@@ -1,4 +1,5 @@
 while true; do
+export LANG="en_US.UTF-8"
 clear
 
 echo -e "\033[96m _____ ____  _____ "
