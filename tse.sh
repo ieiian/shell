@@ -537,7 +537,7 @@ case $choice in
 
             11)
                 clear
-                ss -tulnape
+                ss -untlp
                 ;;
 
             12)
