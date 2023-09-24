@@ -220,7 +220,7 @@ case $choice in
             1)
                 clear
                 read -p "请输入你的快捷按键: " kuaijiejian
-                echo "alias $kuaijiejian='curl -sS -O https://raw.githubusercontent.com/ieiian/sh/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
+                echo "alias $kuaijiejian='curl -sS -O https://raw.githubusercontent.com/ieiian/Shell/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
                 echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
                 ;;
 
