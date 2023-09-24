@@ -67,7 +67,7 @@ case $choice in
 
         kernel_version=$(uname -r)
         
-        local_ip=$(hostname -I)
+        local_ipv4=$(ip -4 addr show | awk '/inet / {split($2, a, "/"); if (a[1] ~ /^192\.|^10\./) print a[1]}')
         congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control)
         queue_algorithm=$(sysctl -n net.core.default_qdisc)
 
@@ -143,7 +143,7 @@ case $choice in
         echo "------------------------"
         echo "网络拥堵算法: $congestion_algorithm $queue_algorithm"
         echo "------------------------"
-        echo "本地IPv4地址: $local_ip"
+        echo "本地IPv4地址: $local_ipv4"
         echo "公网IPv4地址: $ipv4_address"
         echo "公网IPv6地址: $ipv6_address"
         echo "------------------------"
