@@ -2,7 +2,7 @@ while true; do
 export LANG="en_US.UTF-8"
 clear
 
-echo -e "\033[33m _____ ____  _____ "
+echo -e "\033[35m _____ ____  _____ "
 echo "|_   _/ ___|| ____|"
 echo "  | | \___ \|  _|  "
 echo "  | |  ___) | |___ "
