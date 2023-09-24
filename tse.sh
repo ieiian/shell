@@ -1692,7 +1692,7 @@ case $choice in
         done
         ;;
     10)
-        cd ~/ && curl -sS -O https://raw.githubusercontent.com/ieiian/sh/main/tse.sh && chmod +x tse.sh && ./tse.sh
+        cd ~/ && curl -sS -O https://raw.githubusercontent.com/ieiian/Shell/main/tse.sh && chmod +x tse.sh && ./tse.sh
         exit
         ;;
     0)
