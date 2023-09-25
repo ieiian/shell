@@ -32,10 +32,11 @@ case $choice in
         echo "请稍后..."
         # 函数: 获取IPv4和IPv6地址
         fetch_ip_addresses() {
+        local_ipv4=$(ip -4 addr show | awk '/inet / {split($2, a, "/"); if (a[1] ~ /^192\.|^10\./) print a[1]}')
+        ipv4_address_cn=$(curl -4 icanhazip.com)
         ipv4_address=$(curl -s ipv4.ip.sb)
         # ipv6_address=$(curl -s ipv6.ip.sb)
         ipv6_address=$(curl -s --max-time 2 ipv6.ip.sb)
-
         }
 
         # 获取IP地址
@@ -67,8 +68,7 @@ case $choice in
 
         kernel_version=$(uname -r)
         
-        local_ipv4=$(ip -4 addr show | awk '/inet / {split($2, a, "/"); if (a[1] ~ /^192\.|^10\./) print a[1]}')
-        cn_ipv4=$(curl -4 icanhazip.com)
+        
         congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control)
         queue_algorithm=$(sysctl -n net.core.default_qdisc)
 
@@ -144,8 +144,18 @@ case $choice in
         echo "网络拥堵算法: $congestion_algorithm $queue_algorithm"
         echo "------------------------"
         echo "本地IPv4地址: $local_ipv4"
-        echo "公网IPv4地址(国内): $cn_ipv4"
-        echo "公网IPv4地址(国外): $ipv4_address"
+        if [ -n "$ipv4_address_cn" ]; then
+            echo "公网IPv4地址(国内): $ipv4_address_cn"
+        else
+            echo "公网IPv4地址(国内): 无"
+        fi
+        # echo "公网IPv4地址(国内): $ipv4_address_cn"
+        if [ -n "$ipv4_address" ]; then
+            echo "公网IPv4地址(国外): $ipv4_address"
+        else
+            echo "公网IPv4地址(国外): 无"
+        fi
+        # echo "公网IPv4地址(国外): $ipv4_address"
         echo "公网IPv6地址: $ipv6_address"
         echo "------------------------"
         echo "地理位置: $country $city"
