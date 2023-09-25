@@ -152,18 +152,7 @@ case $choice in
         ;;
 
     2)
-        clear
-        # Update system on Debian-based systems
-        if [ -f "/etc/debian_version" ]; then
-            DEBIAN_FRONTEND=noninteractive apt update -y
-        fi
-        # Update system on Red Hat-based systems
-        if [ -f "/etc/redhat-release" ]; then
-            yum -y update
-        fi
-        ;;
-    22)
-        read -p "是否要进行完全升级(-upgrade)？(Y/N，回车默认为N): " choice
+        read -p "\033[31m是否要进行完全升级(-upgrade)？(Y/N，回车默认为N): \033[0m" choice
         if [ "$choice" == "Y" ] || [ "$choice" == "y" ]; then
             # 更新并升级
             clear
