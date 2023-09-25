@@ -55,7 +55,8 @@ case $choice in
         mem_info=$(free -b | awk 'NR==2{printf "%.2f/%.2f MB (%.2f%%)", $3/1024/1024, $2/1024/1024, $3*100/$2}')
 
         disk_info=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)", $3,$2,$5}')
-
+        country_cn=$(curl -s ipinfo.io/$ipv4_address_cn/country)
+        city_cn=$(curl -s ipinfo.io/$ipv4_address_cn/city)
         country=$(curl -s ipinfo.io/country)
         city=$(curl -s ipinfo.io/city)
 
@@ -163,7 +164,8 @@ case $choice in
         fi
         # echo "公网IPv6地址: $ipv6_address"
         echo "------------------------"
-        echo "地理位置: $country $city"
+        echo "地理位置(内): $country_cn $city_cn"
+        echo "地理位置(外): $country $city"
         echo "系统时间: $current_time"
         echo
         ;;
