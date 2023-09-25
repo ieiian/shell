@@ -152,7 +152,7 @@ case $choice in
         ;;
 
     2)
-        read -p "\033[31m是否要进行完全升级(-upgrade)？(Y/N，回车默认为N): \033[0m" choice
+        read -p "是否要进行完全升级(-upgrade)？(Y/N，回车默认为N): " choice
         if [ "$choice" == "Y" ] || [ "$choice" == "y" ]; then
             # 更新并升级
             clear
