@@ -144,19 +144,24 @@ case $choice in
         echo "网络拥堵算法: $congestion_algorithm $queue_algorithm"
         echo "------------------------"
         echo "本地IPv4地址: $local_ipv4"
-        if [ -n "$ipv4_address_cn" ]; then
-            echo "公网IPv4地址(国内): $ipv4_address_cn"
-        else
+        if [[ -z "$ipv4_address_cn" || "$ipv4_address_cn" == *"error code"* ]]; then
             echo "公网IPv4地址(国内): 获取失败"
+        else
+            echo "公网IPv4地址(国内): $ipv4_address_cn"
         fi
         # echo "公网IPv4地址(国内): $ipv4_address_cn"
-        if [[ "$ipv4_address" == *"error code"* ]]; then
+        if [[ -z "$ipv4_address" || "$ipv4_address" == *"error code"* ]]; then
             echo "公网IPv4地址(国外): 获取失败"
         else
             echo "公网IPv4地址(国外): $ipv4_address"
         fi
         # echo "公网IPv4地址(国外): $ipv4_address"
-        echo "公网IPv6地址: $ipv6_address"
+        if [[ -z "$ipv6_address" || "$ipv6_address" == *"error code"* ]]; then
+            echo "公网IPv4地址(国外): 获取失败"
+        else
+            echo "公网IPv6地址: $ipv6_address"
+        fi
+        # echo "公网IPv6地址: $ipv6_address"
         echo "------------------------"
         echo "地理位置: $country $city"
         echo "系统时间: $current_time"
