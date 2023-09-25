@@ -57,8 +57,8 @@ case $choice in
         disk_info=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)", $3,$2,$5}')
         country_cn=$(curl -s ipinfo.io/$ipv4_address_cn/country)
         city_cn=$(curl -s ipinfo.io/$ipv4_address_cn/city)
-        country=$(curl -s ipinfo.io/country)
-        city=$(curl -s ipinfo.io/city)
+        country=$(curl -s ipinfo.io/$ipv4_address/country)
+        city=$(curl -s ipinfo.io/$ipv4_address/city)
 
         isp_info=$(curl -s ipinfo.io/org)
 
