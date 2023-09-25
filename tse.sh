@@ -164,8 +164,18 @@ case $choice in
         fi
         # echo "公网IPv6地址: $ipv6_address"
         echo "------------------------"
-        echo "地理位置(内): $country_cn $city_cn"
-        echo "地理位置(外): $country $city"
+        if [[ -z "$ipv4_address_cn" || "$ipv4_address_cn" == *"error code"* ]]; then
+            :
+        else
+            echo "地理位置(内): $country_cn $city_cn"
+        fi
+        # echo "地理位置(内): $country_cn $city_cn"
+        if [[ -z "$ipv4_address" || "$ipv4_address" == *"error code"* ]]; then
+            :
+        else
+            echo "地理位置(外): $country $city"
+        fi
+        # echo "地理位置(外): $country $city"
         echo "系统时间: $current_time"
         echo
         ;;
