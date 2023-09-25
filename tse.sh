@@ -143,19 +143,19 @@ case $choice in
         echo "------------------------"
         echo "网络拥堵算法: $congestion_algorithm $queue_algorithm"
         echo "------------------------"
-        echo "本地IPv4地址: $local_ipv4"
+        echo "本地IPv4地址(局): $local_ipv4"
         if [[ -z "$ipv4_address_cn" || "$ipv4_address_cn" == *"error code"* ]]; then
-            echo "公网IPv4地址(访问国内): 获取失败"
+            echo "公网IPv4地址(内): 获取失败"
         else
-            echo "公网IPv4地址(访问国内): $ipv4_address_cn"
+            echo "公网IPv4地址(内): $ipv4_address_cn"
         fi
-        # echo "公网IPv4地址(国内): $ipv4_address_cn"
+        # echo "公网IPv4地址(内): $ipv4_address_cn"
         if [[ -z "$ipv4_address" || "$ipv4_address" == *"error code"* ]]; then
-            echo "公网IPv4地址(访问国外): 获取失败"
+            echo "公网IPv4地址(外): 获取失败"
         else
-            echo "公网IPv4地址(访问国外): $ipv4_address"
+            echo "公网IPv4地址(外): $ipv4_address"
         fi
-        # echo "公网IPv4地址(国外): $ipv4_address"
+        # echo "公网IPv4地址(外): $ipv4_address"
         if [[ -z "$ipv6_address" || "$ipv6_address" == *"error code"* ]]; then
             echo "公网IPv6地址: 获取失败"
         else
