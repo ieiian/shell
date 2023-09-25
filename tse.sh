@@ -152,40 +152,48 @@ case $choice in
         ;;
 
     2)
-        read -p "是否要进行完全升级(-upgrade)？(Y/N，或C取消，回车默认为N): " choice
-        case "$choice" in
-            [Yy])
-                # 更新并升级
-                clear
-                # Update system on Debian-based systems
-                if [ -f "/etc/debian_version" ]; then
-                    DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
-                fi
-                # Update system on Red Hat-based systems
-                if [ -f "/etc/redhat-release" ]; then
-                    yum -y update && yum -y upgrade
-                fi
-                ;;
-            [Nn]|"")
-                clear
-                # Update system on Debian-based systems
-                if [ -f "/etc/debian_version" ]; then
-                    DEBIAN_FRONTEND=noninteractive apt update -y
-                fi
-                # Update system on Red Hat-based systems
-                if [ -f "/etc/redhat-release" ]; then
-                    yum -y update
-                fi
-                ;;
-            [Cc])
-                # 取消操作
-                echo "操作已取消。"
-                ;;
-              *)
-                # 无效输入
-                echo "无效的输入，请选择 Y、N 或 C。"
-                ;;
-        esac
+        while true; do
+            read -p "是否要进行完全升级(-upgrade)？(Y/N，或C取消，回车默认为N): " choice
+            case "$choice" in
+                [Yy])
+                    # 更新并升级
+                    clear
+                    # Update system on Debian-based systems
+                    if [ -f "/etc/debian_version" ]; then
+                        DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
+                    fi
+                    # Update system on Red Hat-based systems
+                    if [ -f "/etc/redhat-release" ]; then
+                        yum -y update && yum -y upgrade
+                    fi
+                    break  # 退出循环
+                    ;;
+                [Nn]|"")
+                    clear
+                    # Update system on Debian-based systems
+                    if [ -f "/etc/debian_version" ]; then
+                        DEBIAN_FRONTEND=noninteractive apt update -y
+                    fi
+                    # Update system on Red Hat-based systems
+                    if [ -f "/etc/redhat-release" ]; then
+                        yum -y update
+                    fi
+                    break  # 退出循环
+                    ;;
+                [Cc])
+                    # 取消操作
+                    echo "操作已取消。"
+                    sleep 2  # 等待2秒
+                    break  # 退出循环
+                    ;;
+                *)
+                    # 无效输入
+                    if [ -n "$choice" ]; then
+                        echo "无效的输入，请选择 Y、N、C 或直接按回车。"
+                    fi
+                    ;;
+            esac
+        done
         ;;
 
     3)
