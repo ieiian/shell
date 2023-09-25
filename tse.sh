@@ -144,7 +144,12 @@ case $choice in
         echo "------------------------"
         echo "网络拥堵算法: $congestion_algorithm $queue_algorithm"
         echo "------------------------"
-        echo "本地IPv4地址(局): $local_ipv4"
+        if [[ -z "$local_ipv4" || "$local_ipv4" == *"error code"* ]]; then
+            echo "本地IPv4地址(局): 获取失败，请使用ipconfig查询！"
+        else
+            echo "本地IPv4地址(局): $local_ipv4"
+        fi
+        # echo "本地IPv4地址(局): $local_ipv4"
         if [[ -z "$ipv4_address_cn" || "$ipv4_address_cn" == *"error code"* ]]; then
             echo "公网IPv4地址(内): 获取失败"
         else
