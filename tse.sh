@@ -152,7 +152,7 @@ case $choice in
         ;;
 
     2)
-        read -p "是否要进行完全升级(-upgrade)？(Y/N，回车默认为N): " choice
+        read -p "是否要进行完全升级(-upgrade)？(Y/N，或C取消，回车默认为N): " choice
         case "$choice" in
             [Yy])
                 # 更新并升级
