@@ -33,9 +33,9 @@ case $choice in
         # 函数: 获取IPv4和IPv6地址
         fetch_ip_addresses() {
         ipv4_address_cn=$(curl -s cip.cc | grep -oE 'IP\s+:\s+\S+' | awk '{print $3}')
-        ipv4_address=$(curl -s ipv4.ip.sb)
+        ipv4_address=$(curl -s ipv4.ip.gs)
         # ipv6_address=$(curl -s ipv6.ip.sb)
-        ipv6_address=$(curl -s --max-time 2 ipv6.ip.sb)
+        ipv6_address=$(curl -s --max-time 2 ipv6.ip.gs)
         }
 
         # 获取IP地址
