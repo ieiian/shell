@@ -32,13 +32,14 @@ case $choice in
         echo "请稍后..."
         # 函数: 获取IPv4和IPv6地址
         fetch_ip_addresses() {
+        ipv4_address_cn=$(curl -4 icanhazip.com)
         ipv4_address=$(curl -s ipv4.ip.sb)
         # ipv6_address=$(curl -s ipv6.ip.sb)
         ipv6_address=$(curl -s --max-time 2 ipv6.ip.sb)
         }
 
         # 获取IP地址
-        fetch_ip_addresses
+        fetch_ip_addresses > /dev/null
 
         if [ "$(uname -m)" == "x86_64" ]; then
         cpu_info=$(cat /proc/cpuinfo | grep 'model name' | uniq | sed -e 's/model name[[:space:]]*: //')
@@ -67,7 +68,6 @@ case $choice in
         kernel_version=$(uname -r)
 
         local_ipv4=$(ip -4 addr show | awk '/inet / {split($2, a, "/"); if (a[1] ~ /^192\.|^10\./) print a[1]}')
-        ipv4_address_cn=$(curl -4 icanhazip.com)
 
         congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control)
         queue_algorithm=$(sysctl -n net.core.default_qdisc)
