@@ -165,6 +165,7 @@ case $choice in
                 if [ -f "/etc/redhat-release" ]; then
                     yum -y update && yum -y upgrade
                 fi
+                ;;
             [Nn]|"")
                 clear
                 # Update system on Debian-based systems
@@ -175,6 +176,7 @@ case $choice in
                 if [ -f "/etc/redhat-release" ]; then
                     yum -y update
                 fi
+                ;;
             [Cc])
                 # 取消操作
                 echo "操作已取消。"
