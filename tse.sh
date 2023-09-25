@@ -39,7 +39,7 @@ case $choice in
         }
 
         # 获取IP地址
-        fetch_ip_addresses > /dev/null
+        fetch_ip_addresses > /dev/null 2>&1
 
         if [ "$(uname -m)" == "x86_64" ]; then
         cpu_info=$(cat /proc/cpuinfo | grep 'model name' | uniq | sed -e 's/model name[[:space:]]*: //')
