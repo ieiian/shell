@@ -153,28 +153,37 @@ case $choice in
 
     2)
         read -p "是否要进行完全升级(-upgrade)？(Y/N，回车默认为N): " choice
-        if [ "$choice" == "Y" ] || [ "$choice" == "y" ]; then
-            # 更新并升级
-            clear
-            # Update system on Debian-based systems
-            if [ -f "/etc/debian_version" ]; then
-                DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
-            fi
-            # Update system on Red Hat-based systems
-            if [ -f "/etc/redhat-release" ]; then
-                yum -y update && yum -y upgrade
-            fi
-        else
-            clear
-            # Update system on Debian-based systems
-            if [ -f "/etc/debian_version" ]; then
-                DEBIAN_FRONTEND=noninteractive apt update -y
-            fi
-            # Update system on Red Hat-based systems
-            if [ -f "/etc/redhat-release" ]; then
-                yum -y update
-            fi
-        fi
+        case "$choice" in
+            [Yy])
+                # 更新并升级
+                clear
+                # Update system on Debian-based systems
+                if [ -f "/etc/debian_version" ]; then
+                    DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
+                fi
+                # Update system on Red Hat-based systems
+                if [ -f "/etc/redhat-release" ]; then
+                    yum -y update && yum -y upgrade
+                fi
+            [Nn]|"")
+                clear
+                # Update system on Debian-based systems
+                if [ -f "/etc/debian_version" ]; then
+                    DEBIAN_FRONTEND=noninteractive apt update -y
+                fi
+                # Update system on Red Hat-based systems
+                if [ -f "/etc/redhat-release" ]; then
+                    yum -y update
+                fi
+            [Cc])
+                # 取消操作
+                echo "操作已取消。"
+                ;;
+              *)
+                # 无效输入
+                echo "无效的输入，请选择 Y、N 或 C。"
+                ;;
+        esac
         ;;
 
     3)
