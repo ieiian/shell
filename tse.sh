@@ -11,7 +11,7 @@ echo -e "\033[32m====================="
 echo -e "\033[96mTSE 一键脚本工具 v1.0.1 （支持Ubuntu，Debian，Centos系统）\033[0m"
 echo "------------------------"
 echo "1.  系统信息"
-echo "2.  系统更新      22. -upgrade"
+echo "2.  系统更新"
 echo "3.  系统清理"
 echo "4.  系统工具 ▶"
 echo "5.  常用工具安装 ▶"
@@ -163,14 +163,28 @@ case $choice in
         fi
         ;;
     22)
-        clear
-        # Update system on Debian-based systems
-        if [ -f "/etc/debian_version" ]; then
-            DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
-        fi
-        # Update system on Red Hat-based systems
-        if [ -f "/etc/redhat-release" ]; then
-            yum -y update && yum -y upgrade
+        read -p "是否要进行完全升级(-upgrade)？(Y/N，回车默认为N): " choice
+        if [ "$choice" == "Y" ] || [ "$choice" == "y" ]; then
+            # 更新并升级
+            clear
+            # Update system on Debian-based systems
+            if [ -f "/etc/debian_version" ]; then
+                DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
+            fi
+            # Update system on Red Hat-based systems
+            if [ -f "/etc/redhat-release" ]; then
+                yum -y update && yum -y upgrade
+            fi
+        else
+            clear
+            # Update system on Debian-based systems
+            if [ -f "/etc/debian_version" ]; then
+                DEBIAN_FRONTEND=noninteractive apt update -y
+            fi
+            # Update system on Red Hat-based systems
+            if [ -f "/etc/redhat-release" ]; then
+                yum -y update
+            fi
         fi
         ;;
 
