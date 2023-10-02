@@ -887,16 +887,11 @@ case $choice in
             echo " ▼ "
             echo "安装常用工具"
             echo "------------------------"
-            echo "1.  curl 下载工具"
-            echo "2.  wget 下载工具"
-            echo "3.  sudo 超级管理权限工具"
-            echo "4.  socat 通信连接工具 （申请域名证书必备）"
-            echo "5.  htop 系统监控工具"
-            echo "6.  iftop 网络流量监控工具"
-            echo "7.  unzip ZIP压缩解压工具"
-            echo "8.  tar GZ压缩解压工具"
-            echo "9.  tmux 多路后台运行工具"
-            echo "10. ffmpeg 视频编码直播推流工具"
+            echo "1.  套餐一： sudo / curl / wget / nano"
+            echo "2.  套餐二： sudo / curl / wget / nano / tar / socat"
+            echo "3.  套餐三： htop / iftop / unzip / tmux / ffmpeg"
+            echo "------------------------"
+            echo "4.  手动安装指定工具 ▶"
             echo "------------------------"
             echo "51. 全部安装"
             echo "50. 全部卸载"
@@ -910,9 +905,9 @@ case $choice in
             1)
                 clear
                 if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y curl
+                    apt update -y && apt install -y sudo curl wget nano
                 elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install curl
+                    yum -y update && yum -y install sudo curl wget nano
                 else
                     echo "未知的包管理器!"
                 fi
@@ -921,9 +916,9 @@ case $choice in
             2)
                 clear
                 if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y wget
+                    apt update -y && apt install -y sudo curl wget nano tar socat
                 elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install wget
+                    yum -y update && yum -y install sudo curl wget nano tar socat
                 else
                     echo "未知的包管理器!"
                 fi
@@ -931,22 +926,49 @@ case $choice in
             3)
                 clear
                 if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y sudo
+                    apt update -y && apt install -y htop iftop unzip tmux ffmpeg
                 elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install sudo
+                    yum -y update && yum -y install htop iftop unzip tmux ffmpeg
                 else
                     echo "未知的包管理器!"
                 fi
                 ;;
             4)
                 clear
-                if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y socat
-                elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install socat
-                else
-                    echo "未知的包管理器!"
-                fi
+                while true; do
+                    # 提示用户输入工具名称
+                    read -p "请输入要安装的工具名称（输入 'cancel' 取消安装）: " tool_name
+
+                    # 检查用户输入是否为空
+                    if [[ -z "$tool_name" ]]; then
+                        echo "错误：工具名称不能为空，请重新输入。"
+                    elif [[ "$tool_name" == "cancel" ]]; then
+                        echo "安装已取消。"
+                        break  # 退出当前 case 分支
+                    else
+                        # 检查系统包管理器并安装指定工具
+                        if command -v apt &>/dev/null; then
+                            if sudo apt update -y && sudo apt install -y "$tool_name"; then
+                                echo "$tool_name 工具已安装成功。"
+                                break  # 退出当前 case 分支
+                            else
+                                echo "错误：未找到安装包 '$tool_name'。"
+                                break  # 退出当前 case 分支
+                            fi
+                        elif command -v yum &>/dev/null; then
+                            if sudo yum -y update && sudo yum -y install "$tool_name"; then
+                                echo "$tool_name 工具已安装成功。"
+                                break  # 退出当前 case 分支
+                            else
+                                echo "错误：未找到安装包 '$tool_name'。"
+                                break  # 退出当前 case 分支
+                            fi
+                        else
+                            echo "未知的包管理器!"
+                            exit 1
+                        fi
+                    fi
+                done
                 ;;
             5)
                 clear
