@@ -287,10 +287,24 @@ case $choice in
         case $sub_choice in
             1)
                 clear
+                
+                # 提示用户输入快捷按键
                 read -p "请输入你的快捷按键: " kuaijiejian
+                
+                # 检查输入是否有效
+                if [[ -z $kuaijiejian ]]; then
+                  echo "快捷按键不能为空。"
+                  exit 1
+                elif [[ ! -z $kuaijiejian && ! [[ $kuaijiejian =~ ^[a-zA-Z0-9]+$ ]]; then
+                  echo "快捷按键只能由字母和数字组成。"
+                  exit 1
+                fi
+                
+                # 将快捷命令添加到 ~/.bashrc 文件中
                 echo "alias $kuaijiejian='curl -sS -O https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
+                
+                # 提示用户快捷键已添加
                 echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
-                ;;
 
             2)
                 clear
