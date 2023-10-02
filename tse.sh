@@ -13,7 +13,7 @@ echo "------------------------"
 echo "1.  系统信息"
 echo "2.  系统更新"
 echo "3.  系统清理"
-echo "4.  系统工具 ▶"
+echo "4.  系统设置 ▶"
 echo "5.  常用工具安装 ▶"
 echo "6.  网络优化安装 ▶"
 echo "7.  测试脚本合集 ▶"
@@ -261,23 +261,24 @@ case $choice in
         while true; do
 
         echo " ▼ "
-        echo "系统工具"
+        echo "系统设置"
         echo "------------------------"
         echo "1.  设置脚本快捷键"
         echo "------------------------"
         echo "2.  修改ROOT密码"
         echo "3.  开启ROOT密码登录模式"
-        echo "4.  安装Python最新版"
-        echo "5.  开放所有端口"
+        echo "13. 用户管理"
+        echo "14. 用户/密码生成器"
         echo "6.  修改SSH连接端口"
-        echo "7.  优化DNS地址"
-        echo "8.  一键重装系统"
+        echo "7.  优化DNS地址"  
         echo "9.  禁用ROOT账户创建新账户"
         echo "10. 切换优先ipv4/ipv6"
         echo "11. 查看端口占用状态"
         echo "12. 修改虚拟内存大小"
-        echo "13. 用户管理"
-        echo "14. 用户/密码生成器"
+        echo "5.  开放所有端口"
+        echo "------------------------"
+        echo "4.  安装Python最新版"
+        echo "8.  一键重装系统"
         echo "------------------------"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
@@ -287,11 +288,17 @@ case $choice in
         case $sub_choice in
             1)
                 clear
-                read -p "请输入你的快捷按键: " kuaijiejian
-                echo "alias $kuaijiejian='curl -sS -O https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
-                echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
+                while true; do
+                    read -p "请输入你的快捷按键: " kjj
+                    if [ -z "$kjj" ]; then
+                        echo "错误：快捷按键不能为空，请重新输入。"
+                    else
+                        echo "alias $kjj='curl -sS -O https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
+                        echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
+                        break
+                    fi
+                done
                 ;;
-
             2)
                 clear
                 echo "设置你的ROOT密码"
@@ -417,13 +424,10 @@ case $choice in
                 echo "端口已全部开放"
                 ;;
             6)
+                # 清屏
                 clear
-                #!/bin/bash
 
-                # 去掉 #Port 的注释
-                sed -i 's/#Port/Port/' /etc/ssh/sshd_config
-
-                # 读取当前的 SSH 端口号
+                # 获取当前的 SSH 端口号
                 current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
 
                 # 打印当前的 SSH 端口号
@@ -434,19 +438,22 @@ case $choice in
                 # 提示用户输入新的 SSH 端口号
                 read -p "请输入新的 SSH 端口号: " new_port
 
-                # 备份 SSH 配置文件
-                cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+                # 验证输入是否为数字
+                if [[ ! "$new_port" =~ ^[0-9]+$ ]]; then
+                    echo "错误：请输入有效的端口号。"
+                else
+                    # 备份 SSH 配置文件
+                    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 
-                # 替换 SSH 配置文件中的端口号
-                sed -i "s/Port [0-9]\+/Port $new_port/g" /etc/ssh/sshd_config
+                    # 替换 SSH 配置文件中的端口号
+                    sed -i "s/^ *Port [0-9]\+/Port $new_port/" /etc/ssh/sshd_config
 
-                # 重启 SSH 服务
-                service sshd restart
+                    # 重启 SSH 服务
+                    service ssh restart
 
-                echo "SSH 端口已修改为: $new_port"
-
+                    echo "SSH 端口已修改为: $new_port"
+                fi
                 ;;
-
 
             7)
                 clear
