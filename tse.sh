@@ -1228,20 +1228,21 @@ case $choice in
         echo " ▼ "
         echo "Docker管理器"
         echo "------------------------"
-        echo "1.  安装更新Docker环境"
+        echo "1.  安装/更新 Docker 环境"
+        echo "2.  Dcoker 全局总览"
         echo "------------------------"
-        echo "2.  查看Dcoker全局状态"
+        echo "3.  Dcoker 容器管理 ▶"
+        echo "4.  Dcoker 镜像管理 ▶"
+        echo "5.  Dcoker 网络管理 ▶"
+        echo "6.  Dcoker 卷管理 ▶"
         echo "------------------------"
-        echo "3.  Dcoker容器管理 ▶"
-        echo "4.  Dcoker镜像管理 ▶"
-        echo "5.  Dcoker网络管理 ▶"
-        echo "6.  Dcoker卷管理 ▶"
+        echo "7.  Dcoker-compose 管理"
         echo "------------------------"
-        echo "7.  清理无用的docker容器和镜像网络数据卷"
+        echo "8.  清理无用的 Docker 容器和镜像网络数据卷"
         echo "------------------------"
-        echo "8.  卸载Dcoker环境"
+        echo "9.  卸载 Dcoker 环境"
         echo "------------------------"
-        echo "9.  Docker库管理 ▶"
+        echo "10.  Docker 库管理 ▶"
         echo "------------------------"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
@@ -1557,6 +1558,161 @@ case $choice in
                 done
                 ;;
             7)
+                DOCKER_DIR="/root/docker"
+
+                function list_docker_compose_services() {
+                    echo "当前的 Docker-compose 服务:"
+                    echo ""
+                    services=$(docker-compose ps --services 2>/dev/null)
+                    all_services=$(find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!')
+                    
+                    for service in $all_services; do
+                        display_name="-- $service"
+                        if [[ $services =~ $service ]]; then
+                            running=$(docker-compose ps --quiet --filter "status=running" $service 2>/dev/null)
+                            if [ -n "$running" ]; then
+                                display_name="$display_name *"
+                            fi
+                        fi
+                        echo "$display_name"
+                    done
+                    echo "---------------------------------"
+                    echo ""
+                }
+
+                # 清屏
+                clear
+
+                while true; do
+                    echo "Docker 服务管理菜单:"
+                    echo "1. 列出 Docker-compose 服务"
+                    echo "2. 创建 Docker-compose 服务"
+                    echo "3. 修改 Docker-compose 文件"
+                    echo "4. 启动 Docker-compose 服务"
+                    echo "5. 停止 Docker-compose 服务"
+                    echo "6. 重启 Docker-compose 服务"
+                    echo "7. 删除 Docker-compose 服务"
+                    echo "8. 修改自定义文件夹路径"
+                    echo "9. 退出"
+
+                    read -p "请选择操作: " choice
+
+                    case $choice in
+                        1)
+                            clear
+                            # 列出所有 Docker-compose 服务
+                            list_docker_compose_services
+                            ;;
+                        2)
+                            clear
+                            # 创建新 Docker-compose 服务
+                            read -p "请输入新服务的名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            mkdir -p "$service_dir"
+                            touch "$service_dir/docker-compose.yaml"
+                            echo "version: '3'" > "$service_dir/docker-compose.yaml"
+                            echo "services:" >> "$service_dir/docker-compose.yaml"
+                            echo "  # Please enter your configuration information." >> "$service_dir/docker-compose.yaml"
+                            echo "新服务 '$service_name' 已创建。"
+                            list_docker_compose_services
+                            ;;
+                        3)
+                            clear
+                            # 修改 Docker Compose 文件
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要修改的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                nano "$compose_file"
+                                echo "Docker Compose 文件已修改。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        4)
+                            clear
+                            # 启动 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            read -p "请输入要启动的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" up -d
+                                echo "服务 '$service_name' 已启动。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        5)
+                            clear
+                            # 停止 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            read -p "请输入要停止的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" down
+                                echo "服务 '$service_name' 已停止。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        6)
+                            clear
+                            # 重启 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            read -p "请输入要重启的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" restart
+                                echo "服务 '$service_name' 已重启。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        7)
+                            clear
+                            # 删除 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            read -p "请输入要删除的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            if [ -d "$service_dir" ]; then
+                                rm -r "$service_dir"
+                                echo "服务 '$service_name' 已删除。"
+                            else
+                                echo "错误：服务 '$service_name' 不存在。"
+                            fi
+                            ;;
+                        8)
+                            clear
+                            # 修改自定义文件夹路径
+                            read -p "请输入新的自定义文件夹路径: " custom_dir
+                            if [ -d "$custom_dir" ]; then
+                                DOCKER_DIR="$custom_dir"
+                                echo "自定义文件夹路径已修改为: $DOCKER_DIR"
+                            else
+                                echo "错误：指定的文件夹路径不存在。"
+                            fi
+                            ;;
+                        9)
+                            # 退出
+                            echo "感谢使用，再见！"
+                            break  # 跳出循环，退出菜单
+                            ;;
+                        *)
+                            echo "错误：无效的选项，请重新选择。"
+                            ;;
+                    esac
+                done
+                ;;
+            8)
                 clear
                 read -p "确定清理无用的镜像容器网络吗？(Y/N): " choice
                 case "$choice" in
@@ -1570,7 +1726,7 @@ case $choice in
                     ;;
                 esac
                 ;;
-            8)
+            9)
                 clear
                 read -p "确定卸载docker环境吗？(Y/N): " choice
                 case "$choice" in
@@ -1588,7 +1744,7 @@ case $choice in
                     ;;
                 esac
                 ;;
-            9)
+            10)
                 while true; do
                     clear
                     echo "Docker镜像列表"
