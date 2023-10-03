@@ -1632,7 +1632,7 @@ case $choice in
                             touch "$service_dir/docker-compose.yaml"
                             # echo "version: '3'" > "$service_dir/docker-compose.yaml"
                             # echo "services:" >> "$service_dir/docker-compose.yaml"
-                            echo "###" > "$service_dir/docker-compose.yaml"
+                            echo "# Edit your profile.\n" > "$service_dir/docker-compose.yaml"
                             echo "新服务 '$service_name' 已创建。"
                             list_docker_compose_services
                             ;;
