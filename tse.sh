@@ -123,7 +123,7 @@ case $choice in
         swap_info="${swap_used}MB/${swap_total}MB (${swap_percentage}%)"
 
 
-        echo ""
+        echo " ▼ "
         echo "系统信息查询"
         echo "------------------------"
         echo "主机名: $hostname"
@@ -1563,37 +1563,53 @@ case $choice in
                 function list_docker_compose_services() {
                     echo "当前的 Docker-compose 服务:"
                     echo ""
-                    services=$(docker-compose ps --services 2>/dev/null)
                     all_services=$(find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!')
                     
+                    index=1
                     for service in $all_services; do
-                        display_name="-- $service"
-                        if [[ $services =~ $service ]]; then
-                            running=$(docker-compose ps --quiet --filter "status=running" $service 2>/dev/null)
-                            if [ -n "$running" ]; then
-                                display_name="$display_name *"
-                            fi
+                        display_name="$index -- $service"
+                        service_path="${DOCKER_DIR}/${service}"
+                        
+                        # 检查服务是否正在运行
+                        ps_output=$(docker-compose -f "$service_path/docker-compose.yml" ps 2>/dev/null)
+                        if [ $? -ne 0 ]; then
+                            # 如果yml格式文件不存在，尝试yaml格式
+                            ps_output=$(docker-compose -f "$service_path/docker-compose.yaml" ps 2>/dev/null)
                         fi
-                        echo "$display_name"
+                        
+                        # 检查docker-compose ps输出是否符合正常格式，并且下面有具体服务信息
+                        if echo "$ps_output" | grep -q "NAME\s*IMAGE\s*COMMAND\s*SERVICE\s*CREATED\s*STATUS\s*PORTS" \
+                            && echo "$ps_output" | grep -qE "\b[0-9]+\b\s+[a-zA-Z0-9_-]+\s+"; then
+                            display_name="$display_name   \033[0;35m*running\033[0m"
+                        fi
+                        
+                        echo -e "$display_name"
+                        ((index++))
                     done
-                    echo "---------------------------------"
+                    echo "================================="
                     echo ""
                 }
 
-                # 清屏
-                clear
-
                 while true; do
+                    clear
+                    list_docker_compose_services
                     echo "Docker 服务管理菜单:"
-                    echo "1. 列出 Docker-compose 服务"
-                    echo "2. 创建 Docker-compose 服务"
-                    echo "3. 修改 Docker-compose 文件"
-                    echo "4. 启动 Docker-compose 服务"
-                    echo "5. 停止 Docker-compose 服务"
-                    echo "6. 重启 Docker-compose 服务"
-                    echo "7. 删除 Docker-compose 服务"
-                    echo "8. 修改自定义文件夹路径"
-                    echo "9. 退出"
+                    echo "------------------------"
+                    echo "1.  列出 Docker-compose 服务"
+                    echo "2.  创建 Docker-compose 服务"
+                    echo "3.  修改 Docker-compose 文件"
+                    echo "------------------------"
+                    echo "4.  启动 Docker-compose 服务"
+                    echo "5.  停止 Docker-compose 服务"
+                    echo "6.  重启 Docker-compose 服务"
+                    echo "------------------------"
+                    echo "7.  删除 Docker-compose 服务"
+                    echo "------------------------"
+                    echo "8.  修改自定义文件夹路径"
+                    echo "------------------------"
+                    echo "0.  退出"
+                    echo "------------------------"
+                    echo ""
 
                     read -p "请选择操作: " choice
 
@@ -1601,10 +1617,11 @@ case $choice in
                         1)
                             clear
                             # 列出所有 Docker-compose 服务
-                            list_docker_compose_services
+                            #list_docker_compose_services
                             ;;
                         2)
                             clear
+                            list_docker_compose_services
                             # 创建新 Docker-compose 服务
                             read -p "请输入新服务的名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
@@ -1635,7 +1652,8 @@ case $choice in
                             clear
                             # 启动 Docker 服务
                             echo "可用的 Docker 服务:"
-                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            list_docker_compose_services
+                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
                             read -p "请输入要启动的服务名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
                             compose_file="$service_dir/docker-compose.yaml"
@@ -1650,7 +1668,8 @@ case $choice in
                             clear
                             # 停止 Docker 服务
                             echo "可用的 Docker 服务:"
-                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            list_docker_compose_services
+                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
                             read -p "请输入要停止的服务名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
                             compose_file="$service_dir/docker-compose.yaml"
@@ -1665,7 +1684,8 @@ case $choice in
                             clear
                             # 重启 Docker 服务
                             echo "可用的 Docker 服务:"
-                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            list_docker_compose_services
+                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
                             read -p "请输入要重启的服务名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
                             compose_file="$service_dir/docker-compose.yaml"
@@ -1680,7 +1700,8 @@ case $choice in
                             clear
                             # 删除 Docker 服务
                             echo "可用的 Docker 服务:"
-                            find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            list_docker_compose_services
+                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
                             read -p "请输入要删除的服务名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
                             if [ -d "$service_dir" ]; then
@@ -1701,9 +1722,8 @@ case $choice in
                                 echo "错误：指定的文件夹路径不存在。"
                             fi
                             ;;
-                        9)
+                        0)
                             # 退出
-                            echo "感谢使用，再见！"
                             break  # 跳出循环，退出菜单
                             ;;
                         *)
