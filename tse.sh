@@ -1604,7 +1604,7 @@ case $choice in
                     echo "------------------------"
                     echo "6.  删除 Docker-compose 服务"
                     echo "------------------------"
-                    echo "7.  修改自定义文件夹路径（$DOCKER_DIR）"
+                    echo "7.  修改自定义文件夹路径（\033[0;36m$DOCKER_DIR\033[0m）"
                     echo "------------------------"
                     echo "0.  返回上级菜单"
                     echo "00. 退出脚本"
