@@ -1566,8 +1566,6 @@ case $choice in
                     all_services=$(find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!')
                     
                     index=1
-                    declare -A service_map  # 声明一个关联数组用于保存序号和服务名称的对应关系
-                    
                     for service in $all_services; do
                         display_name="\033[0;34m$index\033[0m -- $service"
                         service_path="${DOCKER_DIR}/${service}"
@@ -1586,7 +1584,6 @@ case $choice in
                         fi
                         
                         echo -e "$display_name"
-                        service_map[$index]=$service  # 将序号和服务名称的对应关系保存到数组中
                         ((index++))
                     done
                     echo "================================="
