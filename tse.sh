@@ -1630,9 +1630,9 @@ case $choice in
                             service_dir="$DOCKER_DIR/$service_name"
                             mkdir -p "$service_dir"
                             touch "$service_dir/docker-compose.yaml"
-                            echo "version: '3'" > "$service_dir/docker-compose.yaml"
-                            echo "services:" >> "$service_dir/docker-compose.yaml"
-                            echo "  # Please enter your configuration information." >> "$service_dir/docker-compose.yaml"
+                            # echo "version: '3'" > "$service_dir/docker-compose.yaml"
+                            # echo "services:" >> "$service_dir/docker-compose.yaml"
+                            echo "###" > "$service_dir/docker-compose.yaml"
                             echo "新服务 '$service_name' 已创建。"
                             list_docker_compose_services
                             ;;
