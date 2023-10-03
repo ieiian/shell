@@ -1566,8 +1566,10 @@ case $choice in
                     all_services=$(find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!')
                     
                     index=1
+                    declare -A service_map  # 声明一个关联数组用于保存序号和服务名称的对应关系
+                    
                     for service in $all_services; do
-                        display_name="$index -- $service"
+                        display_name="\033[0;34m$index\033[0m -- $service"
                         service_path="${DOCKER_DIR}/${service}"
                         
                         # 检查服务是否正在运行
@@ -1584,6 +1586,7 @@ case $choice in
                         fi
                         
                         echo -e "$display_name"
+                        service_map[$index]=$service  # 将序号和服务名称的对应关系保存到数组中
                         ((index++))
                     done
                     echo "================================="
@@ -1606,7 +1609,8 @@ case $choice in
                     echo "------------------------"
                     echo "7.  修改自定义文件夹路径"
                     echo "------------------------"
-                    echo "0.  退出"
+                    echo "0.  返回上级菜单"
+                    echo "00. 退出脚本"
                     echo "------------------------"
                     echo ""
 
@@ -1724,6 +1728,9 @@ case $choice in
                         0)
                             # 退出
                             break  # 跳出循环，退出菜单
+                            ;;
+                        00)
+                            exit
                             ;;
                         *)
                             echo "错误：无效的选项，请重新选择。"
