@@ -1595,17 +1595,16 @@ case $choice in
                     list_docker_compose_services
                     echo "Docker 服务管理菜单:"
                     echo "------------------------"
-                    echo "1.  列出 Docker-compose 服务"
-                    echo "2.  创建 Docker-compose 服务"
-                    echo "3.  修改 Docker-compose 文件"
+                    echo "1.  创建 Docker-compose 服务"
+                    echo "2.  修改 Docker-compose 文件"
                     echo "------------------------"
-                    echo "4.  启动 Docker-compose 服务"
-                    echo "5.  停止 Docker-compose 服务"
-                    echo "6.  重启 Docker-compose 服务"
+                    echo "3.  启动 Docker-compose 服务"
+                    echo "4.  停止 Docker-compose 服务"
+                    echo "5.  重启 Docker-compose 服务"
                     echo "------------------------"
-                    echo "7.  删除 Docker-compose 服务"
+                    echo "6.  删除 Docker-compose 服务"
                     echo "------------------------"
-                    echo "8.  修改自定义文件夹路径"
+                    echo "7.  修改自定义文件夹路径"
                     echo "------------------------"
                     echo "0.  退出"
                     echo "------------------------"
@@ -1614,12 +1613,12 @@ case $choice in
                     read -p "请选择操作: " choice
 
                     case $choice in
+                        # 11)
+                        #     clear
+                        #     # 列出所有 Docker-compose 服务
+                        #     #list_docker_compose_services
+                        #     ;;
                         1)
-                            clear
-                            # 列出所有 Docker-compose 服务
-                            #list_docker_compose_services
-                            ;;
-                        2)
                             clear
                             list_docker_compose_services
                             # 创建新 Docker-compose 服务
@@ -1633,7 +1632,7 @@ case $choice in
                             echo "新服务 '$service_name' 已创建。"
                             list_docker_compose_services
                             ;;
-                        3)
+                        2)
                             clear
                             # 修改 Docker Compose 文件
                             echo "可用的 Docker 服务:"
@@ -1648,7 +1647,7 @@ case $choice in
                                 echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
                             fi
                             ;;
-                        4)
+                        3)
                             clear
                             # 启动 Docker 服务
                             echo "可用的 Docker 服务:"
@@ -1664,7 +1663,7 @@ case $choice in
                                 echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
                             fi
                             ;;
-                        5)
+                        4)
                             clear
                             # 停止 Docker 服务
                             echo "可用的 Docker 服务:"
@@ -1680,7 +1679,7 @@ case $choice in
                                 echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
                             fi
                             ;;
-                        6)
+                        5)
                             clear
                             # 重启 Docker 服务
                             echo "可用的 Docker 服务:"
@@ -1696,7 +1695,7 @@ case $choice in
                                 echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
                             fi
                             ;;
-                        7)
+                        6)
                             clear
                             # 删除 Docker 服务
                             echo "可用的 Docker 服务:"
@@ -1711,7 +1710,7 @@ case $choice in
                                 echo "错误：服务 '$service_name' 不存在。"
                             fi
                             ;;
-                        8)
+                        7)
                             clear
                             # 修改自定义文件夹路径
                             read -p "请输入新的自定义文件夹路径: " custom_dir
