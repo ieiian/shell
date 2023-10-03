@@ -1580,7 +1580,7 @@ case $choice in
                         # 检查docker-compose ps输出是否符合正常格式，并且下面有具体服务信息
                         if echo "$ps_output" | grep -q "NAME\s*IMAGE\s*COMMAND\s*SERVICE\s*CREATED\s*STATUS\s*PORTS" \
                             && echo "$ps_output" | grep -qE "\b[0-9]+\b\s+[a-zA-Z0-9_-]+\s+"; then
-                            display_name="$display_name  \t\033[0;35m*running\033[0m"
+                            display_name="$display_name   \033[0;35m*running\033[0m"
                         fi
                         
                         echo -e "$display_name"
@@ -1604,7 +1604,7 @@ case $choice in
                     echo "------------------------"
                     echo "6.  删除 Docker-compose 服务"
                     echo "------------------------"
-                    echo "7.  修改自定义文件夹路径（\033[0;36m$DOCKER_DIR\033[0m）"
+                    echo "7.  修改自定义文件夹路径（"\033[0;36m$DOCKER_DIR\033[0m"）"
                     echo "------------------------"
                     echo "0.  返回上级菜单"
                     echo "00. 退出脚本"
