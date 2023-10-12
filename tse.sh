@@ -1601,10 +1601,11 @@ case $choice in
                     echo "3.  启动 Docker-compose 服务"
                     echo "4.  停止 Docker-compose 服务"
                     echo "5.  重启 Docker-compose 服务"
+                    echo "6.  升级 Docker-compose 服务"
                     echo "------------------------"
-                    echo "6.  删除 Docker-compose 服务"
+                    echo "7.  删除 Docker-compose 服务"
                     echo "------------------------"
-                    echo "7.  修改文件夹路径（ $DOCKER_DIR ）"
+                    echo "8.  修改文件夹路径（ $DOCKER_DIR ）"
                     echo "------------------------"
                     echo "0.  返回上级菜单"
                     echo "00. 退出脚本"
@@ -1629,7 +1630,7 @@ case $choice in
                             touch "$service_dir/docker-compose.yaml"
                             # echo "version: '3'" > "$service_dir/docker-compose.yaml"
                             # echo "services:" >> "$service_dir/docker-compose.yaml"
-                            echo "#edityour" > "$service_dir/docker-compose.yaml"
+                            echo "#" > "$service_dir/docker-compose.yaml"
                             echo "新服务 '$service_name' 已创建。"
                             list_docker_compose_services
                             ;;
@@ -1669,7 +1670,6 @@ case $choice in
                             # 停止 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
-                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
                             read -p "请输入要停止的服务名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
                             compose_file="$service_dir/docker-compose.yaml"
@@ -1685,7 +1685,6 @@ case $choice in
                             # 重启 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
-                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
                             read -p "请输入要重启的服务名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
                             compose_file="$service_dir/docker-compose.yaml"
@@ -1698,10 +1697,33 @@ case $choice in
                             ;;
                         6)
                             clear
+                            # 升级 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要升级的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" down
+                                image_name=$(grep -m1 '^\s*image:' "$compose_file" | awk '{print $2}')
+                                # 删除 Docker 镜像
+                                if [ -n "$image_name" ]; then
+                                    docker rmi $image_name
+                                    echo "Docker 镜像 '$image_name' 已删除."
+                                else
+                                    echo "无法获取 Docker 镜像名称。"
+                                fi
+                                docker-compose -f "$compose_file" up -d
+                                echo "服务 '$service_name' 已升级。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        7)
+                            clear
                             # 删除 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
-                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
                             read -p "请输入要删除的服务名称: " service_name
                             service_dir="$DOCKER_DIR/$service_name"
                             if [ -d "$service_dir" ]; then
@@ -1711,7 +1733,7 @@ case $choice in
                                 echo "错误：服务 '$service_name' 不存在。"
                             fi
                             ;;
-                        7)
+                        8)
                             clear
                             # 修改自定义文件夹路径
                             read -p "请输入新的自定义文件夹路径: " custom_dir
