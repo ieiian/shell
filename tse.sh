@@ -13,7 +13,7 @@ echo "------------------------"
 echo "1.  系统信息"
 echo "2.  系统更新"
 echo "3.  系统清理"
-echo "4.  系统工具 ▶"
+echo "4.  系统设置 ▶"
 echo "5.  常用工具安装 ▶"
 echo "6.  网络优化安装 ▶"
 echo "7.  测试脚本合集 ▶"
@@ -123,7 +123,7 @@ case $choice in
         swap_info="${swap_used}MB/${swap_total}MB (${swap_percentage}%)"
 
 
-        echo ""
+        echo " ▼ "
         echo "系统信息查询"
         echo "------------------------"
         echo "主机名: $hostname"
@@ -261,23 +261,24 @@ case $choice in
         while true; do
 
         echo " ▼ "
-        echo "系统工具"
+        echo "系统设置"
         echo "------------------------"
         echo "1.  设置脚本快捷键"
         echo "------------------------"
         echo "2.  修改ROOT密码"
         echo "3.  开启ROOT密码登录模式"
-        echo "4.  安装Python最新版"
-        echo "5.  开放所有端口"
+        echo "13. 用户管理"
+        echo "14. 用户/密码生成器"
         echo "6.  修改SSH连接端口"
-        echo "7.  优化DNS地址"
-        echo "8.  一键重装系统"
+        echo "7.  优化DNS地址"  
         echo "9.  禁用ROOT账户创建新账户"
         echo "10. 切换优先ipv4/ipv6"
         echo "11. 查看端口占用状态"
         echo "12. 修改虚拟内存大小"
-        echo "13. 用户管理"
-        echo "14. 用户/密码生成器"
+        echo "5.  开放所有端口"
+        echo "------------------------"
+        echo "4.  安装Python最新版"
+        echo "8.  一键重装系统"
         echo "------------------------"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
@@ -287,25 +288,17 @@ case $choice in
         case $sub_choice in
             1)
                 clear
-                
-                # 提示用户输入快捷按键
-                read -p "请输入你的快捷按键: " kuaijiejian
-                
-                # 检查输入是否有效
-                if [[ -z $kuaijiejian ]]; then
-                  echo "快捷按键不能为空。"
-                  exit 1
-                elif [[ ! -z $kuaijiejian && ! [[ $kuaijiejian =~ ^[a-zA-Z0-9]+$ ]]; then
-                  echo "快捷按键只能由字母和数字组成。"
-                  exit 1
-                fi
-                
-                # 将快捷命令添加到 ~/.bashrc 文件中
-                echo "alias $kuaijiejian='curl -sS -O https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
-                
-                # 提示用户快捷键已添加
-                echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
-
+                while true; do
+                    read -p "请输入你的快捷按键: " kjj
+                    if [ -z "$kjj" ]; then
+                        echo "错误：快捷按键不能为空，请重新输入。"
+                    else
+                        echo "alias $kjj='curl -sS -O https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
+                        echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
+                        break
+                    fi
+                done
+                ;;
             2)
                 clear
                 echo "设置你的ROOT密码"
@@ -431,13 +424,10 @@ case $choice in
                 echo "端口已全部开放"
                 ;;
             6)
+                # 清屏
                 clear
-                #!/bin/bash
 
-                # 去掉 #Port 的注释
-                sed -i 's/#Port/Port/' /etc/ssh/sshd_config
-
-                # 读取当前的 SSH 端口号
+                # 获取当前的 SSH 端口号
                 current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
 
                 # 打印当前的 SSH 端口号
@@ -448,19 +438,22 @@ case $choice in
                 # 提示用户输入新的 SSH 端口号
                 read -p "请输入新的 SSH 端口号: " new_port
 
-                # 备份 SSH 配置文件
-                cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+                # 验证输入是否为数字
+                if [[ ! "$new_port" =~ ^[0-9]+$ ]]; then
+                    echo "错误：请输入有效的端口号。"
+                else
+                    # 备份 SSH 配置文件
+                    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 
-                # 替换 SSH 配置文件中的端口号
-                sed -i "s/Port [0-9]\+/Port $new_port/g" /etc/ssh/sshd_config
+                    # 替换 SSH 配置文件中的端口号
+                    sed -i "s/^ *Port [0-9]\+/Port $new_port/" /etc/ssh/sshd_config
 
-                # 重启 SSH 服务
-                service sshd restart
+                    # 重启 SSH 服务
+                    service ssh restart
 
-                echo "SSH 端口已修改为: $new_port"
-
+                    echo "SSH 端口已修改为: $new_port"
+                fi
                 ;;
-
 
             7)
                 clear
@@ -894,16 +887,11 @@ case $choice in
             echo " ▼ "
             echo "安装常用工具"
             echo "------------------------"
-            echo "1.  curl 下载工具"
-            echo "2.  wget 下载工具"
-            echo "3.  sudo 超级管理权限工具"
-            echo "4.  socat 通信连接工具 （申请域名证书必备）"
-            echo "5.  htop 系统监控工具"
-            echo "6.  iftop 网络流量监控工具"
-            echo "7.  unzip ZIP压缩解压工具"
-            echo "8.  tar GZ压缩解压工具"
-            echo "9.  tmux 多路后台运行工具"
-            echo "10. ffmpeg 视频编码直播推流工具"
+            echo "1.  套餐一： sudo / curl / wget / nano"
+            echo "2.  套餐二： sudo / curl / wget / nano / tar / socat"
+            echo "3.  套餐三： htop / iftop / unzip / tmux / ffmpeg"
+            echo "------------------------"
+            echo "4.  手动安装指定工具 ▶"
             echo "------------------------"
             echo "51. 全部安装"
             echo "50. 全部卸载"
@@ -917,9 +905,9 @@ case $choice in
             1)
                 clear
                 if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y curl
+                    apt update -y && apt install -y sudo curl wget nano
                 elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install curl
+                    yum -y update && yum -y install sudo curl wget nano
                 else
                     echo "未知的包管理器!"
                 fi
@@ -928,9 +916,9 @@ case $choice in
             2)
                 clear
                 if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y wget
+                    apt update -y && apt install -y sudo curl wget nano tar socat
                 elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install wget
+                    yum -y update && yum -y install sudo curl wget nano tar socat
                 else
                     echo "未知的包管理器!"
                 fi
@@ -938,22 +926,49 @@ case $choice in
             3)
                 clear
                 if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y sudo
+                    apt update -y && apt install -y htop iftop unzip tmux ffmpeg
                 elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install sudo
+                    yum -y update && yum -y install htop iftop unzip tmux ffmpeg
                 else
                     echo "未知的包管理器!"
                 fi
                 ;;
             4)
                 clear
-                if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y socat
-                elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install socat
-                else
-                    echo "未知的包管理器!"
-                fi
+                while true; do
+                    # 提示用户输入工具名称
+                    read -p "请输入要安装的工具名称（输入 'cancel' 取消安装）: " tool_name
+
+                    # 检查用户输入是否为空
+                    if [[ -z "$tool_name" ]]; then
+                        echo "错误：工具名称不能为空，请重新输入。"
+                    elif [[ "$tool_name" == "cancel" ]]; then
+                        echo "安装已取消。"
+                        break  # 退出当前 case 分支
+                    else
+                        # 检查系统包管理器并安装指定工具
+                        if command -v apt &>/dev/null; then
+                            if sudo apt update -y && sudo apt install -y "$tool_name"; then
+                                echo "$tool_name 工具已安装成功。"
+                                break  # 退出当前 case 分支
+                            else
+                                echo "错误：未找到安装包 '$tool_name'。"
+                                break  # 退出当前 case 分支
+                            fi
+                        elif command -v yum &>/dev/null; then
+                            if sudo yum -y update && sudo yum -y install "$tool_name"; then
+                                echo "$tool_name 工具已安装成功。"
+                                break  # 退出当前 case 分支
+                            else
+                                echo "错误：未找到安装包 '$tool_name'。"
+                                break  # 退出当前 case 分支
+                            fi
+                        else
+                            echo "未知的包管理器!"
+                            exit 1
+                        fi
+                    fi
+                done
                 ;;
             5)
                 clear
@@ -1213,20 +1228,21 @@ case $choice in
         echo " ▼ "
         echo "Docker管理器"
         echo "------------------------"
-        echo "1.  安装更新Docker环境"
+        echo "1.  安装/更新 Docker 环境"
+        echo "2.  Dcoker 全局总览"
         echo "------------------------"
-        echo "2.  查看Dcoker全局状态"
+        echo "3.  Dcoker 容器管理 ▶"
+        echo "4.  Dcoker 镜像管理 ▶"
+        echo "5.  Dcoker 网络管理 ▶"
+        echo "6.  Dcoker 卷管理 ▶"
         echo "------------------------"
-        echo "3.  Dcoker容器管理 ▶"
-        echo "4.  Dcoker镜像管理 ▶"
-        echo "5.  Dcoker网络管理 ▶"
-        echo "6.  Dcoker卷管理 ▶"
+        echo "7.  Dcoker-compose 管理"
         echo "------------------------"
-        echo "7.  清理无用的docker容器和镜像网络数据卷"
+        echo "8.  清理无用的 Docker 容器和镜像网络数据卷"
         echo "------------------------"
-        echo "8.  卸载Dcoker环境"
+        echo "9.  卸载 Dcoker 环境"
         echo "------------------------"
-        echo "9.  Docker库管理 ▶"
+        echo "10.  Docker 库管理 ▶"
         echo "------------------------"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
@@ -1542,6 +1558,206 @@ case $choice in
                 done
                 ;;
             7)
+                DOCKER_DIR="/root/docker"
+
+                function list_docker_compose_services() {
+                    echo "当前的 Docker-compose 服务:"
+                    echo ""
+                    all_services=$(find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!')
+                    
+                    index=1
+                    for service in $all_services; do
+                        display_name="\033[0;34m$index\033[0m -- $service"
+                        service_path="${DOCKER_DIR}/${service}"
+                        
+                        # 检查服务是否正在运行
+                        ps_output=$(docker-compose -f "$service_path/docker-compose.yml" ps 2>/dev/null)
+                        if [ $? -ne 0 ]; then
+                            # 如果yml格式文件不存在，尝试yaml格式
+                            ps_output=$(docker-compose -f "$service_path/docker-compose.yaml" ps 2>/dev/null)
+                        fi
+                        
+                        # 检查docker-compose ps输出是否符合正常格式，并且下面有具体服务信息
+                        if echo "$ps_output" | grep -q "NAME\s*IMAGE\s*COMMAND\s*SERVICE\s*CREATED\s*STATUS\s*PORTS" \
+                            && echo "$ps_output" | grep -qE "\b[0-9]+\b\s+[a-zA-Z0-9_-]+\s+"; then
+                            display_name="$display_name   \033[0;35m*running\033[0m"
+                        fi
+                        
+                        echo -e "$display_name"
+                        ((index++))
+                    done
+                    echo "================================="
+                    echo ""
+                }
+
+                while true; do
+                    clear
+                    list_docker_compose_services
+                    echo "Docker 服务管理菜单:"
+                    echo "------------------------"
+                    echo "1.  创建 Docker-compose 服务"
+                    echo "2.  修改 Docker-compose 文件"
+                    echo "------------------------"
+                    echo "3.  启动 Docker-compose 服务"
+                    echo "4.  停止 Docker-compose 服务"
+                    echo "5.  重启 Docker-compose 服务"
+                    echo "6.  升级 Docker-compose 服务"
+                    echo "------------------------"
+                    echo "7.  删除 Docker-compose 服务"
+                    echo "------------------------"
+                    echo "8.  修改文件夹路径（ $DOCKER_DIR ）"
+                    echo "------------------------"
+                    echo "0.  返回上级菜单"
+                    echo "00. 退出脚本"
+                    echo "------------------------"
+                    echo ""
+
+                    read -p "请选择操作: " choice
+
+                    case $choice in
+                        # 11)
+                        #     clear
+                        #     # 列出所有 Docker-compose 服务
+                        #     #list_docker_compose_services
+                        #     ;;
+                        1)
+                            clear
+                            list_docker_compose_services
+                            # 创建新 Docker-compose 服务
+                            read -p "请输入新服务的名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            mkdir -p "$service_dir"
+                            touch "$service_dir/docker-compose.yaml"
+                            # echo "version: '3'" > "$service_dir/docker-compose.yaml"
+                            # echo "services:" >> "$service_dir/docker-compose.yaml"
+                            echo "#" > "$service_dir/docker-compose.yaml"
+                            echo "新服务 '$service_name' 已创建。"
+                            list_docker_compose_services
+                            ;;
+                        2)
+                            clear
+                            # 修改 Docker Compose 文件
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要修改的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                nano "$compose_file"
+                                echo "Docker Compose 文件已修改。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        3)
+                            clear
+                            # 启动 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            #find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!' | sed 's/^/|-- /'
+                            read -p "请输入要启动的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" up -d
+                                echo "服务 '$service_name' 已启动。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        4)
+                            clear
+                            # 停止 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要停止的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" down
+                                echo "服务 '$service_name' 已停止。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        5)
+                            clear
+                            # 重启 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要重启的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" restart
+                                echo "服务 '$service_name' 已重启。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        6)
+                            clear
+                            # 升级 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要升级的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" down
+                                image_name=$(grep -m1 '^\s*image:' "$compose_file" | awk '{print $2}')
+                                # 删除 Docker 镜像
+                                if [ -n "$image_name" ]; then
+                                    docker rmi $image_name
+                                    echo "Docker 镜像 '$image_name' 已删除."
+                                else
+                                    echo "无法获取 Docker 镜像名称。"
+                                fi
+                                docker-compose -f "$compose_file" up -d
+                                echo "服务 '$service_name' 已升级。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        7)
+                            clear
+                            # 删除 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要删除的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            if [ -d "$service_dir" ]; then
+                                rm -r "$service_dir"
+                                echo "服务 '$service_name' 已删除。"
+                            else
+                                echo "错误：服务 '$service_name' 不存在。"
+                            fi
+                            ;;
+                        8)
+                            clear
+                            # 修改自定义文件夹路径
+                            read -p "请输入新的自定义文件夹路径: " custom_dir
+                            if [ -d "$custom_dir" ]; then
+                                DOCKER_DIR="$custom_dir"
+                                echo "自定义文件夹路径已修改为: $DOCKER_DIR"
+                            else
+                                echo "错误：指定的文件夹路径不存在。"
+                            fi
+                            ;;
+                        0)
+                            # 退出
+                            break  # 跳出循环，退出菜单
+                            ;;
+                        00)
+                            exit
+                            ;;
+                        *)
+                            echo "错误：无效的选项，请重新选择。"
+                            ;;
+                    esac
+                done
+                ;;
+            8)
                 clear
                 read -p "确定清理无用的镜像容器网络吗？(Y/N): " choice
                 case "$choice" in
@@ -1555,7 +1771,7 @@ case $choice in
                     ;;
                 esac
                 ;;
-            8)
+            9)
                 clear
                 read -p "确定卸载docker环境吗？(Y/N): " choice
                 case "$choice" in
@@ -1573,7 +1789,7 @@ case $choice in
                     ;;
                 esac
                 ;;
-            9)
+            10)
                 while true; do
                     clear
                     echo "Docker镜像列表"
