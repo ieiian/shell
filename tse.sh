@@ -1603,9 +1603,11 @@ case $choice in
                     echo "5.  重启 Docker-compose 服务"
                     echo "6.  升级 Docker-compose 服务"
                     echo "------------------------"
-                    echo "7.  删除 Docker-compose 服务"
+                    echo "7.  查询 Docker-compose 日志"
                     echo "------------------------"
-                    echo "8.  修改文件夹路径（ $DOCKER_DIR ）"
+                    echo "8.  删除 Docker-compose 服务"
+                    echo "------------------------"
+                    echo "9.  修改文件夹路径（ $DOCKER_DIR ）"
                     echo "------------------------"
                     echo "0.  返回上级菜单"
                     echo "00. 退出脚本"
@@ -1721,6 +1723,22 @@ case $choice in
                             ;;
                         7)
                             clear
+                            # 查询 Docker 服务
+                            echo "可用的 Docker 服务:"
+                            list_docker_compose_services
+                            read -p "请输入要查询的服务名称: " service_name
+                            service_dir="$DOCKER_DIR/$service_name"
+                            compose_file="$service_dir/docker-compose.yaml"
+                            if [ -f "$compose_file" ]; then
+                                docker-compose -f "$compose_file" logs
+                                read -r
+                                echo "服务 '$service_name' 日志查询完毕。"
+                            else
+                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                            fi
+                            ;;
+                        8)
+                            clear
                             # 删除 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1733,7 +1751,7 @@ case $choice in
                                 echo "错误：服务 '$service_name' 不存在。"
                             fi
                             ;;
-                        8)
+                        9)
                             clear
                             # 修改自定义文件夹路径
                             read -p "请输入新的自定义文件夹路径: " custom_dir
