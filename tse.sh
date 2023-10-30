@@ -111,7 +111,6 @@ case $choice in
 
         current_time=$(date "+%Y-%m-%d %I:%M %p")
 
-
         swap_used=$(free -m | awk 'NR==3{print $3}')
         swap_total=$(free -m | awk 'NR==3{print $2}')
 
@@ -122,7 +121,6 @@ case $choice in
         fi
 
         swap_info="${swap_used}MB/${swap_total}MB (${swap_percentage}%)"
-
 
         echo " ▼ "
         echo "系统信息查询"
@@ -196,6 +194,8 @@ case $choice in
                 [Yy])
                     # 更新并升级
                     clear
+                    echo " ▼ "
+                    echo "系统更新中..."
                     # Update system on Debian-based systems
                     if [ -f "/etc/debian_version" ]; then
                         DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
@@ -208,6 +208,8 @@ case $choice in
                     ;;
                 [Nn]|"")
                     clear
+                    echo " ▼ "
+                    echo "系统更新中..."
                     # Update system on Debian-based systems
                     if [ -f "/etc/debian_version" ]; then
                         DEBIAN_FRONTEND=noninteractive apt update -y
@@ -234,8 +236,6 @@ case $choice in
         done
         ;;
 
-
-
     3)
         clear
         while true; do
@@ -252,7 +252,7 @@ case $choice in
         echo "6.  用户/密码/UUID生成器"
         echo "------------------------"
         echo "7.  修改SSH连接端口"
-        echo "8.  查看端口占用状态"
+        echo "8.  查询端口占用状态"
         echo "9.  开放所有端口"
         echo "------------------------"
         echo "10. 优化DNS地址"
@@ -350,10 +350,10 @@ case $choice in
                         printf "%-20s %-30s %-20s %-10s\n" "$username" "$homedir" "$groups" "$sudo_status"
                     done < /etc/passwd
 
-
+                    echo " ▼ "
+                    echo "系统设置 - 账户管理"
                     echo ""
-                    echo "账户操作"
-                    echo "------------------------"
+                    echo ""
                     echo "1. 创建普通账户             2. 创建高级账户"
                     echo "------------------------"
                     echo "3. 赋予最高权限             4. 取消最高权限"
@@ -550,10 +550,14 @@ case $choice in
                 ;;
             8)
                 clear
+                echo " ▼ "
+                echo "系统设置 - 查询端口占用状态"
                 ss -untlp
                 ;;
             9)
                 clear
+                echo " ▼ "
+                echo "系统设置 - 开放所有端口"
                     if ! command -v iptables &> /dev/null; then
                     echo ""
                     else
@@ -568,8 +572,11 @@ case $choice in
 
             10)
                 clear
-                echo "当前DNS地址"
+                echo " ▼ "
+                echo "系统设置 - 优化DNS地址"
+                echo ""
                 echo "------------------------"
+                echo "当前DNS地址"
                 cat /etc/resolv.conf
                 echo "------------------------"
                 echo ""
@@ -610,11 +617,7 @@ case $choice in
                     echo "DNS设置未更改"
                 fi
 
-                ;;
-
-            
-
-            
+                ;;          
 
             11)
                 clear
@@ -650,10 +653,6 @@ case $choice in
 
                 esac
                 ;;
-
-            
-            
-            
 
             12)
 
@@ -717,7 +716,6 @@ case $choice in
                     ;;
                 esac
                 ;;
-
             
             13)
                 clear
@@ -943,6 +941,8 @@ case $choice in
                 ;;
             4)
                 clear
+                echo " ▼ "
+                echo "安装常用工具 - 手动安装指定工具"
                 while true; do
                     # 提示用户输入工具名称
                     read -p "请输入要安装的工具名称（输入 'cancel' 取消安装）: " tool_name
@@ -1101,6 +1101,8 @@ case $choice in
         case $sub_choice in
             1)
                 clear
+                echo " ▼ "
+                echo "安装常用工具 - BBR"
                 # 检查并安装 wget（如果需要）
                 if ! command -v wget &>/dev/null; then
                     if command -v apt &>/dev/null; then
@@ -1124,6 +1126,8 @@ case $choice in
             
             2)
                 clear
+                echo " ▼ "
+                echo "安装常用工具 - WARP"
                 # 检查并安装 wget（如果需要）
                 if ! command -v wget &>/dev/null; then
                     if command -v apt &>/dev/null; then
@@ -1621,6 +1625,8 @@ case $choice in
 
                 while true; do
                     clear
+                    echo " ▼ "
+                    echo "Dcoker-compose 管理"
                     list_docker_compose_services
                     echo "Docker 服务管理菜单:"
                     echo "------------------------"
@@ -1788,7 +1794,14 @@ case $choice in
                                 DOCKER_DIR="$custom_dir"
                                 echo "自定义文件夹路径已修改为: $DOCKER_DIR"
                             else
-                                echo "错误：指定的文件夹路径不存在。"
+                                read -p "指定的文件夹路径不存在，是否要创建该文件夹？(Y/N): " create_folder
+                                if [ "$create_folder" = "Y" ] || [ "$create_folder" = "y" ]; then
+                                    mkdir -p "$custom_dir"
+                                    DOCKER_DIR="$custom_dir"
+                                    echo "文件夹已创建，并且自定义文件夹路径已修改为: $DOCKER_DIR"
+                                else
+                                    echo "未创建文件夹，自定义文件夹路径未修改。"
+                                fi
                             fi
                             ;;
                         0)
