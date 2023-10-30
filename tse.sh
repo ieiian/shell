@@ -1,28 +1,27 @@
 #!/bin/bash
+[ ! -d ~/.tse ] && mkdir ~/.tse
 
 max_retries=3
 retry_count=0
 
 while [[ $retry_count -lt $max_retries ]]; do
-    output=$(curl your_url 2>&1)  # 将"your_url"替换为实际的URL
+    output=$(curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh 2>&1)
     if [[ $output == *"curl: (35) OpenSSL SSL_connect"* ]]; then
         echo "Retry $((retry_count + 1)): SSL_connect error. Retrying..."
         ((retry_count++))
     else
-        echo "Request successful!"
+        # echo "Command executed successfully!"
         break
     fi
 done
 
 if [[ $retry_count -eq $max_retries ]]; then
-    echo "连续三次出现SSL连接错误。请检查网格。"
+    echo "连续三次出现SSL连接错误。请检查网络。"
     exit 1
 fi
 
 while true; do
 export LANG="en_US.UTF-8"
-
-[ ! -d ~/.tse ] && mkdir ~/.tse
 
 clear
 # 检查/root/.bashrc文件中是否已经包含了指定的命令
