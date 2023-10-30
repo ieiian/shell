@@ -893,8 +893,7 @@ case $choice in
                     esac
                     ;;
             0)
-                cd ~
-                ./tse.sh
+                bash ~/.tse/tse.sh
                 exit
                 ;;
 
@@ -1089,8 +1088,7 @@ case $choice in
                 ;;
 
             0)
-                cd ~
-                ./tse.sh
+                bash ~/.tse/tse.sh
                 exit
                 ;;
 
@@ -1176,8 +1174,7 @@ case $choice in
                 ;;
 
             0)
-                cd ~
-                ./tse.sh
+                bash ~/.tse/tse.sh
                 exit
                 ;;
 
@@ -1263,8 +1260,7 @@ case $choice in
                 wget -qO- bench.sh | bash
                 ;;
             0)
-                cd ~
-                ./tse.sh
+                bash ~/.tse/tse.sh
                 exit
                 ;;
             00)
@@ -1916,8 +1912,7 @@ case $choice in
                 done
                 ;;
             0)
-                cd ~
-                ./tse.sh
+                bash ~/.tse/tse.sh
                 exit
                 ;;
             00)
@@ -2057,8 +2052,7 @@ case $choice in
                 tmux list-sessions
                 ;;
             0)
-                cd ~
-                ./tse.sh
+                bash ~/.tse/tse.sh
                 exit
                 ;;
             00)
@@ -2159,8 +2153,7 @@ case $choice in
                 ;;
 
             0)
-                cd ~
-                ./tse.sh
+                bash ~/.tse/tse.sh
                 exit
                 ;;
 
@@ -2188,6 +2181,9 @@ case $choice in
         exit
         ;;
     00)
+        exit
+        ;;
+    x)
         exit
         ;;
     *)
