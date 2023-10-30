@@ -1112,9 +1112,12 @@ case $choice in
                         exit 1
                     fi
                 fi
-                wget --no-check-certificate -O tcpx.sh https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcpx.sh
-                chmod +x tcpx.sh
-                ./tcpx.sh
+                if [ ! -d "/root/tse" ]; then
+                    sudo mkdir -p /root/tse
+                fi
+                wget --no-check-certificate -O /root/tse/tcpx.sh https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcpx.sh
+                chmod +x /root/tse/tcpx.sh
+                bash /root/tse/tcpx.sh
                 ;;
             
             2)
@@ -1130,8 +1133,11 @@ case $choice in
                         exit 1
                     fi
                 fi
+                if [ ! -d "/root/tse" ]; then
+                    sudo mkdir -p /root/tse
+                fi
                 # wget -N https://raw.githubusercontent.com/fscarmen/warp/main/menu.sh && bash menu.sh [option] [lisence]
-                wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh [option] [lisence/url/token]
+                wget -N -P /root/tse/ https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash /root/tse/menu.sh [option] [lisence/url/token]
                 ;;
 
             0)
@@ -1180,7 +1186,8 @@ case $choice in
         case $sub_choice in
             1)
                 clear
-                bash <(curl -Ls https://cdn.jsdelivr.net/gh/missuo/OpenAI-Checker/openai.sh)
+                # bash <(curl -Ls https://cdn.jsdelivr.net/gh/missuo/OpenAI-Checker/openai.sh)
+                bash <(curl -Ls https://cdn.jsdelivr.net/gh/missuo/OpenAI-Checker/openai.sh) -o /root/tse/openai.sh
                 ;;
             2)
                 clear
@@ -1188,19 +1195,23 @@ case $choice in
                 ;;
             3)
                 clear
-                wget -qO- https://github.com/yeahwu/check/raw/main/check.sh | bash
+                # wget -qO- https://github.com/yeahwu/check/raw/main/check.sh | bash
+                wget -qO- https://github.com/yeahwu/check/raw/main/check.sh -O /root/tse/check.sh | bash /root/tse/check.sh
                 ;;
             4)
                 clear
-                wget -qO- git.io/besttrace | bash
+                # wget -qO- git.io/besttrace | bash
+                wget -qO- git.io/besttrace -O /root/tse/besttrace | bash /root/tse/besttrace
                 ;;
             5)
                 clear
-                curl https://raw.githubusercontent.com/zhucaidan/mtr_trace/main/mtr_trace.sh | bash
+                # curl https://raw.githubusercontent.com/zhucaidan/mtr_trace/main/mtr_trace.sh | bash
+                curl https://raw.githubusercontent.com/zhucaidan/mtr_trace/main/mtr_trace.sh -o /root/tse/mtr_trace.sh | bash /root/tse/mtr_trace.sh
                 ;;
             6)
                 clear
-                bash <(curl -Lso- https://git.io/superspeed_uxh)
+                # bash <(curl -Lso- https://git.io/superspeed_uxh)
+                bash <(curl -Lso- https://git.io/superspeed_uxh) -o /root/tse/superspeed_uxh
                 ;;
             7)
                 clear
