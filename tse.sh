@@ -1,7 +1,34 @@
+#!/bin/bash
+
 while true; do
 export LANG="en_US.UTF-8"
-clear
 
+[ ! -d ~/.tse ] && mkdir ~/.tse
+
+clear
+# 检查/root/.bashrc文件中是否已经包含了指定的命令
+grep -q "curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh" /root/.bashrc
+
+if [ $? -eq 0 ]; then
+    echo "在/root/.bashrc中已经包含指定的命令，将直接运行后面的程序。"
+else
+    echo " ▼ "
+    read -p "脚本快捷指令设置（直接回车默认为tse，输入N/n跳过设置）（重启生效）: " shortcut
+    if [[ "$shortcut" == "n" || "$shortcut" == "N" ]]; then
+        :
+    elif [[ -z "$shortcut" || "$shortcut" == "" ]]; then
+        shortcut="tse"
+        tsecom="alias $shortcut='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'"
+        echo "$tsecom" >> /root/.bashrc
+        echo "快捷指令已经设置并添加到/root/.bashrc中。"
+    else
+        tsecom="alias $shortcut='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'"
+        echo "$tsecom" >> /root/.bashrc
+        echo "快捷指令已经设置并添加到/root/.bashrc中。"
+    fi
+fi
+
+clear
 echo -e "\033[35m _____ \033[36m ____  \033[33m _____ "
 echo -e "\033[35m|_   _|\033[36m/ ___| \033[33m| ____|"
 echo -e "\033[35m  | |  \033[36m\___ \ \033[33m|  _|  "
