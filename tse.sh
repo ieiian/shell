@@ -2173,7 +2173,7 @@ case $choice in
         done
         ;;
     10)
-        cd ~/ && curl -sS -O https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x tse.sh && ./tse.sh
+        curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh
         exit
         ;;
     0)
