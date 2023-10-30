@@ -12,13 +12,14 @@ echo -e "\033[96mTSE 一键脚本工具 v1.0.1 （支持Ubuntu，Debian，Centos
 echo "------------------------"
 echo "1.  系统信息"
 echo "2.  系统更新"
-echo "3.  系统清理"
-echo "4.  系统设置 ▶"
-echo "5.  常用工具安装 ▶"
-echo "6.  网络优化安装 ▶"
-echo "7.  测试脚本合集 ▶"
-echo "8.  Docker管理 ▶"
-echo "9.  工作区 ▶▶▶ "
+echo "3.  系统设置 ▶"
+echo "4.  常用工具安装 ▶"
+echo "5.  网络优化安装 ▶"
+echo "6.  测试脚本合集 ▶"
+echo "7.  Docker管理 ▶"
+echo "8.  工作区 ▶▶▶ "
+echo "------------------------"
+echo "9.  其它设置"
 echo "------------------------"
 echo "10. 更新脚本"
 echo "------------------------"
@@ -233,30 +234,9 @@ case $choice in
         done
         ;;
 
-    3)
-        clear
-        if [ -f "/etc/debian_version" ]; then
-            # Debian-based systems
-            apt autoremove --purge -y
-            apt clean -y
-            apt autoclean -y
-            apt remove --purge $(dpkg -l | awk '/^rc/ {print $2}') -y
-            journalctl --rotate
-            journalctl --vacuum-time=1s
-            journalctl --vacuum-size=50M
-            apt remove --purge $(dpkg -l | awk '/^ii linux-(image|headers)-[^ ]+/{print $2}' | grep -v $(uname -r | sed 's/-.*//') | xargs) -y
-        elif [ -f "/etc/redhat-release" ]; then
-            # Red Hat-based systems
-            yum autoremove -y
-            yum clean all
-            journalctl --rotate
-            journalctl --vacuum-time=1s
-            journalctl --vacuum-size=50M
-            yum remove $(rpm -q kernel | grep -v $(uname -r)) -y
-        fi
-        ;;
 
-    4)
+
+    3)
         clear
         while true; do
 
@@ -267,18 +247,22 @@ case $choice in
         echo "------------------------"
         echo "2.  修改ROOT密码"
         echo "3.  开启ROOT密码登录模式"
-        echo "13. 用户管理"
-        echo "14. 用户/密码生成器"
-        echo "6.  修改SSH连接端口"
-        echo "7.  优化DNS地址"  
-        echo "9.  禁用ROOT账户创建新账户"
-        echo "10. 切换优先ipv4/ipv6"
-        echo "11. 查看端口占用状态"
-        echo "12. 修改虚拟内存大小"
-        echo "5.  开放所有端口"
+        echo "4.  禁用ROOT账户创建新账户"
+        echo "5.  用户管理"
+        echo "6.  用户/密码/UUID生成器"
         echo "------------------------"
-        echo "4.  安装Python最新版"
-        echo "8.  一键重装系统"
+        echo "7.  修改SSH连接端口"
+        echo "8.  查看端口占用状态"
+        echo "9.  开放所有端口"
+        echo "------------------------"
+        echo "10. 优化DNS地址"
+        echo "11. 切换优先ipv4/ipv6"
+        echo "12. 修改虚拟内存大小"
+        echo "------------------------"
+        echo "13. 安装Python最新版"
+        echo "------------------------"
+        echo "14. 系统清理"
+        echo "15. 重装系统"
         echo "------------------------"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
@@ -325,228 +309,7 @@ case $choice in
                 ;;
                 esac
                 ;;
-
             4)
-                clear
-
-                RED="\033[31m"
-                GREEN="\033[32m"
-                YELLOW="\033[33m"
-                NC="\033[0m"
-
-                # 系统检测
-                OS=$(cat /etc/os-release | grep -o -E "Debian|Ubuntu|CentOS" | head -n 1)
-
-                if [[ $OS == "Debian" || $OS == "Ubuntu" || $OS == "CentOS" ]]; then
-                    echo -e "检测到你的系统是 ${YELLOW}${OS}${NC}"
-                else
-                    echo -e "${RED}很抱歉，你的系统不受支持！${NC}"
-                    exit 1
-                fi
-
-                # 检测安装Python3的版本
-                VERSION=$(python3 -V 2>&1 | awk '{print $2}')
-
-                # 获取最新Python3版本
-                PY_VERSION=$(curl -s https://www.python.org/ | grep "downloads/release" | grep -o 'Python [0-9.]*' | grep -o '[0-9.]*')
-
-                # 卸载Python3旧版本
-                if [[ $VERSION == "3"* ]]; then
-                    echo -e "${YELLOW}你的Python3版本是${NC}${RED}${VERSION}${NC}，${YELLOW}最新版本是${NC}${RED}${PY_VERSION}${NC}"
-                    read -p "是否确认升级最新版Python3？默认不升级 [y/N]: " CONFIRM
-                    if [[ $CONFIRM == "y" ]]; then
-                        if [[ $OS == "CentOS" ]]; then
-                            echo ""
-                            rm-rf /usr/local/python3* >/dev/null 2>&1
-                        else
-                            apt --purge remove python3 python3-pip -y
-                            rm-rf /usr/local/python3*
-                        fi
-                    else
-                        echo -e "${YELLOW}已取消升级Python3${NC}"
-                        exit 1
-                    fi
-                else
-                    echo -e "${RED}检测到没有安装Python3。${NC}"
-                    read -p "是否确认安装最新版Python3？默认安装 [Y/n]: " CONFIRM
-                    if [[ $CONFIRM != "n" ]]; then
-                        echo -e "${GREEN}开始安装最新版Python3...${NC}"
-                    else
-                        echo -e "${YELLOW}已取消安装Python3${NC}"
-                        exit 1
-                    fi
-                fi
-
-                # 安装相关依赖
-                if [[ $OS == "CentOS" ]]; then
-                    yum update
-                    yum groupinstall -y "development tools"
-                    yum install wget openssl-devel bzip2-devel libffi-devel zlib-devel -y
-                else
-                    apt update
-                    apt install wget build-essential libreadline-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev -y
-                fi
-
-                # 安装python3
-                cd /root/
-                wget https://www.python.org/ftp/python/${PY_VERSION}/Python-"$PY_VERSION".tgz
-                tar -zxf Python-${PY_VERSION}.tgz
-                cd Python-${PY_VERSION}
-                ./configure --prefix=/usr/local/python3
-                make -j $(nproc)
-                make install
-                if [ $? -eq 0 ];then
-                    rm -f /usr/local/bin/python3*
-                    rm -f /usr/local/bin/pip3*
-                    ln -sf /usr/local/python3/bin/python3 /usr/bin/python3
-                    ln -sf /usr/local/python3/bin/pip3 /usr/bin/pip3
-                    clear
-                    echo -e "${YELLOW}Python3安装${GREEN}成功，${NC}版本为: ${NC}${GREEN}${PY_VERSION}${NC}"
-                else
-                    clear
-                    echo -e "${RED}Python3安装失败！${NC}"
-                    exit 1
-                fi
-                cd /root/ && rm -rf Python-${PY_VERSION}.tgz && rm -rf Python-${PY_VERSION}
-                ;;
-
-            5)
-                clear
-                    if ! command -v iptables &> /dev/null; then
-                    echo ""
-                    else
-                        # iptables命令
-                        iptables -P INPUT ACCEPT
-                        iptables -P FORWARD ACCEPT
-                        iptables -P OUTPUT ACCEPT
-                        iptables -F
-                    fi
-                echo "端口已全部开放"
-                ;;
-            6)
-                # 清屏
-                clear
-
-                # 获取当前的 SSH 端口号
-                current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
-
-                # 打印当前的 SSH 端口号
-                echo "当前的 SSH 端口号是: $current_port"
-
-                echo "------------------------"
-
-                # 提示用户输入新的 SSH 端口号
-                read -p "请输入新的 SSH 端口号: " new_port
-
-                # 验证输入是否为数字
-                if [[ ! "$new_port" =~ ^[0-9]+$ ]]; then
-                    echo "错误：请输入有效的端口号。"
-                else
-                    # 备份 SSH 配置文件
-                    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
-
-                    # 替换 SSH 配置文件中的端口号
-                    sed -i "s/^ *Port [0-9]\+/Port $new_port/" /etc/ssh/sshd_config
-
-                    # 重启 SSH 服务
-                    service ssh restart
-
-                    echo "SSH 端口已修改为: $new_port"
-                fi
-                ;;
-
-            7)
-                clear
-                echo "当前DNS地址"
-                echo "------------------------"
-                cat /etc/resolv.conf
-                echo "------------------------"
-                echo ""
-                # 询问用户是否要优化DNS设置
-                read -p "是否要设置为Cloudflare和Google的DNS地址？(y/n): " choice
-
-                if [ "$choice" == "y" ]; then
-                    # 定义DNS地址
-                    cloudflare_ipv4="1.1.1.1"
-                    google_ipv4="8.8.8.8"
-                    cloudflare_ipv6="2606:4700:4700::1111"
-                    google_ipv6="2001:4860:4860::8888"
-
-                    # 检查机器是否有IPv6地址
-                    ipv6_available=0
-                    if [[ $(ip -6 addr | grep -c "inet6") -gt 0 ]]; then
-                        ipv6_available=1
-                    fi
-
-                    # 设置DNS地址为Cloudflare和Google（IPv4和IPv6）
-                    echo "设置DNS为Cloudflare和Google"
-
-                    # 设置IPv4地址
-                    echo "nameserver $cloudflare_ipv4" > /etc/resolv.conf
-                    echo "nameserver $google_ipv4" >> /etc/resolv.conf
-
-                    # 如果有IPv6地址，则设置IPv6地址
-                    if [[ $ipv6_available -eq 1 ]]; then
-                        echo "nameserver $cloudflare_ipv6" >> /etc/resolv.conf
-                        echo "nameserver $google_ipv6" >> /etc/resolv.conf
-                    fi
-
-                    echo "DNS地址已更新"
-                    echo "------------------------"
-                    cat /etc/resolv.conf
-                    echo "------------------------"
-                else
-                    echo "DNS设置未更改"
-                fi
-
-                ;;
-
-            8)
-            clear
-            echo "请备份数据，将为你重装系统，预计花费15分钟。"
-            read -p "确定继续吗？(Y/N): " choice
-
-            case "$choice" in
-                [Yy])
-                while true; do
-                    read -p "请选择要重装的系统:  1. Debian12 | 2. Ubuntu20.04 : " sys_choice
-
-                    case "$sys_choice" in
-                    1)
-                        xitong="-d 12"
-                        break  # 结束循环
-                        ;;
-                    2)
-                        xitong="-u 20.04"
-                        break  # 结束循环
-                        ;;
-                    *)
-                        echo "无效的选择，请重新输入。"
-                        ;;
-                    esac
-                done
-
-                read -p "请输入你重装后的密码: " vpspasswd
-                if command -v apt &>/dev/null; then
-                    apt update -y && apt install -y wget
-                elif command -v yum &>/dev/null; then
-                    yum -y update && yum -y install wget
-                else
-                    echo "未知的包管理器!"
-                fi
-                bash <(wget --no-check-certificate -qO- 'https://raw.githubusercontent.com/MoeClub/Note/master/InstallNET.sh') $xitong -v 64 -p $vpspasswd -port 22
-                ;;
-                [Nn])
-                echo "已取消"
-                ;;
-                *)
-                echo "无效的选择，请输入 Y 或 N。"
-                ;;
-                esac
-                ;;
-
-
-            9)
                 clear
                 if ! command -v sudo &>/dev/null; then
                     if command -v apt &>/dev/null; then
@@ -574,111 +337,7 @@ case $choice in
                 echo "操作已完成。"
                 ;;
 
-
-            10)
-                clear
-                ipv6_disabled=$(sysctl -n net.ipv6.conf.all.disable_ipv6)
-
-                echo ""
-                if [ "$ipv6_disabled" -eq 1 ]; then
-                    echo "当前网络优先级设置: IPv4 优先"
-                else
-                    echo "当前网络优先级设置: IPv6 优先"
-                fi
-                echo "------------------------"
-
-                echo ""
-                echo "切换的网络优先级"
-                echo "------------------------"
-                echo "1. IPv4 优先          2. IPv6 优先"
-                echo "------------------------"
-                read -p "选择优先的网络: " choice
-
-                case $choice in
-                    1)
-                        sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1
-                        echo "已切换为 IPv4 优先"
-                        ;;
-                    2)
-                        sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null 2>&1
-                        echo "已切换为 IPv6 优先"
-                        ;;
-                    *)
-                        echo "无效的选择"
-                        ;;
-
-                esac
-                ;;
-
-            11)
-                clear
-                ss -untlp
-                ;;
-
-            12)
-
-                if [ "$EUID" -ne 0 ]; then
-                echo "请以 root 权限运行此脚本。"
-                exit 1
-                fi
-
-                clear
-                # 获取当前交换空间信息
-                swap_used=$(free -m | awk 'NR==3{print $3}')
-                swap_total=$(free -m | awk 'NR==3{print $2}')
-
-                if [ "$swap_total" -eq 0 ]; then
-                swap_percentage=0
-                else
-                swap_percentage=$((swap_used * 100 / swap_total))
-                fi
-
-                swap_info="${swap_used}MB/${swap_total}MB (${swap_percentage}%)"
-
-                echo "当前虚拟内存: $swap_info"
-
-                read -p "是否调整大小?(Y/N): " choice
-
-                case "$choice" in
-                [Yy])
-                    # 输入新的虚拟内存大小
-                    read -p "请输入虚拟内存大小MB: " new_swap
-
-                    # 获取当前系统中所有的 swap 分区
-                    swap_partitions=$(grep -E '^/dev/' /proc/swaps | awk '{print $1}')
-
-                    # 遍历并删除所有的 swap 分区
-                    for partition in $swap_partitions; do
-                    swapoff "$partition"
-                    wipefs -a "$partition"  # 清除文件系统标识符
-                    mkswap -f "$partition"
-                    echo "已删除并重新创建 swap 分区: $partition"
-                    done
-
-                    # 确保 /swapfile 不再被使用
-                    swapoff /swapfile
-
-                    # 删除旧的 /swapfile
-                    rm -f /swapfile
-
-                    # 创建新的 swap 分区
-                    dd if=/dev/zero of=/swapfile bs=1M count=$new_swap
-                    chmod 600 /swapfile
-                    mkswap /swapfile
-                    swapon /swapfile
-
-                    echo "虚拟内存大小已调整为${new_swap}MB"
-                    ;;
-                [Nn])
-                    echo "已取消"
-                    ;;
-                *)
-                    echo "无效的选择，请输入 Y 或 N。"
-                    ;;
-                esac
-                ;;
-
-            13)
+            5)
                 while true; do
                     clear
                     # 显示所有用户、用户权限、用户组和是否在sudoers中
@@ -808,7 +467,7 @@ case $choice in
                 done
                 ;;
 
-            14)
+            6)
                 clear
 
                 echo "随机用户名"
@@ -856,9 +515,358 @@ case $choice in
                     echo "随机密码 $i: $password"
                 done
                     echo ""
+                ;;
+            
+            7)
+                # 清屏
+                clear
+
+                # 获取当前的 SSH 端口号
+                current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
+
+                # 打印当前的 SSH 端口号
+                echo "当前的 SSH 端口号是: $current_port"
+
+                echo "------------------------"
+
+                # 提示用户输入新的 SSH 端口号
+                read -p "请输入新的 SSH 端口号: " new_port
+
+                # 验证输入是否为数字
+                if [[ ! "$new_port" =~ ^[0-9]+$ ]]; then
+                    echo "错误：请输入有效的端口号。"
+                else
+                    # 备份 SSH 配置文件
+                    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+
+                    # 替换 SSH 配置文件中的端口号
+                    sed -i "s/^ *Port [0-9]\+/Port $new_port/" /etc/ssh/sshd_config
+
+                    # 重启 SSH 服务
+                    service ssh restart
+
+                    echo "SSH 端口已修改为: $new_port"
+                fi
+                ;;
+            8)
+                clear
+                ss -untlp
+                ;;
+            9)
+                clear
+                    if ! command -v iptables &> /dev/null; then
+                    echo ""
+                    else
+                        # iptables命令
+                        iptables -P INPUT ACCEPT
+                        iptables -P FORWARD ACCEPT
+                        iptables -P OUTPUT ACCEPT
+                        iptables -F
+                    fi
+                echo "端口已全部开放"
+                ;;
+
+            10)
+                clear
+                echo "当前DNS地址"
+                echo "------------------------"
+                cat /etc/resolv.conf
+                echo "------------------------"
+                echo ""
+                # 询问用户是否要优化DNS设置
+                read -p "是否要设置为Cloudflare和Google的DNS地址？(y/n): " choice
+
+                if [ "$choice" == "y" ]; then
+                    # 定义DNS地址
+                    cloudflare_ipv4="1.1.1.1"
+                    google_ipv4="8.8.8.8"
+                    cloudflare_ipv6="2606:4700:4700::1111"
+                    google_ipv6="2001:4860:4860::8888"
+
+                    # 检查机器是否有IPv6地址
+                    ipv6_available=0
+                    if [[ $(ip -6 addr | grep -c "inet6") -gt 0 ]]; then
+                        ipv6_available=1
+                    fi
+
+                    # 设置DNS地址为Cloudflare和Google（IPv4和IPv6）
+                    echo "设置DNS为Cloudflare和Google"
+
+                    # 设置IPv4地址
+                    echo "nameserver $cloudflare_ipv4" > /etc/resolv.conf
+                    echo "nameserver $google_ipv4" >> /etc/resolv.conf
+
+                    # 如果有IPv6地址，则设置IPv6地址
+                    if [[ $ipv6_available -eq 1 ]]; then
+                        echo "nameserver $cloudflare_ipv6" >> /etc/resolv.conf
+                        echo "nameserver $google_ipv6" >> /etc/resolv.conf
+                    fi
+
+                    echo "DNS地址已更新"
+                    echo "------------------------"
+                    cat /etc/resolv.conf
+                    echo "------------------------"
+                else
+                    echo "DNS设置未更改"
+                fi
 
                 ;;
 
+            
+
+            
+
+            11)
+                clear
+                ipv6_disabled=$(sysctl -n net.ipv6.conf.all.disable_ipv6)
+
+                echo ""
+                if [ "$ipv6_disabled" -eq 1 ]; then
+                    echo "当前网络优先级设置: IPv4 优先"
+                else
+                    echo "当前网络优先级设置: IPv6 优先"
+                fi
+                echo "------------------------"
+
+                echo ""
+                echo "切换的网络优先级"
+                echo "------------------------"
+                echo "1. IPv4 优先          2. IPv6 优先"
+                echo "------------------------"
+                read -p "选择优先的网络: " choice
+
+                case $choice in
+                    1)
+                        sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1
+                        echo "已切换为 IPv4 优先"
+                        ;;
+                    2)
+                        sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null 2>&1
+                        echo "已切换为 IPv6 优先"
+                        ;;
+                    *)
+                        echo "无效的选择"
+                        ;;
+
+                esac
+                ;;
+
+            
+            
+            
+
+            12)
+
+                if [ "$EUID" -ne 0 ]; then
+                echo "请以 root 权限运行此脚本。"
+                exit 1
+                fi
+
+                clear
+                # 获取当前交换空间信息
+                swap_used=$(free -m | awk 'NR==3{print $3}')
+                swap_total=$(free -m | awk 'NR==3{print $2}')
+
+                if [ "$swap_total" -eq 0 ]; then
+                swap_percentage=0
+                else
+                swap_percentage=$((swap_used * 100 / swap_total))
+                fi
+
+                swap_info="${swap_used}MB/${swap_total}MB (${swap_percentage}%)"
+
+                echo "当前虚拟内存: $swap_info"
+
+                read -p "是否调整大小?(Y/N): " choice
+
+                case "$choice" in
+                [Yy])
+                    # 输入新的虚拟内存大小
+                    read -p "请输入虚拟内存大小MB: " new_swap
+
+                    # 获取当前系统中所有的 swap 分区
+                    swap_partitions=$(grep -E '^/dev/' /proc/swaps | awk '{print $1}')
+
+                    # 遍历并删除所有的 swap 分区
+                    for partition in $swap_partitions; do
+                    swapoff "$partition"
+                    wipefs -a "$partition"  # 清除文件系统标识符
+                    mkswap -f "$partition"
+                    echo "已删除并重新创建 swap 分区: $partition"
+                    done
+
+                    # 确保 /swapfile 不再被使用
+                    swapoff /swapfile
+
+                    # 删除旧的 /swapfile
+                    rm -f /swapfile
+
+                    # 创建新的 swap 分区
+                    dd if=/dev/zero of=/swapfile bs=1M count=$new_swap
+                    chmod 600 /swapfile
+                    mkswap /swapfile
+                    swapon /swapfile
+
+                    echo "虚拟内存大小已调整为${new_swap}MB"
+                    ;;
+                [Nn])
+                    echo "已取消"
+                    ;;
+                *)
+                    echo "无效的选择，请输入 Y 或 N。"
+                    ;;
+                esac
+                ;;
+
+            
+            13)
+                clear
+
+                RED="\033[31m"
+                GREEN="\033[32m"
+                YELLOW="\033[33m"
+                NC="\033[0m"
+
+                # 系统检测
+                OS=$(cat /etc/os-release | grep -o -E "Debian|Ubuntu|CentOS" | head -n 1)
+
+                if [[ $OS == "Debian" || $OS == "Ubuntu" || $OS == "CentOS" ]]; then
+                    echo -e "检测到你的系统是 ${YELLOW}${OS}${NC}"
+                else
+                    echo -e "${RED}很抱歉，你的系统不受支持！${NC}"
+                    exit 1
+                fi
+
+                # 检测安装Python3的版本
+                VERSION=$(python3 -V 2>&1 | awk '{print $2}')
+
+                # 获取最新Python3版本
+                PY_VERSION=$(curl -s https://www.python.org/ | grep "downloads/release" | grep -o 'Python [0-9.]*' | grep -o '[0-9.]*')
+
+                # 卸载Python3旧版本
+                if [[ $VERSION == "3"* ]]; then
+                    echo -e "${YELLOW}你的Python3版本是${NC}${RED}${VERSION}${NC}，${YELLOW}最新版本是${NC}${RED}${PY_VERSION}${NC}"
+                    read -p "是否确认升级最新版Python3？默认不升级 [y/N]: " CONFIRM
+                    if [[ $CONFIRM == "y" ]]; then
+                        if [[ $OS == "CentOS" ]]; then
+                            echo ""
+                            rm-rf /usr/local/python3* >/dev/null 2>&1
+                        else
+                            apt --purge remove python3 python3-pip -y
+                            rm-rf /usr/local/python3*
+                        fi
+                    else
+                        echo -e "${YELLOW}已取消升级Python3${NC}"
+                        exit 1
+                    fi
+                else
+                    echo -e "${RED}检测到没有安装Python3。${NC}"
+                    read -p "是否确认安装最新版Python3？默认安装 [Y/n]: " CONFIRM
+                    if [[ $CONFIRM != "n" ]]; then
+                        echo -e "${GREEN}开始安装最新版Python3...${NC}"
+                    else
+                        echo -e "${YELLOW}已取消安装Python3${NC}"
+                        exit 1
+                    fi
+                fi
+
+                # 安装相关依赖
+                if [[ $OS == "CentOS" ]]; then
+                    yum update
+                    yum groupinstall -y "development tools"
+                    yum install wget openssl-devel bzip2-devel libffi-devel zlib-devel -y
+                else
+                    apt update
+                    apt install wget build-essential libreadline-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev -y
+                fi
+
+                # 安装python3
+                cd /root/
+                wget https://www.python.org/ftp/python/${PY_VERSION}/Python-"$PY_VERSION".tgz
+                tar -zxf Python-${PY_VERSION}.tgz
+                cd Python-${PY_VERSION}
+                ./configure --prefix=/usr/local/python3
+                make -j $(nproc)
+                make install
+                if [ $? -eq 0 ];then
+                    rm -f /usr/local/bin/python3*
+                    rm -f /usr/local/bin/pip3*
+                    ln -sf /usr/local/python3/bin/python3 /usr/bin/python3
+                    ln -sf /usr/local/python3/bin/pip3 /usr/bin/pip3
+                    clear
+                    echo -e "${YELLOW}Python3安装${GREEN}成功，${NC}版本为: ${NC}${GREEN}${PY_VERSION}${NC}"
+                else
+                    clear
+                    echo -e "${RED}Python3安装失败！${NC}"
+                    exit 1
+                fi
+                cd /root/ && rm -rf Python-${PY_VERSION}.tgz && rm -rf Python-${PY_VERSION}
+                ;;
+            14)
+                clear
+                if [ -f "/etc/debian_version" ]; then
+                    # Debian-based systems
+                    apt autoremove --purge -y
+                    apt clean -y
+                    apt autoclean -y
+                    apt remove --purge $(dpkg -l | awk '/^rc/ {print $2}') -y
+                    journalctl --rotate
+                    journalctl --vacuum-time=1s
+                    journalctl --vacuum-size=50M
+                    apt remove --purge $(dpkg -l | awk '/^ii linux-(image|headers)-[^ ]+/{print $2}' | grep -v $(uname -r | sed 's/-.*//') | xargs) -y
+                elif [ -f "/etc/redhat-release" ]; then
+                    # Red Hat-based systems
+                    yum autoremove -y
+                    yum clean all
+                    journalctl --rotate
+                    journalctl --vacuum-time=1s
+                    journalctl --vacuum-size=50M
+                    yum remove $(rpm -q kernel | grep -v $(uname -r)) -y
+                fi
+                ;;
+            15)
+                clear
+                echo "请备份数据，将为你重装系统，预计花费15分钟。"
+                read -p "确定继续吗？(Y/N): " choice
+
+                case "$choice" in
+                    [Yy])
+                    while true; do
+                        read -p "请选择要重装的系统:  1. Debian12 | 2. Ubuntu20.04 : " sys_choice
+
+                        case "$sys_choice" in
+                        1)
+                            xitong="-d 12"
+                            break  # 结束循环
+                            ;;
+                        2)
+                            xitong="-u 20.04"
+                            break  # 结束循环
+                            ;;
+                        *)
+                            echo "无效的选择，请重新输入。"
+                            ;;
+                        esac
+                    done
+
+                    read -p "请输入你重装后的密码: " vpspasswd
+                    if command -v apt &>/dev/null; then
+                        apt update -y && apt install -y wget
+                    elif command -v yum &>/dev/null; then
+                        yum -y update && yum -y install wget
+                    else
+                        echo "未知的包管理器!"
+                    fi
+                    bash <(wget --no-check-certificate -qO- 'https://raw.githubusercontent.com/MoeClub/Note/master/InstallNET.sh') $xitong -v 64 -p $vpspasswd -port 22
+                    ;;
+                    [Nn])
+                    echo "已取消"
+                    ;;
+                    *)
+                    echo "无效的选择，请输入 Y 或 N。"
+                    ;;
+                    esac
+                    ;;
             0)
                 cd ~
                 ./tse.sh
@@ -881,7 +889,7 @@ case $choice in
         done
         ;;
 
-    5)
+    4)
         clear
         while true; do
             echo " ▼ "
@@ -1076,7 +1084,7 @@ case $choice in
         done
         ;;
 
-    6)
+    5)
         clear
         while true; do
             echo " ▼ "
@@ -1148,7 +1156,7 @@ case $choice in
 
         done
         ;;
-    7)
+    6)
         clear
         while true; do
 
@@ -1222,32 +1230,32 @@ case $choice in
         done
         ;;
 
-    8)
+    7)
         clear
         while true; do
-        echo " ▼ "
-        echo "Docker管理器"
-        echo "------------------------"
-        echo "1.  安装/更新 Docker 环境"
-        echo "2.  Dcoker 全局总览"
-        echo "------------------------"
-        echo "3.  Dcoker 容器管理 ▶"
-        echo "4.  Dcoker 镜像管理 ▶"
-        echo "5.  Dcoker 网络管理 ▶"
-        echo "6.  Dcoker 卷管理 ▶"
-        echo "------------------------"
-        echo "7.  Dcoker-compose 管理"
-        echo "------------------------"
-        echo "8.  清理无用的 Docker 容器和镜像网络数据卷"
-        echo "------------------------"
-        echo "9.  卸载 Dcoker 环境"
-        echo "------------------------"
-        echo "10.  Docker 库管理 ▶"
-        echo "------------------------"
-        echo "0.  返回主菜单"
-        echo "00. 退出脚本"
-        echo "------------------------"
-        read -p "请输入你的选择: " sub_choice
+            echo " ▼ "
+            echo "Docker管理器"
+            echo "------------------------"
+            echo "1.  安装/更新 Docker 环境"
+            echo "2.  Dcoker 全局总览"
+            echo "------------------------"
+            echo "3.  Dcoker 容器管理 ▶"
+            echo "4.  Dcoker 镜像管理 ▶"
+            echo "5.  Dcoker 网络管理 ▶"
+            echo "6.  Dcoker 卷管理 ▶"
+            echo "------------------------"
+            echo "7.  Dcoker-compose 管理"
+            echo "------------------------"
+            echo "8.  清理无用的 Docker 容器和镜像网络数据卷"
+            echo "------------------------"
+            echo "9.  卸载 Dcoker 环境"
+            echo "------------------------"
+            echo "10.  Docker 库管理 ▶"
+            echo "------------------------"
+            echo "0.  返回主菜单"
+            echo "00. 退出脚本"
+            echo "------------------------"
+            read -p "请输入你的选择: " sub_choice
 
         case $sub_choice in
             1)
@@ -1863,12 +1871,10 @@ case $choice in
         read -n 1 -s -r -p ""
         echo ""
         clear
-
         done
-
         ;;
 
-    9)
+    8)
         clear
         while true; do
         echo " ▼ "
@@ -2006,6 +2012,98 @@ case $choice in
         read -n 1 -s -r -p ""
         echo ""
         clear
+        done
+        ;;
+
+    9)
+        clear
+        while true; do
+            echo " ▼ "
+            echo "其它设置"
+            echo "------------------------"
+            echo "1.  ubuntu区域语言(locale)中文设置"
+            echo "2.  禁止screen改变窗口大小"
+            echo "------------------------"
+            echo "0.  返回主菜单"
+            echo "00. 退出脚本"
+            echo "------------------------"
+            read -p "请输入你的选择: " sub_choice
+        case $sub_choice in
+            1)
+                # Backup function
+                backup_file() {
+                    if [ -f "$1" ]; then
+                        sudo mv "$1" "$1.bak"
+                        echo "备份 $1 为 $1.bak"
+                    fi
+                }
+
+                # Check and create directory if not exists
+                check_and_create_directory() {
+                    if [ ! -d "$1" ]; then
+                        sudo mkdir -p "$1"
+                        echo "创建目录 $1"
+                    fi
+                }
+
+                # Step 1: Check and create directory, backup and edit supported locales file
+                check_and_create_directory "/var/lib/locales/supported.d"
+                backup_file "/var/lib/locales/supported.d/local"
+                echo -e 'zh_CN.UTF-8 UTF-8\nzh_CN GB2312\nzh_CN.GBK GBK\nen_US.UTF-8 UTF-8\nfr_FR ISO-8859-1\nzh_CN.GB18030 GB18030' | sudo tee "/var/lib/locales/supported.d/local" > /dev/null
+
+                # Step 2: Generate locales
+                sudo locale-gen --purge
+
+                # Step 3: Check and create directory, backup and edit default locale file
+                check_and_create_directory "/etc/default"
+                backup_file "/etc/default/locale"
+                echo -e 'LANG="zh_CN.UTF-8"\nLANGUAGE="zh_CN:zh"\nLC_ALL="zh_CN.UTF-8"' | sudo tee "/etc/default/locale" > /dev/null
+
+                # Print success message
+                echo "乱码问题已经处理完毕。请运行命令 'locale' 检查设置是否生效，建议重启电脑以使改变生效。"
+
+                sleep 2
+                ;;
+
+            2)
+                if [ -e /etc/screenrc ]; then
+                    # 在文件中查找并替换特定行
+                    if grep -q "termcapinfo xterm\* 'is=E\[rE\[mE\[2JE\[HE\[?7hE\[?1;4;6l'" /etc/screenrc; then
+                        # 如果找到了特定行，执行替换操作
+                        sed -i "s/termcapinfo xterm\* 'is=E\[rE\[mE\[2JE\[HE\[?7hE\[?1;4;6l'/termcapinfo xterm\* 'is=E\[rE\[mE\[2JE\[HE\[?7hE\[?1;4;6l*'/" /etc/screenrc
+                        echo "已经成功在/etc/screenrc文件中修改了特定行。"
+                    else
+                        # 如果没有找到特定行，添加新行
+                        echo "termcapinfo xterm* 'is=E[rE[mE[2JE[HE[?7hE[?1;4;6l*'" >> /etc/screenrc
+                        echo "已经在/etc/screenrc文件中添加了新行。"
+                    fi
+                else
+                    echo "/etc/screenrc 文件不存在。"
+                fi
+
+                sleep 2
+                ;;
+
+            0)
+                cd ~
+                ./tse.sh
+                exit
+                ;;
+
+            00)
+                exit
+                ;;
+
+            *)
+                echo "无效的输入!"
+                ;;
+        esac
+        echo -e "\033[0;32m操作完成\033[0m"
+        echo "按任意键继续..."
+        read -n 1 -s -r -p ""
+        echo ""
+        clear
+
         done
         ;;
     10)
