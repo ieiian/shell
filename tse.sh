@@ -2068,13 +2068,13 @@ case $choice in
             2)
                 if [ -e /etc/screenrc ]; then
                     # 在文件中查找并替换特定行
-                    if grep -q "termcapinfo xterm\* 'is=E\[rE\[mE\[2JE\[HE\[?7hE\[?1;4;6l'" /etc/screenrc; then
+                    if grep -q "termcapinfo xterm 'is=" /etc/screenrc; then
                         # 如果找到了特定行，执行替换操作
-                        sed -i "s/termcapinfo xterm\* 'is=E\[rE\[mE\[2JE\[HE\[?7hE\[?1;4;6l'/termcapinfo xterm\* 'is=E\[rE\[mE\[2JE\[HE\[?7hE\[?1;4;6l*'/" /etc/screenrc
+                        sed -i "s/termcapinfo xterm 'is=/termcapinfo xterm* 'is=/" /etc/screenrc
                         echo "已经成功在/etc/screenrc文件中修改了特定行。"
                     else
                         # 如果没有找到特定行，添加新行
-                        echo "termcapinfo xterm* 'is=E[rE[mE[2JE[HE[?7hE[?1;4;6l*'" >> /etc/screenrc
+                        echo "termcapinfo xterm* 'is=\E[r\E[m\E[2J\E[H\E[?7h\E[?1;4;6l'" >> /etc/screenrc
                         echo "已经在/etc/screenrc文件中添加了新行。"
                     fi
                 else
