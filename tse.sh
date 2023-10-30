@@ -1,5 +1,24 @@
 #!/bin/bash
 
+max_retries=3
+retry_count=0
+
+while [[ $retry_count -lt $max_retries ]]; do
+    output=$(curl your_url 2>&1)  # 将"your_url"替换为实际的URL
+    if [[ $output == *"curl: (35) OpenSSL SSL_connect"* ]]; then
+        echo "Retry $((retry_count + 1)): SSL_connect error. Retrying..."
+        ((retry_count++))
+    else
+        echo "Request successful!"
+        break
+    fi
+done
+
+if [[ $retry_count -eq $max_retries ]]; then
+    echo "连续三次出现SSL连接错误。请检查网格。"
+    exit 1
+fi
+
 while true; do
 export LANG="en_US.UTF-8"
 
