@@ -1645,6 +1645,7 @@ case $choice in
                 }
 
                 while true; do
+                    [ ! -f ~/.tse/tse.conf ] && echo 'DOCKER_DIR="/root/docker"' > ~/.tse/tse.conf
                     clear
                     echo " ▼ "
                     echo "Dcoker-compose 管理"
