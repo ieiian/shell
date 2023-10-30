@@ -2062,26 +2062,30 @@ case $choice in
                 # Print success message
                 echo "乱码问题已经处理完毕。请运行命令 'locale' 检查设置是否生效，建议重启电脑以使改变生效。"
 
-                sleep 2
+                # sleep 2
                 ;;
 
             2)
                 if [ -e /etc/screenrc ]; then
-                    # 在文件中查找并替换特定行
+                    # 在文件中查找termcapinfo xterm 'is=
                     if grep -q "termcapinfo xterm 'is=" /etc/screenrc; then
-                        # 如果找到了特定行，执行替换操作
+                        # 如果找到了特定行，执行替换操作（保留后面的内容）
                         sed -i "s/termcapinfo xterm 'is=/termcapinfo xterm* 'is=/" /etc/screenrc
                         echo "已经成功在/etc/screenrc文件中修改了特定行。"
+                    elif grep -q "termcapinfo xterm* 'is=" /etc/screenrc; then
+                        # 如果找到了termcapinfo xterm* 'is=，输出提示信息
+                        echo "内容已经存在，请手动查询文件/etc/screenrc。"
                     else
-                        # 如果没有找到特定行，添加新行
-                        echo "termcapinfo xterm* 'is=\E[r\E[m\E[2J\E[H\E[?7h\E[?1;4;6l'" >> /etc/screenrc
-                        echo "已经在/etc/screenrc文件中添加了新行。"
+                        # 如果两者都不存在，添加新行
+                        # echo "termcapinfo xterm* 'is=\E[r\E[m\E[2J\E[H\E[?7h\E[?1;4;6l'" >> /etc/screenrc
+                        # echo "已经在/etc/screenrc文件中添加了新行。"
+                        echo "未发现特定行或已经修改，请手动查询文件/etc/screenrc，并进行以下修改(xterm*)："
+                        echo "termcapinfo xterm* 'is=\E[r\E[m\E[2J\E[H\E[?7h\E[?1;4;6l'"
                     fi
                 else
+                    # 如果文件不存在，输出提示信息
                     echo "/etc/screenrc 文件不存在。"
                 fi
-
-                sleep 2
                 ;;
 
             0)
