@@ -1,7 +1,5 @@
 #!/bin/bash
 [ ! -d ~/.tse ] && mkdir ~/.tse
-
-while true; do
 export LANG="en_US.UTF-8"
 
 clear
@@ -27,6 +25,7 @@ else
     fi
 fi
 
+while true; do
 clear
 echo -e "\033[35m _____ \033[36m ____  \033[33m _____ "
 echo -e "\033[35m|_   _|\033[36m/ ___| \033[33m| ____|"
