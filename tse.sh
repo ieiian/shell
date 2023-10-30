@@ -304,7 +304,7 @@ case $choice in
                     if [ -z "$kjj" ]; then
                         echo "错误：快捷按键不能为空，请重新输入。"
                     else
-                        echo "alias $kjj='cd ~ && curl -sS -O https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x tse.sh && ./tse.sh'" >> ~/.bashrc
+                        echo "alias $kjj='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'" >> ~/.bashrc
                         echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
                         break
                     fi
