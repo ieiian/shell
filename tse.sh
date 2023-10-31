@@ -27,7 +27,7 @@ if [ "$EUID" -eq 0 ]; then
     fi
 else
     echo "当前用户为非root用户，部分操作可能无法顺利进行。"
-    sleep 2
+    read -n 1 -s -r -p "按下任意键继续..."
 fi
 while true; do
 clear
