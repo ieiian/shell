@@ -52,7 +52,7 @@ echo -e "${MA}|_   _|${CY}/ ___| ${YE}| ____|"
 echo -e "${MA}  | |  ${CY}\___ \ ${YE}|  _|  "
 echo -e "${MA}  | |  ${CY} ___) |${YE}| |___ "
 echo -e "${MA}  |_|  ${CY}|____/ ${YE}|_____|"
-echo -e "${BL}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${NC}"
+echo -e "${BL}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${NC} ${BL}■ ${GR}■ ${BL}■"
 
 get_random_color() {
     colors=($BL $RE $GR $YE $MA $CY $WH)  # Array of available colors
