@@ -31,7 +31,10 @@ fi
 while true; do
 clear
 if [ ! "$EUID" -eq 0 ]; then
+    user_path="/home/$(whoami)"
     echo -e "\033[31m当前用户为非root用户，部分操作可能无法顺利进行。"
+else
+    user_path="/root"
 fi
 echo -e "\033[35m _____ \033[36m ____  \033[33m _____ "
 echo -e "\033[35m|_   _|\033[36m/ ___| \033[33m| ____|"
@@ -1618,11 +1621,6 @@ case $choice in
                 done
                 ;;
             7)
-                if [ ! "$EUID" -eq 0 ]; then
-                    user_path="/home/$(whoami)"
-                else
-                    user_path="/root"
-                fi
                 if [ ! -f ~/.tse/tse.conf ]; then
                     # echo 'DOCKER_DIR="$user_path/docker"' > ~/.tse/tse.conf
                     echo "DOCKER_DIR=\"$user_path/docker\"" > ~/.tse/tse.conf
