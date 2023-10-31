@@ -46,7 +46,7 @@ if [ ! "$EUID" -eq 0 ]; then
 else
     user_path="/root"
 fi
-echo -e "${GR}TSE 一键脚本工具 v1.0.2 （支持Ubuntu，Debian，Centos系统）${NC}"
+echo -e "${RE}TSE 一键脚本工具 v1.0.2 （支持Ubuntu，Debian，Centos系统）${NC}"
 echo -e "${MA} _____ ${CY} ____  ${YE} _____ "
 echo -e "${MA}|_   _|${CY}/ ___| ${YE}| ____|"
 echo -e "${MA}  | |  ${CY}\___ \ ${YE}|  _|  "
