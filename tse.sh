@@ -100,7 +100,7 @@ read -p "请输入你的选择: " choice
 case $choice in
     1)
         clear
-        echo "${MA}部分信息需要从网络获取，请耐心等候...${NC}"
+        echo -e "${MA}部分信息需要从网络获取，请耐心等候...${NC}"
 
         # 函数: 获取IPv4和IPv6地址
         fetch_ip_addresses() {
