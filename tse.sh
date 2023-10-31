@@ -2180,9 +2180,9 @@ case $choice in
                     # 如果文件不存在，输出提示信息
                     echo "未发现/etc/screenrc 文件，系统未安装Screen，可执行以下指令安装Screen："
                     if command -v apt &>/dev/null; then
-                        echo "apt install -y screen"
+                        echo "apt install screen"
                     elif command -v yum &>/dev/null; then
-                        echo "yum -y install screen"
+                        echo "yum install screen"
                     else
                         echo "未知系统!"
                     fi
