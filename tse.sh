@@ -1620,7 +1620,7 @@ case $choice in
             7)
                 # [ ! -f ~/.tse/tse.conf ] && echo 'DOCKER_DIR="~/docker"' > ~/.tse/tse.conf
                 if [ ! -f ~/.tse/tse.conf ]; then
-                    echo 'DOCKER_DIR="/root/docker"' > ~/.tse/tse.conf
+                    echo 'DOCKER_DIR="~/docker"' > ~/.tse/tse.conf
                 fi
                 DOCKER_DIR_old=$(grep '^DOCKER_DIR=' ~/.tse/tse.conf | awk -F '"' '{print $2}')
                 DOCKER_DIR="$DOCKER_DIR_old"
