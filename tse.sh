@@ -1,5 +1,7 @@
 #!/bin/bash
-[ ! -d ~/.tse ] && mkdir ~/.tse
+if [ ! -d ~/.tse ]; then
+    mkdir ~/.tse
+fi
 export LANG="en_US.UTF-8"
 EUID=$(id -u)
 clear
@@ -25,14 +27,10 @@ if [ "$EUID" -eq 0 ]; then
             echo "快捷指令已经设置并添加到/root/.bashrc中。"
         fi
     fi
-else
-    :
 fi
 while true; do
 clear
-if [ "$EUID" -eq 0 ]; then
-    :
-else
+if [ ! "$EUID" -eq 0 ]; then
     echo -e "\033[31m当前用户为非root用户，部分操作可能无法顺利进行。"
 fi
 echo -e "\033[35m _____ \033[36m ____  \033[33m _____ "
