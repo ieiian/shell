@@ -185,26 +185,26 @@ case $choice in
         swap_info="${swap_used}MB/${swap_total}MB (${swap_percentage}%)"
 
         echo " ▼ "
-        echo "系统信息查询"
-        echo "------------------------"
+        echo -e "${MA}系统信息查询${NC}"
+        echo -e "${colored_text}${NC}"
         echo "主机名: $hostname"
         echo "运营商: $isp_info"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "系统版本: $os_info"
         echo "Linux版本: $kernel_version"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "CPU架构: $cpu_arch"
         echo "CPU型号: $cpu_info"
         echo "CPU核心: $cpu_cores   CPU占用: $cpu_usage_percent"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "物理内存: $mem_info"
         echo "虚拟内存: $swap_info"
         echo "硬盘占用: $disk_info"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "$output"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "网络拥堵算法: $congestion_algorithm $queue_algorithm"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         if [[ -z "$local_ipv4" || "$local_ipv4" == *"error code"* ]]; then
             echo "本地IPv4地址(局): 获取失败，请使用指令:"ip a"查询！"
         else
@@ -232,7 +232,7 @@ case $choice in
             echo "公网IPv6地址: $ipv6_address"
         fi
         # echo "公网IPv6地址: $ipv6_address"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         if [[ -z "$ipv4_address_cn" || "$ipv4_address_cn" == *"error code"* ]]; then
             :
         else
@@ -303,32 +303,32 @@ case $choice in
         while true; do
 
         echo " ▼ "
-        echo "系统设置"
-        echo "------------------------"
+        echo -e "${MA}系统设置${NC}"
+        echo -e "${colored_text}${NC}"
         echo "1.  设置脚本快捷键"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "2.  修改ROOT密码"
         echo "3.  开启ROOT登录(对于未开启SSH登陆)"
         echo -e "4.  禁用ROOT账户(${MA}谨慎使用${NC})"
         echo "5.  用户管理"
         echo "6.  用户/密码/UUID生成器"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "7.  修改SSH连接端口"
         echo "8.  查询端口占用状态"
         echo "9.  开放所有端口"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "10. 优化DNS地址"
         echo "11. 切换优先ipv4/ipv6"
         echo "12. 修改虚拟内存大小"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "13. 安装Python最新版"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "14. 系统清理"
         echo "15. 重装系统"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         read -p "请输入你的选择: " sub_choice
 
         case $sub_choice in
@@ -413,17 +413,16 @@ case $choice in
                     done < /etc/passwd
 
                     echo " ▼ "
-                    echo "系统设置 - 账户管理"
-                    echo ""
-                    echo ""
+                    echo -e "${CY}系统设置 - 账户管理${NC}"
+                    echo -e "${colored_text}${NC}"
                     echo "1. 创建普通账户             2. 创建高级账户"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "3. 赋予最高权限             4. 取消最高权限"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "5. 删除账号"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "0. 返回上一级选单"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     read -p "请输入你的选择: " sub_choice
 
                     case $sub_choice in
@@ -533,7 +532,7 @@ case $choice in
                 clear
 
                 echo "随机用户名"
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
                 for i in {1..5}; do
                     username="user$(< /dev/urandom tr -dc _a-z0-9 | head -c6)"
                     echo "随机用户名 $i: $username"
@@ -541,7 +540,7 @@ case $choice in
 
                 echo ""
                 echo "随机姓名"
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
                 first_names=("Gou" "Zhu" "Ji" "Ma" "Xiaoming" "Meimei" "Gege" "Budao" "Tian" "Feng" "Qiang" "Cong" "Qiu" "Ying" "Xia")
                 last_names=("SUN" "ZHANG" "LI" "XIE" "XIAO" "GUANG" "FENG" "GO" "HUANG" "DA" "CAO" "LAN" "LIU" "LIAO")
 
@@ -555,7 +554,7 @@ case $choice in
 
                     echo ""
                     echo "随机UUID"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                 for i in {1..5}; do
                     uuid=$(cat /proc/sys/kernel/random/uuid)
                     echo "随机UUID $i: $uuid"
@@ -563,7 +562,7 @@ case $choice in
 
                     echo ""
                     echo "16位随机密码"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                 for i in {1..5}; do
                     password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c16)
                     echo "随机密码 $i: $password"
@@ -571,7 +570,7 @@ case $choice in
 
                     echo ""
                     echo "32位随机密码"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                 for i in {1..5}; do
                     password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32)
                     echo "随机密码 $i: $password"
@@ -589,7 +588,7 @@ case $choice in
                 # 打印当前的 SSH 端口号
                 echo "当前的 SSH 端口号是: $current_port"
 
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
 
                 # 提示用户输入新的 SSH 端口号
                 read -p "请输入新的 SSH 端口号: " new_port
@@ -613,7 +612,7 @@ case $choice in
             8)
                 clear
                 echo " ▼ "
-                echo "系统设置 - 查询端口占用状态"
+                echo -e "${CY}系统设置 - 查询端口占用状态${NC}"
                 ss -untlp
                 ;;
             9)
@@ -635,12 +634,12 @@ case $choice in
             10)
                 clear
                 echo " ▼ "
-                echo "系统设置 - 优化DNS地址"
+                echo -e "${CY}系统设置 - 优化DNS地址${NC}"
                 echo ""
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
                 echo "当前DNS地址"
                 cat /etc/resolv.conf
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
                 echo ""
                 # 询问用户是否要优化DNS设置
                 read -p "是否要设置为Cloudflare和Google的DNS地址？(y/n): " choice
@@ -672,9 +671,9 @@ case $choice in
                     fi
 
                     echo "DNS地址已更新"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     cat /etc/resolv.conf
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                 else
                     echo "DNS设置未更改"
                 fi
@@ -691,13 +690,13 @@ case $choice in
                 else
                     echo "当前网络优先级设置: IPv6 优先"
                 fi
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
 
                 echo ""
                 echo "切换的网络优先级"
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
                 echo "1. IPv4 优先          2. IPv6 优先"
-                echo "------------------------"
+                echo -e "${colored_text}${NC}"
                 read -p "选择优先的网络: " choice
 
                 case $choice in
@@ -946,20 +945,20 @@ case $choice in
         clear
         while true; do
             echo " ▼ "
-            echo "常用工具安装"
-            echo "------------------------"
+            echo -e "${MA}常用工具安装${NC}"
+            echo -e "${colored_text}${NC}"
             echo "1.  套餐一： sudo / curl / wget / nano"
             echo "2.  套餐二： sudo / curl / wget / nano / tar / socat"
             echo "3.  套餐三： htop / iftop / unzip / tmux / ffmpeg"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "4.  手动安装指定工具 ▶"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "51. 全部安装"
             echo "50. 全部卸载"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "0.  返回主菜单"
             echo "00. 退出脚本"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             read -p "请输入你的选择: " sub_choice
 
         case $sub_choice in
@@ -997,7 +996,7 @@ case $choice in
             4)
                 clear
                 echo " ▼ "
-                echo "安装常用工具 - 手动安装指定工具"
+                echo -e "${CY}安装常用工具 - 手动安装指定工具${NC}"
                 while true; do
                     # 提示用户输入工具名称
                     read -p "请输入要安装的工具名称（输入 'cancel' 取消安装）: " tool_name
@@ -1142,21 +1141,21 @@ case $choice in
         clear
         while true; do
             echo " ▼ "
-            echo "网络优化安装"
-            echo "------------------------"
+            echo -e "${MA}网络优化安装${NC}"
+            echo -e "${colored_text}${NC}"
             echo "1.  BBR"
             echo "2.  WARP"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "0.  返回主菜单"
             echo "00. 退出脚本"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             read -p "请输入你的选择: " sub_choice
 
         case $sub_choice in
             1)
                 clear
                 echo " ▼ "
-                echo "安装常用工具 - BBR"
+                echo -e "${CY}安装常用工具 - BBR${NC}"
                 # 检查并安装 wget（如果需要）
                 if ! command -v wget &>/dev/null; then
                     if command -v apt &>/dev/null; then
@@ -1181,7 +1180,7 @@ case $choice in
             2)
                 clear
                 echo " ▼ "
-                echo "安装常用工具 - WARP"
+                echo -e "${CY}安装常用工具 - WARP${NC}"
                 # 检查并安装 wget（如果需要）
                 if ! command -v wget &>/dev/null; then
                     if command -v apt &>/dev/null; then
@@ -1228,8 +1227,8 @@ case $choice in
         while true; do
 
         echo " ▼ "
-        echo "测试脚本合集"
-        echo "------------------------"
+        echo -e "${MA}测试脚本合集${NC}"
+        echo -e "${colored_text}${NC}"
         echo "1.  ChatGPT解锁状态检测"
         echo "2.  流媒体解锁测试"
         echo "3.  TikTok状态检测"
@@ -1238,10 +1237,10 @@ case $choice in
         echo "6.  三网专项测速"
         echo "7.  VPS性能专项测试"
         echo "8.  VPS性能全局测试"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         read -p "请输入你的选择: " sub_choice
 
         # if [ ! -d "~/tse" ]; then
@@ -1311,27 +1310,27 @@ case $choice in
         clear
         while true; do
             echo " ▼ "
-            echo "DOCKER"
-            echo "------------------------"
+            echo -e "${MA}DOCKER${NC}"
+            echo -e "${colored_text}${NC}"
             echo "1.  安装/更新 DOCKER 环境"
             echo "2.  DOCKER 全局总览"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "3.  DOCKER 容器管理 ▶"
             echo "4.  DOCKER 镜像管理 ▶"
             echo "5.  DOCKER 网络管理 ▶"
             echo "6.  DOCKER 卷管理 ▶"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "7.  DOCKER-COMPOSE 管理"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "8.  清理无用的 DOCKER 容器和镜像网络数据卷"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "9.  卸载 DOCKER 环境"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "10.  DOCKER 库管理 ▶"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "0.  返回主菜单"
             echo "00. 退出脚本"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             read -p "请输入你的选择: " sub_choice
 
         case $sub_choice in
@@ -1370,22 +1369,22 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "DOCKER 容器列表:"
+                    echo -e "${CY}DOCKER 容器列表:${NC}"
                     docker ps -a
                     echo ""
                     echo "DOCKER - 容器操作"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "1. 创建新的容器"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "2. 启动指定容器             6. 启动所有容器"
                     echo "3. 停止指定容器             7. 暂停所有容器"
                     echo "4. 删除指定容器             8. 删除所有容器"
                     echo "5. 重启指定容器             9. 重启所有容器"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "11. 进入指定容器           12. 查看容器日志           13. 查看容器网络"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "0. 返回上一级选单"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     read -p "请输入你的选择: " sub_choice
 
                     case $sub_choice in
@@ -1487,16 +1486,16 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "DOCKER 镜像列表:"
+                    echo -e "${CY}DOCKER 镜像列表:${NC}"
                     docker image ls
                     echo ""
                     echo "DOCKER - 镜像操作"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "1. 获取指定镜像             3. 删除指定镜像"
                     echo "2. 更新指定镜像             4. 删除所有镜像"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "0. 返回上一级选单"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     read -p "请输入你的选择: " sub_choice
 
                     case $sub_choice in
@@ -1541,7 +1540,7 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "DOCKER 网络列表:"
+                    echo -e "${CY}DOCKER 网络列表:${NC}"
                     echo "------------------------------------------------------------"
                     docker network ls
                     echo ""
@@ -1566,14 +1565,14 @@ case $choice in
 
                     echo ""
                     echo "DOCKER - 网络操作"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "1. 创建网络"
                     echo "2. 加入网络"
                     echo "3. 退出网络"
                     echo "4. 删除网络"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "0. 返回上一级选单"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     read -p "请输入你的选择: " sub_choice
 
                     case $sub_choice in
@@ -1613,16 +1612,16 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "DOCKER 卷列表:"
+                    echo -e "${CY}DOCKER 卷列表:${NC}"
                     docker volume ls
                     echo ""
                     echo "DOCKER - 卷操作"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "1. 创建新卷"
                     echo "2. 删除卷"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "0. 返回上一级选单"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     read -p "请输入你的选择: " sub_choice
 
                     case $sub_choice in
@@ -1686,27 +1685,27 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "DOCKER-COMPOSE 服务列表:"
+                    echo -e "${CY}DOCKER-COMPOSE 服务列表:${NC}"
                     list_docker_compose_services
                     echo "DOCKER - COMPOSE"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "1.  创建 Docker-compose 服务"
                     echo "2.  修改 Docker-compose 文件"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "3.  启动 Docker-compose 服务"
                     echo "4.  停止 Docker-compose 服务"
                     echo "5.  重启 Docker-compose 服务"
                     echo "6.  升级 Docker-compose 服务"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "7.  查询 Docker-compose 日志"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "8.  删除 Docker-compose 服务"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "9.  修改文件夹路径（ $DOCKER_DIR ）"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "0.  返回上级菜单"
                     echo "00. 退出脚本"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo ""
 
                     read -p "请选择操作: " choice
@@ -1940,16 +1939,16 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "DOCKER 镜像列表:"
+                    echo -e "${CY}DOCKER 镜像列表:${NC}"
                     docker images
                     echo ""
                     echo "DOCKER - 库管理"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     echo "1. Docker Hub登入"
                     echo "2. Docker Hub登出"
                     echo "3. 推送现有镜像"
                     echo "0. 返回主菜单"
-                    echo "------------------------"
+                    echo -e "${colored_text}${NC}"
                     read -p "请输入选项： " choice
 
                     case $choice in
@@ -1999,24 +1998,24 @@ case $choice in
         clear
         while true; do
         echo " ▼ "
-        echo "我的工作区"
+        echo -e "${MA}我的工作区${NC}"
         echo "系统将为你提供5个后台运行的工作区，你可以用来执行长时间的任务"
         echo "即使你断开SSH，工作区中的任务也不会中断，非常方便！来试试吧！"
         echo -e "\033[33m注意: 进入工作区后使用Ctrl+b再单独按d，退出工作区！\033[0m"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "a.  安装工作区环境"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "1.  1号工作区"
         echo "2.  2号工作区"
         echo "3.  3号工作区"
         echo "4.  4号工作区"
         echo "5.  5号工作区"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "8.  工作区状态"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         echo "0.  返回主菜单"
         echo "00. 退出脚本"
-        echo "------------------------"
+        echo -e "${colored_text}${NC}"
         read -p "请输入你的选择: " sub_choice
 
         case $sub_choice in
@@ -2139,14 +2138,14 @@ case $choice in
         clear
         while true; do
             echo " ▼ "
-            echo "其它设置"
-            echo "------------------------"
+            echo -e "${MA}其它设置${NC}"
+            echo -e "${colored_text}${NC}"
             echo "1.  ubuntu区域语言(locale)中文设置"
             echo "2.  禁止screen改变窗口大小"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             echo "0.  返回主菜单"
             echo "00. 退出脚本"
-            echo "------------------------"
+            echo -e "${colored_text}${NC}"
             read -p "请输入你的选择: " sub_choice
         case $sub_choice in
             1)
