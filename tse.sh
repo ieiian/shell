@@ -43,13 +43,13 @@ clear
 if [ "$EUID" -eq 0 ]; then
     grep -q "curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh" /root/.bashrc
     if [ $? -eq 0 ]; then
-        echo "在/root/.bashrc中已经包含指定的命令，将直接运行后面的程序。"
+        :
     else
         echo " ▼ "
         echo -e "${CY}脚本快捷指令设置${NC}"
         echo -e "${colored_text2}${NC}"
-        echo -e "输入关键字 或 直接回车默认为: ${MA}tse${NC}"
-        read -p "输入N/n跳过设置（重启后生效）: " shortcut
+        echo -e "输入关键字 或 直接回车默认为: ${MA}tse${NC} （重启后生效）"
+        read -p "输入N/n跳过设置: " shortcut
         if [[ "$shortcut" == "n" || "$shortcut" == "N" ]]; then
             :
         elif [[ -z "$shortcut" || "$shortcut" == "" ]]; then
@@ -68,7 +68,7 @@ while true; do
 clear
 if [ ! "$EUID" -eq 0 ]; then
     user_path="/home/$(whoami)"
-    echo -e "\033[31m当前用户为非root用户，部分操作可能无法顺利进行。"
+    echo -e "${GR}当前用户为非root用户，部分操作可能无法顺利进行。${NC}"
 else
     user_path="/root"
 fi
@@ -100,7 +100,8 @@ read -p "请输入你的选择: " choice
 case $choice in
     1)
         clear
-        echo "请稍后..."
+        echo "${MA}部分信息需要从网络获取，请耐心等候...${NC}"
+
         # 函数: 获取IPv4和IPv6地址
         fetch_ip_addresses() {
         ipv4_address_cn=$(curl -s cip.cc | grep -oE 'IP\s+:\s+\S+' | awk '{print $3}')
@@ -108,37 +109,29 @@ case $choice in
         # ipv6_address=$(curl -s ipv6.ip.sb)
         ipv6_address=$(curl -s --max-time 2 ipv6.ip.gs)
         }
-
         # 获取IP地址
         fetch_ip_addresses > /dev/null 2>&1
 
         if [ "$(uname -m)" == "x86_64" ]; then
-        cpu_info=$(cat /proc/cpuinfo | grep 'model name' | uniq | sed -e 's/model name[[:space:]]*: //')
+            cpu_info=$(cat /proc/cpuinfo | grep 'model name' | uniq | sed -e 's/model name[[:space:]]*: //')
         else
-        cpu_info=$(lscpu | grep 'Model name' | sed -e 's/Model name[[:space:]]*: //')
+            cpu_info=$(lscpu | grep 'Model name' | sed -e 's/Model name[[:space:]]*: //')
         fi
 
         cpu_usage=$(top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}')
         cpu_usage_percent=$(printf "%.2f" "$cpu_usage")%
-
         cpu_cores=$(nproc)
-
         mem_info=$(free -b | awk 'NR==2{printf "%.2f/%.2f MB (%.2f%%)", $3/1024/1024, $2/1024/1024, $3*100/$2}')
-
         disk_info=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)", $3,$2,$5}')
         country_cn=$(curl -s ipinfo.io/$ipv4_address_cn/country)
         city_cn=$(curl -s ipinfo.io/$ipv4_address_cn/city)
         country=$(curl -s ipinfo.io/$ipv4_address/country)
         city=$(curl -s ipinfo.io/$ipv4_address/city)
-
         isp_info=$(curl -s ipinfo.io/org)
 
         cpu_arch=$(uname -m)
-
         hostname=$(hostname)
-
         kernel_version=$(uname -r)
-
         local_ipv4=$(ip -4 addr show | awk '/inet / {split($2, a, "/"); if (a[1] ~ /^192\.|^10\./) print a[1]}')
 
         congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control)
@@ -178,9 +171,7 @@ case $choice in
                 printf("总接收: %.2f %s\n总发送: %.2f %s\n", rx_total, rx_units, tx_total, tx_units);
             }' /proc/net/dev)
 
-
         current_time=$(date "+%Y-%m-%d %I:%M %p")
-
         swap_used=$(free -m | awk 'NR==3{print $3}')
         swap_total=$(free -m | awk 'NR==3{print $2}')
 
