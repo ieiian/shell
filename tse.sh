@@ -1655,7 +1655,6 @@ case $choice in
                 DOCKER_DIR="$DOCKER_DIR_old"
 
                 function list_docker_compose_services() {
-                    echo "当前的 Docker-compose 服务:"
                     echo ""
                     all_services=$(find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!')
                     
@@ -1687,9 +1686,9 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Dcoker-compose列表"
+                    echo "Dcoker-compose服务列表"
                     list_docker_compose_services
-                    echo "Docker管理器 - Docker-compose管理"
+                    echo "Docker-compose管理"
                     echo "------------------------"
                     echo "1.  创建 Docker-compose 服务"
                     echo "2.  修改 Docker-compose 文件"
