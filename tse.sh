@@ -2262,6 +2262,7 @@ case $choice in
         exit
         ;;
     x)
+        echo
         exit
         ;;
     *)
