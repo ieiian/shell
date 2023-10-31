@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export LANG="en_US.UTF-8"
 # ANSI颜色代码
 BL="\033[30m"
 RE="\033[31m"
@@ -11,10 +12,32 @@ CY="\033[36m"
 WH="\033[37m"
 NC="\033[0m"
 # echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
+
 if [ ! -d ~/.tse ]; then
     mkdir ~/.tse
 fi
-export LANG="en_US.UTF-8"
+
+get_random_color() {
+    colors=($BL $RE $GR $YE $MA $CY $WH)  # Array of available colors
+    random_index=$((RANDOM % ${#colors[@]}))
+    echo "${colors[random_index]}"
+}
+
+text1="------------------------"
+text2="============================"
+colored_text1=""
+colored_text2=""
+
+for ((i=0; i<${#text1}; i++)); do
+    color=$(get_random_color)
+    colored_text1="${colored_text1}${color}${text1:$i:1}"
+done
+
+for ((i=0; i<${#text2}; i++)); do
+    color=$(get_random_color)
+    colored_text2="${colored_text2}${color}${text2:$i:1}"
+done
+
 EUID=$(id -u)
 clear
 if [ "$EUID" -eq 0 ]; then
@@ -56,28 +79,6 @@ echo -e "${MA}  | |  ${CY}\___ \ ${YE}|  _|  "
 echo -e "${MA}  | |  ${CY} ___) |${YE}| |___ "
 echo -e "${MA}  |_|  ${CY}|____/ ${YE}|_____|"
 echo -e "${BL}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${NC} ${BL}■ ${GR}■ ${BL}■"
-
-get_random_color() {
-    colors=($BL $RE $GR $YE $MA $CY $WH)  # Array of available colors
-    random_index=$((RANDOM % ${#colors[@]}))
-    echo "${colors[random_index]}"
-}
-
-text1="------------------------"
-text2="============================"
-colored_text1=""
-colored_text2=""
-
-for ((i=0; i<${#text1}; i++)); do
-    color=$(get_random_color)
-    colored_text1="${colored_text1}${color}${text1:$i:1}"
-done
-
-for ((i=0; i<${#text2}; i++)); do
-    color=$(get_random_color)
-    colored_text2="${colored_text2}${color}${text2:$i:1}"
-done
-
 echo -e "${colored_text2}${NC}"
 echo "1.  系统信息"
 echo "2.  系统更新"
