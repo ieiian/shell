@@ -1612,7 +1612,8 @@ case $choice in
                 done
                 ;;
             7)
-                DOCKER_DIR="/root/docker"
+                DOCKER_DIR_old=$(grep '^DOCKER_DIR=' ~/.tse/tse.conf | awk -F '"' '{print $2}')
+                DOCKER_DIR="$DOCKER_DIR_old"
 
                 function list_docker_compose_services() {
                     echo "当前的 Docker-compose 服务:"
@@ -1645,7 +1646,10 @@ case $choice in
                 }
 
                 while true; do
-                    [ ! -f ~/.tse/tse.conf ] && echo 'DOCKER_DIR="/root/docker"' > ~/.tse/tse.conf
+                    # [ ! -f ~/.tse/tse.conf ] && echo 'DOCKER_DIR="/root/docker"' > ~/.tse/tse.conf
+                    if [ ! -f ~/.tse/tse.conf ]; then
+                        echo 'DOCKER_DIR="/root/docker"' > ~/.tse/tse.conf
+                    fi
                     clear
                     echo " ▼ "
                     echo "Dcoker-compose 管理"
@@ -1811,19 +1815,39 @@ case $choice in
                         9)
                             clear
                             # 修改自定义文件夹路径
+                            echo "修改自定义文件夹路径:"
                             read -p "请输入新的自定义文件夹路径: " custom_dir
-                            if [ -d "$custom_dir" ]; then
-                                DOCKER_DIR="$custom_dir"
-                                echo "自定义文件夹路径已修改为: $DOCKER_DIR"
-                            else
+                            custom_dir=$(echo "$custom_dir" | sed 's:/*$::' | sed 's:\\*$::')
+                            if [ ! -d "$custom_dir" ]; then
                                 read -p "指定的文件夹路径不存在，是否要创建该文件夹？(Y/N): " create_folder
                                 if [ "$create_folder" = "Y" ] || [ "$create_folder" = "y" ]; then
                                     mkdir -p "$custom_dir"
-                                    DOCKER_DIR="$custom_dir"
-                                    echo "文件夹已创建，并且自定义文件夹路径已修改为: $DOCKER_DIR"
                                 else
-                                    echo "未创建文件夹，自定义文件夹路径未修改。"
+                                    echo "文件夹已经存在。"
                                 fi
+                            fi
+                            DOCKER_DIR_old="$DOCKER_DIR"
+                            sed -i "s|^DOCKER_DIR=.*|DOCKER_DIR=\"$custom_dir\"|" ~/.tse/tse.conf
+                            DOCKER_DIR="$custom_dir"
+                            echo "自定义文件夹路径由原来的($DOCKER_DIR_old)已修改为: $DOCKER_DIR"
+                            read -p "是否要将原文件夹($DOCKER_DIR_old)内容移动至新文件夹($DOCKER_DIR)？(Y/N): " move_folder
+                            if [ "$move_folder" = "Y" ] || [ "$move_folder" = "y" ]; then
+                                mv "$DOCKER_DIR_old"/* "$DOCKER_DIR"
+                                rm -rf "$DOCKER_DIR_old"
+                                echo "已将原文件夹内容移动至新文件夹。("$DOCKER_DIR_old" -->> "$DOCKER_DIR")"
+                            # read -p "是否要将原文件夹($DOCKER_DIR_old)内容复制至新文件夹($DOCKER_DIR)？(Y/N): " copy_folder
+                            # if [ "$copy_folder" = "Y" ] || [ "$copy_folder" = "y" ]; then
+                            #     cp -r "$DOCKER_DIR_old"/* "$DOCKER_DIR"
+                            #     echo "已将原文件夹内容复制至新文件夹。(cp -r "$DOCKER_DIR_old"/* "$DOCKER_DIR")"
+                            #     read -p "是否要删除原文件夹($DOCKER_DIR_old)及其中的所有内容？(y/n): " delete_folder
+                            #     if [ "$delete_folder" = "Y" ] || [ "$delete_folder" = "y" ]; then
+                            #         rm -rf "$DOCKER_DIR_old"
+                            #         echo "已删除原文件夹及其中的所有内容。"
+                            #     else
+                            #         echo "未删除原文件夹及其中的所有内容。"
+                            #     fi
+                            else
+                                echo "未移动原文件夹内容至新文件夹。"
                             fi
                             ;;
                         0)
