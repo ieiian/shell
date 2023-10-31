@@ -1709,7 +1709,14 @@ case $choice in
                                 nano "$compose_file"
                                 echo "Docker Compose 文件已修改。"
                             else
-                                echo "错误：服务 '$service_name' 的 Docker Compose 文件不存在。"
+                                read -p "目录未发现docker-compose.yaml，是否要创建文件？(Y/N): " create_comfile
+                                if [ "$create_comfile" = "Y" ] || [ "$create_comfile" = "y" ]; then
+                                    touch "$compose_file"
+                                    nano "$compose_file"
+                                    echo "Docker Compose 文件已修改。"
+                                else
+                                    echo "已取消创建。"
+                                fi
                             fi
                             ;;
                         3)
