@@ -26,11 +26,13 @@ if [ "$EUID" -eq 0 ]; then
         fi
     fi
 else
-    echo "当前用户为非root用户，部分操作可能无法顺利进行。"
-    read -n 1 -s -r -p "按下任意键继续..."
 fi
 while true; do
 clear
+if [ "$EUID" -eq 0 ]; then
+else
+    echo -e "\033[31m当前用户为非root用户，部分操作可能无法顺利进行。"
+fi
 echo -e "\033[35m _____ \033[36m ____  \033[33m _____ "
 echo -e "\033[35m|_   _|\033[36m/ ___| \033[33m| ____|"
 echo -e "\033[35m  | |  \033[36m\___ \ \033[33m|  _|  "
