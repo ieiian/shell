@@ -309,7 +309,7 @@ case $choice in
         echo "------------------------"
         echo "2.  修改ROOT密码"
         echo "3.  开启ROOT登录(对于未开启SSH登陆)"
-        echo "4.  禁用ROOT账户(${RE}谨慎使用${NC})"
+        echo -e "4.  禁用ROOT账户(${RE}谨慎使用${NC})"
         echo "5.  用户管理"
         echo "6.  用户/密码/UUID生成器"
         echo "------------------------"
