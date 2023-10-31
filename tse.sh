@@ -95,7 +95,7 @@ echo "u.  更新脚本"
 echo -e "${colored_text1}${NC}"
 echo "x.  退出脚本"
 echo -e "${colored_text1}${NC}"
-read -p "请输入你的选择: " -n 1 -r choice
+read -p "请输入你的选择: " -n 3 -r choice
 
 case $choice in
     1)
@@ -2252,7 +2252,7 @@ case $choice in
         done
         ;;
     u)
-        echo
+        # echo
         curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh
         exit
         ;;
@@ -2263,7 +2263,7 @@ case $choice in
         exit
         ;;
     x)
-        echo
+        # echo
         exit
         ;;
     *)
