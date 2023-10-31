@@ -25,7 +25,6 @@ if [ "$EUID" -eq 0 ]; then
             echo "快捷指令已经设置并添加到/root/.bashrc中。"
         fi
     fi
-else
 fi
 while true; do
 clear
