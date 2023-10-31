@@ -250,7 +250,7 @@ case $choice in
 
     2)
         while true; do
-            read -p "是否要进行完全升级(-upgrade)？(Y/N，或C取消，回车默认为N): " choice
+            read -p "是否要进行完全升级(${MA}-upgrade${NC})？(Y/N，或C取消，回车默认为N): " -n 1 -r choice
             case "$choice" in
                 [Yy])
                     # 更新并升级
