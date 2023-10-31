@@ -91,11 +91,11 @@ echo "8.  工作区 ▶▶▶ "
 echo -e "${colored_text1}${NC}"
 echo "9.  其它设置"
 echo -e "${colored_text1}${NC}"
-echo "10. 更新脚本"
+echo "u.  更新脚本"
 echo -e "${colored_text1}${NC}"
-echo "0.  退出脚本"
+echo "x.  退出脚本"
 echo -e "${colored_text1}${NC}"
-read -p "请输入你的选择: " choice
+read -p "请输入你的选择: " -n 1 -r choice
 
 case $choice in
     1)
@@ -2251,7 +2251,7 @@ case $choice in
 
         done
         ;;
-    10)
+    u)
         curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh
         exit
         ;;
