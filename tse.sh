@@ -250,7 +250,7 @@ case $choice in
 
     2)
         while true; do
-            read -p "是否要进行完全升级(${MA}-upgrade${NC})？(Y/N，或C取消，回车默认为N): " -n 1 -r choice
+            read -p "是否要进行完全升级(-upgrade)？(Y/N，或C取消，回车默认为N): " -n 1 -r choice
             case "$choice" in
                 [Yy])
                     # 更新并升级
@@ -339,7 +339,7 @@ case $choice in
                         echo "错误：快捷按键不能为空，请重新输入。"
                     else
                         echo "alias $kjj='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'" >> ~/.bashrc
-                        echo "快捷键已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
+                        echo "快捷键 ${MA}$kjj${NC} 已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
                         break
                     fi
                 done
