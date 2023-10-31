@@ -26,12 +26,12 @@ if [ "$EUID" -eq 0 ]; then
         fi
     fi
 else
-    ::
+    :
 fi
 while true; do
 clear
 if [ "$EUID" -eq 0 ]; then
-    ::
+    :
 else
     echo -e "\033[31m当前用户为非root用户，部分操作可能无法顺利进行。"
 fi
