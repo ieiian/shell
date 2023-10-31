@@ -1311,23 +1311,23 @@ case $choice in
         clear
         while true; do
             echo " ▼ "
-            echo "Docker管理器"
+            echo "DOCKER"
             echo "------------------------"
-            echo "1.  安装/更新 Docker 环境"
-            echo "2.  Dcoker 全局总览"
+            echo "1.  安装/更新 DOCKER 环境"
+            echo "2.  DOCKER 全局总览"
             echo "------------------------"
-            echo "3.  Dcoker 容器管理 ▶"
-            echo "4.  Dcoker 镜像管理 ▶"
-            echo "5.  Dcoker 网络管理 ▶"
-            echo "6.  Dcoker 卷管理 ▶"
+            echo "3.  DOCKER 容器管理 ▶"
+            echo "4.  DOCKER 镜像管理 ▶"
+            echo "5.  DOCKER 网络管理 ▶"
+            echo "6.  DOCKER 卷管理 ▶"
             echo "------------------------"
-            echo "7.  Dcoker-compose 管理"
+            echo "7.  DOCKER-COMPOSE 管理"
             echo "------------------------"
-            echo "8.  清理无用的 Docker 容器和镜像网络数据卷"
+            echo "8.  清理无用的 DOCKER 容器和镜像网络数据卷"
             echo "------------------------"
-            echo "9.  卸载 Dcoker 环境"
+            echo "9.  卸载 DOCKER 环境"
             echo "------------------------"
-            echo "10.  Docker 库管理 ▶"
+            echo "10.  DOCKER 库管理 ▶"
             echo "------------------------"
             echo "0.  返回主菜单"
             echo "00. 退出脚本"
@@ -1370,10 +1370,10 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Docker容器列表"
+                    echo "DOCKER 容器列表:"
                     docker ps -a
                     echo ""
-                    echo "Docker管理器 - 容器操作"
+                    echo "DOCKER - 容器操作"
                     echo "------------------------"
                     echo "1. 创建新的容器"
                     echo "------------------------"
@@ -1487,10 +1487,10 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Docker镜像列表"
+                    echo "DOCKER 镜像列表:"
                     docker image ls
                     echo ""
-                    echo "Docker管理器 - 镜像操作"
+                    echo "DOCKER - 镜像操作"
                     echo "------------------------"
                     echo "1. 获取指定镜像             3. 删除指定镜像"
                     echo "2. 更新指定镜像             4. 删除所有镜像"
@@ -1541,7 +1541,7 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Docker网络列表"
+                    echo "DOCKER 网络列表:"
                     echo "------------------------------------------------------------"
                     docker network ls
                     echo ""
@@ -1565,7 +1565,7 @@ case $choice in
                     done
 
                     echo ""
-                    echo "Docker管理器 - 网络操作"
+                    echo "DOCKER - 网络操作"
                     echo "------------------------"
                     echo "1. 创建网络"
                     echo "2. 加入网络"
@@ -1613,10 +1613,10 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Docker卷列表"
+                    echo "DOCKER 卷列表:"
                     docker volume ls
                     echo ""
-                    echo "Docker管理器 - 卷操作"
+                    echo "DOCKER - 卷操作"
                     echo "------------------------"
                     echo "1. 创建新卷"
                     echo "2. 删除卷"
@@ -1686,9 +1686,9 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Dcoker-compose服务列表"
+                    echo "DOCKER-COMPOSE 服务列表:"
                     list_docker_compose_services
-                    echo "Docker-compose管理"
+                    echo "DOCKER - COMPOSE"
                     echo "------------------------"
                     echo "1.  创建 Docker-compose 服务"
                     echo "2.  修改 Docker-compose 文件"
@@ -1940,10 +1940,10 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Docker镜像列表"
+                    echo "DOCKER 镜像列表:"
                     docker images
                     echo ""
-                    echo "Docker管理器 - Docker库管理"
+                    echo "DOCKER - 库管理"
                     echo "------------------------"
                     echo "1. Docker Hub登入"
                     echo "2. Docker Hub登出"
