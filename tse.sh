@@ -1620,7 +1620,6 @@ case $choice in
             7)
                 if [ ! "$EUID" -eq 0 ]; then
                     user_path="/home/$(whoami)"
-                    echo -e "\033[31m当前用户为非root用户，部分操作可能无法顺利进行。"
                 else
                     user_path="/root"
                 fi
