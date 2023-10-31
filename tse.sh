@@ -946,7 +946,7 @@ case $choice in
         clear
         while true; do
             echo " ▼ "
-            echo "安装常用工具"
+            echo "常用工具安装"
             echo "------------------------"
             echo "1.  套餐一： sudo / curl / wget / nano"
             echo "2.  套餐二： sudo / curl / wget / nano / tar / socat"
@@ -1142,7 +1142,7 @@ case $choice in
         clear
         while true; do
             echo " ▼ "
-            echo "安装常用工具"
+            echo "网络优化安装"
             echo "------------------------"
             echo "1.  BBR"
             echo "2.  WARP"
@@ -1369,10 +1369,11 @@ case $choice in
             3)
                 while true; do
                     clear
+                    echo " ▼ "
                     echo "Docker容器列表"
                     docker ps -a
                     echo ""
-                    echo "容器操作"
+                    echo "Docker管理器 - 容器操作"
                     echo "------------------------"
                     echo "1. 创建新的容器"
                     echo "------------------------"
@@ -1485,10 +1486,11 @@ case $choice in
             4)
                 while true; do
                     clear
+                    echo " ▼ "
                     echo "Docker镜像列表"
                     docker image ls
                     echo ""
-                    echo "镜像操作"
+                    echo "Docker管理器 - 镜像操作"
                     echo "------------------------"
                     echo "1. 获取指定镜像             3. 删除指定镜像"
                     echo "2. 更新指定镜像             4. 删除所有镜像"
@@ -1538,6 +1540,7 @@ case $choice in
             5)
                 while true; do
                     clear
+                    echo " ▼ "
                     echo "Docker网络列表"
                     echo "------------------------------------------------------------"
                     docker network ls
@@ -1562,7 +1565,7 @@ case $choice in
                     done
 
                     echo ""
-                    echo "网络操作"
+                    echo "Docker管理器 - 网络操作"
                     echo "------------------------"
                     echo "1. 创建网络"
                     echo "2. 加入网络"
@@ -1609,10 +1612,11 @@ case $choice in
             6)
                 while true; do
                     clear
+                    echo " ▼ "
                     echo "Docker卷列表"
                     docker volume ls
                     echo ""
-                    echo "卷操作"
+                    echo "Docker管理器 - 卷操作"
                     echo "------------------------"
                     echo "1. 创建新卷"
                     echo "2. 删除卷"
@@ -1683,9 +1687,9 @@ case $choice in
                 while true; do
                     clear
                     echo " ▼ "
-                    echo "Dcoker-compose 管理"
+                    echo "Dcoker-compose列表"
                     list_docker_compose_services
-                    echo "Docker 服务管理菜单:"
+                    echo "Docker管理器 - Docker-compose管理"
                     echo "------------------------"
                     echo "1.  创建 Docker-compose 服务"
                     echo "2.  修改 Docker-compose 文件"
@@ -1936,10 +1940,11 @@ case $choice in
             10)
                 while true; do
                     clear
+                    echo " ▼ "
                     echo "Docker镜像列表"
                     docker images
                     echo ""
-                    echo "Docker库管理"
+                    echo "Docker管理器 - Docker库管理"
                     echo "------------------------"
                     echo "1. Docker Hub登入"
                     echo "2. Docker Hub登出"
