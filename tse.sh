@@ -1618,9 +1618,15 @@ case $choice in
                 done
                 ;;
             7)
-                # [ ! -f ~/.tse/tse.conf ] && echo 'DOCKER_DIR="~/docker"' > ~/.tse/tse.conf
+                if [ ! "$EUID" -eq 0 ]; then
+                    user_path="/home/$(whoami)"
+                    echo -e "\033[31m当前用户为非root用户，部分操作可能无法顺利进行。"
+                else
+                    user_path="/root"
+                fi
                 if [ ! -f ~/.tse/tse.conf ]; then
-                    echo 'DOCKER_DIR="~/docker"' > ~/.tse/tse.conf
+                    # echo 'DOCKER_DIR="$user_path/docker"' > ~/.tse/tse.conf
+                    echo "DOCKER_DIR=\"$user_path/docker\"" > ~/.tse/tse.conf
                 fi
                 DOCKER_DIR_old=$(grep '^DOCKER_DIR=' ~/.tse/tse.conf | awk -F '"' '{print $2}')
                 DOCKER_DIR="$DOCKER_DIR_old"
