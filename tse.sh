@@ -2252,6 +2252,7 @@ case $choice in
         done
         ;;
     u)
+        echo
         curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh
         exit
         ;;
