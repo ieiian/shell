@@ -1664,7 +1664,6 @@ case $choice in
                 DOCKER_DIR="$DOCKER_DIR_old"
 
                 function list_docker_compose_services() {
-                    echo ""
                     all_services=$(find "$DOCKER_DIR" -mindepth 1 -maxdepth 1 -type d | sed 's!.*/!!')
                     
                     index=1
