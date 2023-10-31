@@ -2178,7 +2178,14 @@ case $choice in
                     fi
                 else
                     # 如果文件不存在，输出提示信息
-                    echo "/etc/screenrc 文件不存在。"
+                    echo "未发现/etc/screenrc 文件，系统可能未安装Screen，如有需要可执行以下指令安装Screen："
+                    if command -v apt &>/dev/null; then
+                        echo "apt install -y screen"
+                    elif command -v yum &>/dev/null; then
+                        echo "yum -y install screen"
+                    else
+                        echo "未知系统!"
+                    fi
                 fi
                 ;;
 
