@@ -1,4 +1,16 @@
 #!/bin/bash
+
+# ANSI颜色代码
+BL="\033[30m"
+RE="\033[31m"
+GR="\033[32m"
+YE="\033[33m"
+BL="\033[34m"
+MA="\033[35m"
+CY="\033[36m"
+WH="\033[37m"
+NC="\033[0m"
+# echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
 if [ ! -d ~/.tse ]; then
     mkdir ~/.tse
 fi
@@ -6,9 +18,7 @@ export LANG="en_US.UTF-8"
 EUID=$(id -u)
 clear
 if [ "$EUID" -eq 0 ]; then
-    # 检查/root/.bashrc文件中是否已经包含了指定的命令
     grep -q "curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh" /root/.bashrc
-    
     if [ $? -eq 0 ]; then
         echo "在/root/.bashrc中已经包含指定的命令，将直接运行后面的程序。"
     else
@@ -36,14 +46,32 @@ if [ ! "$EUID" -eq 0 ]; then
 else
     user_path="/root"
 fi
-echo -e "\033[35m _____ \033[36m ____  \033[33m _____ "
-echo -e "\033[35m|_   _|\033[36m/ ___| \033[33m| ____|"
-echo -e "\033[35m  | |  \033[36m\___ \ \033[33m|  _|  "
-echo -e "\033[35m  | |  \033[36m ___) |\033[33m| |___ "
-echo -e "\033[35m  |_|  \033[36m|____/ \033[33m|_____|"
-echo -e "\033[32m====================="
-echo -e "\033[96mTSE 一键脚本工具 v1.0.2 （支持Ubuntu，Debian，Centos系统）\033[0m"
-echo "------------------------"
+echo -e "${GR}TSE 一键脚本工具 v1.0.2 （支持Ubuntu，Debian，Centos系统）${NC}"
+echo -e "${MA} _____ ${CY} ____  ${YE} _____ "
+echo -e "${MA}|_   _|${CY}/ ___| ${YE}| ____|"
+echo -e "${MA}  | |  ${CY}\___ \ ${YE}|  _|  "
+echo -e "${MA}  | |  ${CY} ___) |${YE}| |___ "
+echo -e "${MA}  |_|  ${CY}|____/ ${YE}|_____|"
+echo -e "${BL}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${NC}"
+text="------------------------"
+colored_text=""
+
+for ((i=0; i<${#text}; i++)); do
+    random_color=$((1 + $RANDOM % 8))
+    color=""
+    case $random_color in
+        1) color=$BL ;;
+        2) color=$RE ;;
+        3) color=$GR ;;
+        4) color=$YE ;;
+        5) color=$BL ;;
+        6) color=$MA ;;
+        7) color=$CY ;;
+        8) color=$WH ;;
+    esac
+    colored_text="${colored_text}${color}${text:$i:1}"
+done
+echo -e "${colored_text}${NC}"
 echo "1.  系统信息"
 echo "2.  系统更新"
 echo "3.  系统设置 ▶"
@@ -52,13 +80,13 @@ echo "5.  网络优化安装 ▶"
 echo "6.  测试脚本合集 ▶"
 echo "7.  Docker管理 ▶"
 echo "8.  工作区 ▶▶▶ "
-echo "------------------------"
+echo -e "${colored_text}${NC}"
 echo "9.  其它设置"
-echo "------------------------"
+echo -e "${colored_text}${NC}"
 echo "10. 更新脚本"
-echo "------------------------"
+echo -e "${colored_text}${NC}"
 echo "0.  退出脚本"
-echo "------------------------"
+echo -e "${colored_text}${NC}"
 read -p "请输入你的选择: " choice
 
 case $choice in
@@ -753,19 +781,13 @@ case $choice in
             
             13)
                 clear
-
-                RED="\033[31m"
-                GREEN="\033[32m"
-                YELLOW="\033[33m"
-                NC="\033[0m"
-
                 # 系统检测
                 OS=$(cat /etc/os-release | grep -o -E "Debian|Ubuntu|CentOS" | head -n 1)
 
                 if [[ $OS == "Debian" || $OS == "Ubuntu" || $OS == "CentOS" ]]; then
-                    echo -e "检测到你的系统是 ${YELLOW}${OS}${NC}"
+                    echo -e "检测到你的系统是 ${YE}${OS}${NC}"
                 else
-                    echo -e "${RED}很抱歉，你的系统不受支持！${NC}"
+                    echo -e "${RE}很抱歉，你的系统不受支持！${NC}"
                     exit 1
                 fi
 
@@ -777,7 +799,7 @@ case $choice in
 
                 # 卸载Python3旧版本
                 if [[ $VERSION == "3"* ]]; then
-                    echo -e "${YELLOW}你的Python3版本是${NC}${RED}${VERSION}${NC}，${YELLOW}最新版本是${NC}${RED}${PY_VERSION}${NC}"
+                    echo -e "${YE}你的Python3版本是${NC}${RE}${VERSION}${NC}，${YE}最新版本是${NC}${RE}${PY_VERSION}${NC}"
                     read -p "是否确认升级最新版Python3？默认不升级 [y/N]: " CONFIRM
                     if [[ $CONFIRM == "y" ]]; then
                         if [[ $OS == "CentOS" ]]; then
@@ -788,16 +810,16 @@ case $choice in
                             rm-rf /usr/local/python3*
                         fi
                     else
-                        echo -e "${YELLOW}已取消升级Python3${NC}"
+                        echo -e "${YE}已取消升级Python3${NC}"
                         exit 1
                     fi
                 else
-                    echo -e "${RED}检测到没有安装Python3。${NC}"
+                    echo -e "${RE}检测到没有安装Python3。${NC}"
                     read -p "是否确认安装最新版Python3？默认安装 [Y/n]: " CONFIRM
                     if [[ $CONFIRM != "n" ]]; then
-                        echo -e "${GREEN}开始安装最新版Python3...${NC}"
+                        echo -e "${GR}开始安装最新版Python3...${NC}"
                     else
-                        echo -e "${YELLOW}已取消安装Python3${NC}"
+                        echo -e "${YE}已取消安装Python3${NC}"
                         exit 1
                     fi
                 fi
@@ -826,10 +848,10 @@ case $choice in
                     ln -sf /usr/local/python3/bin/python3 /usr/bin/python3
                     ln -sf /usr/local/python3/bin/pip3 /usr/bin/pip3
                     clear
-                    echo -e "${YELLOW}Python3安装${GREEN}成功，${NC}版本为: ${NC}${GREEN}${PY_VERSION}${NC}"
+                    echo -e "${YE}Python3安装${GR}成功${NC}，版本为: ${GR}${PY_VERSION}${NC}"
                 else
                     clear
-                    echo -e "${RED}Python3安装失败！${NC}"
+                    echo -e "${RE}Python3安装失败！${NC}"
                     exit 1
                 fi
                 cd /root/ && rm -rf Python-${PY_VERSION}.tgz && rm -rf Python-${PY_VERSION}
