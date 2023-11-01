@@ -326,7 +326,7 @@ case $choice in
         echo "15. 重装系统"
         echo -e "${colored_text1}${NC}"
         echo "0.  返回主菜单"
-        echo "00. 退出脚本"
+        echo "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
         read -p "请输入你的选择: " sub_choice
 
@@ -924,11 +924,9 @@ case $choice in
                 bash ~/.tse/tse.sh
                 exit
                 ;;
-
-            00)
+            x|X)
                 exit
                 ;;
-
             *)
                 echo "无效的输入!"
                 ;;
@@ -957,7 +955,7 @@ case $choice in
             echo "50. 全部卸载"
             echo -e "${colored_text1}${NC}"
             echo "0.  返回主菜单"
-            echo "00. 退出脚本"
+            echo "x.  退出脚本"
             echo -e "${colored_text1}${NC}"
             read -p "请输入你的选择: " sub_choice
 
@@ -1120,11 +1118,9 @@ case $choice in
                 bash ~/.tse/tse.sh
                 exit
                 ;;
-
-            00)
+            x|X)
                 exit
                 ;;
-
             *)
                 echo "无效的输入!"
                 ;;
@@ -1148,7 +1144,7 @@ case $choice in
             echo "2.  WARP"
             echo -e "${colored_text1}${NC}"
             echo "0.  返回主菜单"
-            echo "00. 退出脚本"
+            echo "x.  退出脚本"
             echo -e "${colored_text1}${NC}"
             read -p "请输入你的选择: " sub_choice
 
@@ -1208,11 +1204,9 @@ case $choice in
                 bash ~/.tse/tse.sh
                 exit
                 ;;
-
-            00)
+            x|X)
                 exit
                 ;;
-
             *)
                 echo "无效的输入!"
                 ;;
@@ -1242,7 +1236,7 @@ case $choice in
         echo "8.  VPS性能全局测试"
         echo -e "${colored_text1}${NC}"
         echo "0.  返回主菜单"
-        echo "00. 退出脚本"
+        echo "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
         read -p "请输入你的选择: " sub_choice
 
@@ -1294,7 +1288,7 @@ case $choice in
                 bash ~/.tse/tse.sh
                 exit
                 ;;
-            00)
+            x|X)
                 exit
                 ;;
             *)
@@ -1332,7 +1326,7 @@ case $choice in
             echo "10.  DOCKER 库管理 ▶"
             echo -e "${colored_text1}${NC}"
             echo "0.  返回主菜单"
-            echo "00. 退出脚本"
+            echo "x.  退出脚本"
             echo -e "${colored_text1}${NC}"
             read -p "请输入你的选择: " sub_choice
 
@@ -1709,7 +1703,7 @@ case $choice in
                     echo "9.  修改文件夹路径（ $DOCKER_DIR ）"
                     echo -e "${colored_text1}${NC}"
                     echo "0.  返回上级菜单"
-                    echo "00. 退出脚本"
+                    echo "x.  退出脚本"
                     echo -e "${colored_text1}${NC}"
                     echo ""
 
@@ -1899,7 +1893,7 @@ case $choice in
                             # 退出
                             break  # 跳出循环，退出菜单
                             ;;
-                        00)
+                        x|X)
                             exit
                             ;;
                         *)
@@ -1985,7 +1979,7 @@ case $choice in
                 bash ~/.tse/tse.sh
                 exit
                 ;;
-            00)
+            x|X)
                 exit
                 ;;
             *)
@@ -2021,7 +2015,7 @@ case $choice in
         echo "8.  工作区状态"
         echo -e "${colored_text1}${NC}"
         echo "0.  返回主菜单"
-        echo "00. 退出脚本"
+        echo "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
         read -p "请输入你的选择: " sub_choice
 
@@ -2126,7 +2120,7 @@ case $choice in
                 bash ~/.tse/tse.sh
                 exit
                 ;;
-            00)
+            x|X)
                 exit
                 ;;
             *)
@@ -2151,7 +2145,7 @@ case $choice in
             echo "2.  禁止screen改变窗口大小"
             echo -e "${colored_text1}${NC}"
             echo "0.  返回主菜单"
-            echo "00. 退出脚本"
+            echo "x.  退出脚本"
             echo -e "${colored_text1}${NC}"
             read -p "请输入你的选择: " sub_choice
         case $sub_choice in
@@ -2234,11 +2228,9 @@ case $choice in
                 bash ~/.tse/tse.sh
                 exit
                 ;;
-
-            00)
+            x|X)
                 exit
                 ;;
-
             *)
                 echo "无效的输入!"
                 ;;
@@ -2259,16 +2251,12 @@ case $choice in
     0)
         exit
         ;;
-    00)
-        exit
-        ;;
-    x)
+    x|X)
         # echo
         exit
         ;;
     *)
         echo "无效的输入!"
-
 esac
 echo -e "\033[0;32m操作完成\033[0m"
 echo "按任意键继续..."
