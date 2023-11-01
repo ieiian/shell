@@ -2266,16 +2266,11 @@ case $choice in
             p)
                 clear_screen
                 check_pve_environment() {
-                    kernel_version=$(uname -r)
-                    if [[ $kernel_version == *pve* ]]; then
-                        kvm_version=$(kvm -version 2>&1)
-                        qemu_img_version=$(qemu-img -V 2>&1)
-                        if [[ $kvm_version == *"pve-qemu-kvm"* && $qemu_img_version == *"pve-qemu-kvm"* ]]; then
+                    kvm_version=$(kvm -version 2>&1)
+                    qemu_img_version=$(qemu-img -V 2>&1)
+                    if [[ $kvm_version == *"pve-qemu-kvm"* && $qemu_img_version == *"pve-qemu-kvm"* ]]; then
+                        if [[ $kernel_version == *pve* ]]; then
                             testuser=1
-                        else
-                            testuser=0
-                            echo -e "${MA}以上操作必须在PVE宿主机后台并以root身份执行。${NC}"
-                            return
                         fi
                     else
                         testuser=0
