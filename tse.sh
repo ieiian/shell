@@ -2289,11 +2289,11 @@ case $choice in
                     echo " ▼ "
                     echo -e "${MA}PVE设置${NC}"
                     echo -e "${colored_text2}${NC}"
-                    echo -e "1.  导入镜像文件 ${MA}->${NC} 虚拟机"
-                    echo -e "2.  更改 LXC/虚拟机的 ${MA}VMID${NC}"
-                    echo -e "3.  一键更换 ${CY}中科大${NC} 源地址并升级"
+                    echo -e "1.  导入镜像文件 ${GR}->${NC} 虚拟机"
+                    echo -e "2.  更改 LXC/虚拟机的 ${GR}VMID${NC}"
+                    echo -e "3.  一键更换 ${GR}中科大${NC} 源地址并升级"
                     echo "4.  去除无效订阅提示"
-                    echo -e "5.  修复 "${MA}command 'apt-get update' failed: exit code 100${NC}""
+                    echo -e "5.  修复 "${GR}command 'apt-get update' failed: exit code 100${NC}""
                     echo "6.  开启/关闭-硬件直通"
                     echo -e "${colored_text1}${NC}"
                     echo "0.  返回主菜单"
@@ -2310,19 +2310,40 @@ case $choice in
                         echo " ▼ "
                         echo -e "${CY}PVE - 导入镜像文件${NC} ${MA}->${NC} ${CY}虚拟机${NC}"
                         echo -e "${colored_text2}${NC}"
+                        qm list
+                        echo -e "${colored_text1}${NC}"
+
+                        process_img_path() {
+                            local file_extension=$(basename "$1" | rev | cut -d. -f1 | rev)  # 获取文件名的后缀名
+
+                            if [ "$file_extension" = "gz" ]; then
+                                # 如果后缀是gz，删除后面的.gz，保留.img作为后缀
+                                img_path=$(echo "$1" | sed 's/\.gz$//')
+                            elif [ "$file_extension" = "img" ]; then
+                                # 如果后缀是.img，不作处理
+                                img_path=$1
+                            else
+                                # 如果不是.img或.img.gz后缀，你可以在这里处理其他类型的后缀，或者输出错误提示
+                                echo "Error: Invalid file extension"
+                                exit 1
+                            fi
+                        }
 
                         file_path=~/.tse/img2kvm
                         if [ ! -f "$file_path" ]; then
                             wget -P ~/.tse/ https://github.com/ieiian/shell/raw/main/img2kvm >/dev/null 2>&1 && chmod +x img2kvm
                         fi
 
-                        read -p "请输入虚拟机名称: " vmname
-                        name_regex="^[A-Za-z0-9]{1,20}$"
-                        if [[ $vmname =~ $name_regex ]]; then
-                            :
-                        else
-                            echo "输入的名称不合法，请重新输入。"
-                        fi
+                        while true; do
+                            echo -e "请输入虚拟机磁盘(${GR}虚拟机所使用的磁盘${NC})名称"
+                            read -p "建议采用vm-<vmid>-disk-<diskid> (如:vm-200-disk-1): " vmname
+                            name_regex="^[A-Za-z0-9_-]{1,20}$"
+                            if [[ $vmname =~ $name_regex ]]; then
+                                break
+                            else
+                                echo "输入的名称不合法，请重新输入。"
+                            fi
+                        done
 
                         while true; do
                             read -p "请输入镜像文件地址 (按回车键查找地址，按 C 退出): " img_path
@@ -2342,6 +2363,7 @@ case $choice in
                                 echo "取消操作，退出循环。"
                                 break
                             elif [ -e "$img_path" ] && [ ! -d "$img_path" ] && [ -f "$img_path" ]; then
+                                process_img_path "$img_path"
                                 # echo "找到对应的文件: $img_path"
                                 break
                             else
@@ -2349,40 +2371,36 @@ case $choice in
                             fi
                         done
 
-                            echo " ▼ "
-                            echo -e "${CY}当前虚拟机列表:${NC}"
-                            echo -e "${colored_text2}${NC}"
-                            qm list
-                            echo ""
-                            echo "虚拟机名称: $vmname"
-                            echo "找到对应的文件: $img_path"
-                            echo -e "${colored_text1}${NC}"
-                            while true; do
-                                read -p "请输入要导入的VMID (按 C 取消操作): " vmid_choice
+                        while true; do
+                            read -p "请输入要导入的VMID (按 C 取消操作): " vmid_choice
 
-                                if [ "$vmid_choice" == "C" ] || [ "$vmid_choice" == "c" ]; then
-                                    echo "取消操作，退出循环。"
-                                    break
-                                fi
+                            if [ "$vmid_choice" == "C" ] || [ "$vmid_choice" == "c" ]; then
+                                echo "取消操作，退出循环。"
+                                break
+                            fi
 
-                                result=$(qm list | grep -E "\s+$vmid_choice\s+" | awk '{print $1}')
+                            result=$(qm list | grep -E "\s+$vmid_choice\s+" | awk '{print $1}')
 
-                                if [ -n "$result" ]; then
-                                    echo "找到匹配的VMID: $result"
-                                    read -p "参数已经确定，是否继续操作Y/N: " import_choice
-                                        if [ "$import_choice" == "Y" ] || [ "$import_choice" == "y" ]; then
-                                            ~/.tse/img2kvm "$img_path" "$vmid_choice" "$vmname"
-                                            echo "操作已执行。"
-                                            break
-                                        else
-                                            echo "取消操作，退出循环。"
-                                            break
-                                        fi
-                                    break
-                                else
-                                    echo "未找到VMID，请重新输入。"
-                                fi
-                            done
+                            if [ -n "$result" ]; then
+                                echo -e "${colored_text1}${NC}"
+                                echo "磁盘名称: $vmname"
+                                echo "镜像文件: $img_path"
+                                echo "虚拟机VMID: $result"
+                                echo -e "${colored_text1}${NC}"
+                                read -p "参数确认，是否继续操作 (Y/N): " import_choice
+                                    if [ "$import_choice" == "Y" ] || [ "$import_choice" == "y" ]; then
+                                        ~/.tse/img2kvm "$img_path" "$vmid_choice" "$vmname"
+                                        echo "操作已执行。"
+                                        break
+                                    else
+                                        echo "取消操作，退出循环。"
+                                        break
+                                    fi
+                                break
+                            else
+                                echo "未找到VMID，请重新输入。"
+                            fi
+                        done
 
 
                         # done
