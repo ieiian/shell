@@ -2,16 +2,26 @@
 
 export LANG="en_US.UTF-8"
 # ANSI颜色代码
-BL="\033[30m"
-RE="\033[31m"
-GR="\033[32m"
-YE="\033[33m"
-BL="\033[34m"
-MA="\033[35m"
-CY="\033[36m"
-WH="\033[37m"
-NC="\033[0m"
+# BL="\033[30m"
+# RE="\033[31m"
+# GR="\033[32m"
+# YE="\033[33m"
+# BL="\033[34m"
+# MA="\033[35m"
+# CY="\033[36m"
+# WH="\033[37m"
+# NC="\033[0m"
 # echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
+
+BL=$(tput setaf 0)  # 黑色
+RE=$(tput setaf 1)  # 红色
+GR=$(tput setaf 2)  # 绿色
+YE=$(tput setaf 3)  # 黄色
+BL=$(tput setaf 4)  # 蓝色
+MA=$(tput setaf 5)  # 洋红色
+CY=$(tput setaf 6)  # 青色
+WH=$(tput setaf 7)  # 白色
+NC=$(tput sgr0)     # 恢复默认颜色
 
 clear_screen(){
     printf "\033c"
@@ -260,7 +270,7 @@ case $choice in
                     # 更新并升级
                     clear_screen
                     echo " ▼ "
-                    echo -e "${CY}系统更新中... ${NC}"
+                    echo -e "${CY}系统更新中...${NC}"
                     # Update system on Debian-based systems
                     if command -v apt &>/dev/null; then
                         DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
@@ -274,7 +284,7 @@ case $choice in
                 [Nn]|"")
                     clear_screen
                     echo " ▼ "
-                    echo -e "${CY}系统更新中... ${NC}"
+                    echo -e "${CY}系统更新中...${NC}"
                     # Update system on Debian-based systems
                     if command -v apt &>/dev/null; then
                         DEBIAN_FRONTEND=noninteractive apt update -y
