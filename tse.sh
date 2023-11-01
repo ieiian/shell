@@ -355,24 +355,50 @@ case $choice in
                 ;;
             3)
                 clear_screen
-                echo "设置你的ROOT密码"
-                passwd
-                sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config;
-                sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config;
-                service sshd restart
-                echo "ROOT登录设置完毕！"
-                read -p "需要重启服务器吗？(Y/N): " choice
-                case "$choice" in
-                [Yy])
-                reboot
-                ;;
-                [Nn])
-                echo "已取消"
-                ;;
-                *)
-                echo "无效的选择，请输入 Y 或 N。"
-                ;;
-                esac
+                echo -e "${MA}设置你的ROOT密码${NC}"
+                if [ ! -f "/etc/ssh/sshd_config" ]; then
+                if command -v apt &>/dev/null; then
+                    apt-get update
+                    apt-get install -y openssl openssh-server
+                elif command -v yum &>/dev/null; then
+                    yum install -y openssl openssh-server
+                else
+                    echo "不支持的操作系统类型"
+                    exit 1
+                fi
+            fi
+
+            if grep -qE '^PermitRootLogin\s+yes' /etc/ssh/sshd_config && grep -qE '^PasswordAuthentication\s+yes' /etc/ssh/sshd_config; then
+                echo "操作之前已经完成，无需再次操作。"
+            else
+                sed -E 's/^#*\s*PermitRootLogin\s+.*/PermitRootLogin yes/' -i /etc/ssh/sshd_config
+                sed -E 's/^#*\s*PasswordAuthentication\s+.*/PasswordAuthentication yes/' -i /etc/ssh/sshd_config
+                read -p "是否需要更改登陆密码？(y/Y 为是，其他为否): " choice
+                if [[ $choice == "y" || $choice == "Y" ]]; then
+                    passwd
+                fi
+                read -p "是否需要重启系统？(y/Y 为是，其他为否): " choice
+                if [[ $choice == "y" || $choice == "Y" ]]; then
+                    reboot
+                fi
+            fi
+                # passwd
+                # sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config;
+                # sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config;
+                # service sshd restart
+                # echo "ROOT登录设置完毕！"
+                # read -p "需要重启服务器吗？(Y/N): " choice
+                # case "$choice" in
+                # [Yy])
+                #     reboot
+                #     ;;
+                # [Nn])
+                #     echo "已取消"
+                #     ;;
+                # *)
+                #     echo "无效的选择，请输入 Y 或 N。"
+                #     ;;
+                # esac
                 ;;
             4)
                 clear_screen
