@@ -2299,7 +2299,7 @@ case $choice in
                     echo "x.  退出脚本"
                     echo -e "${colored_text1}${NC}"
                     check_pve_environment
-                    if [ $tsetuser -eq 0 ]; then
+                    if [ $testuser -eq 0 ]; then
                         echo -e "${BK}请输入你的选择: ${NC}"
                     fi
                     read -p "请输入你的选择: " sub_choice
