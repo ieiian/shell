@@ -352,12 +352,14 @@ case $choice in
                 ;;
             2)
                 clear_screen
-                echo "${MA}设置你的ROOT密码${NC}"
+                echo -e "${CY}设置你的ROOT密码${NC}"
+                echo -e "${colored_text2}${NC}"
                 passwd
                 ;;
             3)
                 clear_screen
-                echo -e "${MA}开启ROOT登陆${NC}"
+                echo -e "${CY}开启ROOT登陆${NC}"
+                echo -e "${colored_text2}${NC}"
                 if [ ! -f "/etc/ssh/sshd_config" ]; then
                     if command -v apt &>/dev/null; then
                         apt-get update
@@ -418,7 +420,7 @@ case $choice in
                 while true; do
                     clear_screen
                     # 显示所有用户、用户权限、用户组和是否在sudoers中
-                    echo "用户列表"
+                    echo -e "${CY}用户列表${NC}"
                     echo -e "${colored_text1}${NC}${colored_text1}${NC}${colored_text1}${NC}"
                     printf "%-24s %-34s %-20s %-10s\n" "用户名" "用户权限" "用户组" "sudo权限"
                     while IFS=: read -r username _ userid groupid _ _ homedir shell; do
@@ -546,7 +548,7 @@ case $choice in
             6)
                 clear_screen
 
-                echo "随机用户名"
+                echo -e "${CY}随机用户名${NC}"
                 echo -e "${colored_text1}${NC}"
                 for i in {1..5}; do
                     username="user$(< /dev/urandom tr -dc _a-z0-9 | head -c6)"
@@ -554,7 +556,7 @@ case $choice in
                 done
 
                 echo ""
-                echo "随机姓名"
+                echo -e "${CY}随机姓名${NC}"
                 echo -e "${colored_text1}${NC}"
                 first_names=("Gou" "Zhu" "Ji" "Ma" "Xiaoming" "Meimei" "Gege" "Budao" "Tian" "Feng" "Qiang" "Cong" "Qiu" "Ying" "Xia")
                 last_names=("SUN" "ZHANG" "LI" "XIE" "XIAO" "GUANG" "FENG" "GO" "HUANG" "DA" "CAO" "LAN" "LIU" "LIAO")
@@ -568,7 +570,7 @@ case $choice in
                 done
 
                     echo ""
-                    echo "随机UUID"
+                    echo -e "${CY}随机UUID${NC}"
                     echo -e "${colored_text1}${NC}"
                 for i in {1..5}; do
                     uuid=$(cat /proc/sys/kernel/random/uuid)
@@ -576,7 +578,7 @@ case $choice in
                 done
 
                     echo ""
-                    echo "16位随机密码"
+                    echo -e "${CY}16位随机密码${NC}"
                     echo -e "${colored_text1}${NC}"
                 for i in {1..5}; do
                     password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c16)
@@ -584,7 +586,7 @@ case $choice in
                 done
 
                     echo ""
-                    echo "32位随机密码"
+                    echo -e "${CY}32位随机密码${NC}"
                     echo -e "${colored_text1}${NC}"
                 for i in {1..5}; do
                     password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32)
@@ -734,7 +736,7 @@ case $choice in
             12)
 
                 if [ "$EUID" -ne 0 ]; then
-                echo "请以 root 权限运行此脚本。"
+                echo -e "${MA}请以 root 权限运行此脚本。${NC}"
                 exit 1
                 fi
 
@@ -895,7 +897,7 @@ case $choice in
                 ;;
             15)
                 clear_screen
-                echo "请备份数据，将为你重装系统，预计花费15分钟。"
+                echo -e "${MA}请备份数据，将为你重装系统，预计花费15分钟。${NC}"
                 read -p "确定继续吗？(Y/N): " choice
 
                 case "$choice" in
