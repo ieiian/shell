@@ -13,6 +13,10 @@ WH="\033[37m"
 NC="\033[0m"
 # echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
 
+clear_screen(){
+    printf "\033c"
+}
+
 if [ ! -d ~/.tse ]; then
     mkdir ~/.tse
 fi
@@ -39,7 +43,7 @@ for ((i=0; i<${#text2}; i++)); do
 done
 
 EUID=$(id -u)
-clear
+clear_screen
 if [ "$EUID" -eq 0 ]; then
     grep -q "curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh" /root/.bashrc
     if [ $? -eq 0 ]; then
@@ -65,7 +69,7 @@ if [ "$EUID" -eq 0 ]; then
     fi
 fi
 while true; do
-clear
+clear_screen
 if [ ! "$EUID" -eq 0 ]; then
     user_path="/home/$(whoami)"
     echo -e "${GR}当前用户为非root用户，部分操作可能无法顺利进行。${NC}"
@@ -99,7 +103,7 @@ read -p "请输入你的选择: " -n 3 -r choice
 
 case $choice in
     1)
-        clear
+        clear_screen
         echo -e "${MA}部分信息需要从网络获取，请耐心等候...${NC}"
 
         # 函数: 获取IPv4和IPv6地址
@@ -154,7 +158,7 @@ case $choice in
         fi
         fi
 
-        clear
+        clear_screen
         output=$(awk 'BEGIN { rx_total = 0; tx_total = 0 }
             NR > 2 { rx_total += $2; tx_total += $10 }
             END {
@@ -254,7 +258,7 @@ case $choice in
             case "$choice" in
                 [Yy])
                     # 更新并升级
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}系统更新中...${NC}"
                     # Update system on Debian-based systems
@@ -268,7 +272,7 @@ case $choice in
                     break  # 退出循环
                     ;;
                 [Nn]|"")
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}系统更新中...${NC}"
                     # Update system on Debian-based systems
@@ -298,7 +302,7 @@ case $choice in
         ;;
 
     3)
-        clear
+        clear_screen
         while true; do
 
         echo " ▼ "
@@ -332,7 +336,7 @@ case $choice in
 
         case $sub_choice in
             1)
-                clear
+                clear_screen
                 while true; do
                     read -p "请输入你的快捷按键: " kjj
                     if [ -z "$kjj" ]; then
@@ -345,12 +349,12 @@ case $choice in
                 done
                 ;;
             2)
-                clear
+                clear_screen
                 echo "设置你的ROOT密码"
                 passwd
                 ;;
             3)
-                clear
+                clear_screen
                 echo "设置你的ROOT密码"
                 passwd
                 sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config;
@@ -371,7 +375,7 @@ case $choice in
                 esac
                 ;;
             4)
-                clear
+                clear_screen
                 if ! command -v sudo &>/dev/null; then
                     if command -v apt &>/dev/null; then
                         apt update -y && apt install -y sudo
@@ -400,7 +404,7 @@ case $choice in
 
             5)
                 while true; do
-                    clear
+                    clear_screen
                     # 显示所有用户、用户权限、用户组和是否在sudoers中
                     echo "用户列表"
                     echo -e "${colored_text1}${NC}${colored_text1}${NC}${colored_text1}${NC}"
@@ -528,7 +532,7 @@ case $choice in
                 ;;
 
             6)
-                clear
+                clear_screen
 
                 echo "随机用户名"
                 echo -e "${colored_text1}${NC}"
@@ -579,7 +583,7 @@ case $choice in
             
             7)
                 # 清屏
-                clear
+                clear_screen
 
                 # 获取当前的 SSH 端口号
                 current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
@@ -609,14 +613,14 @@ case $choice in
                 fi
                 ;;
             8)
-                clear
+                clear_screen
                 echo " ▼ "
                 echo -e "${CY}系统设置 - 查询端口占用状态${NC}"
                 echo -e "${colored_text2}${NC}"
                 ss -untlp
                 ;;
             9)
-                clear
+                clear_screen
                 echo " ▼ "
                 echo -e "${CY}系统设置 - 开放所有端口${NC}"
                 echo -e "${colored_text2}${NC}"
@@ -633,7 +637,7 @@ case $choice in
                 ;;
 
             10)
-                clear
+                clear_screen
                 echo " ▼ "
                 echo -e "${CY}系统设置 - 优化DNS地址${NC}"
                 echo -e "${colored_text2}${NC}"
@@ -681,7 +685,7 @@ case $choice in
                 ;;          
 
             11)
-                clear
+                clear_screen
                 ipv6_disabled=$(sysctl -n net.ipv6.conf.all.disable_ipv6)
 
                 echo ""
@@ -722,7 +726,7 @@ case $choice in
                 exit 1
                 fi
 
-                clear
+                clear_screen
                 # 获取当前交换空间信息
                 swap_used=$(free -m | awk 'NR==3{print $3}')
                 swap_total=$(free -m | awk 'NR==3{print $2}')
@@ -779,7 +783,7 @@ case $choice in
                 ;;
             
             13)
-                clear
+                clear_screen
                 # 系统检测
                 OS=$(cat /etc/os-release | grep -o -E "Debian|Ubuntu|CentOS" | head -n 1)
 
@@ -846,17 +850,17 @@ case $choice in
                     rm -f /usr/local/bin/pip3*
                     ln -sf /usr/local/python3/bin/python3 /usr/bin/python3
                     ln -sf /usr/local/python3/bin/pip3 /usr/bin/pip3
-                    clear
+                    clear_screen
                     echo -e "${YE}Python3安装${GR}成功${NC}，版本为: ${GR}${PY_VERSION}${NC}"
                 else
-                    clear
+                    clear_screen
                     echo -e "${RE}Python3安装失败！${NC}"
                     exit 1
                 fi
                 cd /root/ && rm -rf Python-${PY_VERSION}.tgz && rm -rf Python-${PY_VERSION}
                 ;;
             14)
-                clear
+                clear_screen
                 if [ -f "/etc/debian_version" ]; then
                     # Debian-based systems
                     apt autoremove --purge -y
@@ -878,7 +882,7 @@ case $choice in
                 fi
                 ;;
             15)
-                clear
+                clear_screen
                 echo "请备份数据，将为你重装系统，预计花费15分钟。"
                 read -p "确定继续吗？(Y/N): " choice
 
@@ -935,12 +939,12 @@ case $choice in
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
-        clear
+        clear_screen
         done
         ;;
 
     4)
-        clear
+        clear_screen
         while true; do
             echo " ▼ "
             echo -e "${MA}常用工具安装${NC}"
@@ -961,7 +965,7 @@ case $choice in
 
         case $sub_choice in
             1)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y sudo curl wget nano
                 elif command -v yum &>/dev/null; then
@@ -972,7 +976,7 @@ case $choice in
 
                 ;;
             2)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y sudo curl wget nano tar socat
                 elif command -v yum &>/dev/null; then
@@ -982,7 +986,7 @@ case $choice in
                 fi
                 ;;
             3)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y htop iftop unzip tmux ffmpeg
                 elif command -v yum &>/dev/null; then
@@ -992,7 +996,7 @@ case $choice in
                 fi
                 ;;
             4)
-                clear
+                clear_screen
                 echo " ▼ "
                 echo -e "${CY}安装常用工具 - 手动安装指定工具${NC}"
                 echo -e "${colored_text2}${NC}"
@@ -1032,7 +1036,7 @@ case $choice in
                 done
                 ;;
             5)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y htop
                 elif command -v yum &>/dev/null; then
@@ -1042,7 +1046,7 @@ case $choice in
                 fi
                 ;;
             6)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y iftop
                 elif command -v yum &>/dev/null; then
@@ -1052,7 +1056,7 @@ case $choice in
                 fi
                 ;;
             7)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y unzip
                 elif command -v yum &>/dev/null; then
@@ -1062,7 +1066,7 @@ case $choice in
                 fi
                 ;;
             8)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y tar
                 elif command -v yum &>/dev/null; then
@@ -1072,7 +1076,7 @@ case $choice in
                 fi
                 ;;
             9)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y tmux
                 elif command -v yum &>/dev/null; then
@@ -1082,7 +1086,7 @@ case $choice in
                 fi
                 ;;
             10)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y ffmpeg
                 elif command -v yum &>/dev/null; then
@@ -1093,7 +1097,7 @@ case $choice in
                 ;;
 
             51)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y curl wget sudo socat htop iftop unzip tar tmux ffmpeg
                 elif command -v yum &>/dev/null; then
@@ -1104,7 +1108,7 @@ case $choice in
                 ;;
 
             50)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt remove -y htop iftop unzip tmux ffmpeg
                 elif command -v yum &>/dev/null; then
@@ -1129,13 +1133,13 @@ case $choice in
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
-        clear
+        clear_screen
 
         done
         ;;
 
     5)
-        clear
+        clear_screen
         while true; do
             echo " ▼ "
             echo -e "${MA}网络优化安装${NC}"
@@ -1150,7 +1154,7 @@ case $choice in
 
         case $sub_choice in
             1)
-                clear
+                clear_screen
                 echo " ▼ "
                 echo -e "${CY}安装常用工具 - BBR${NC}"
                 echo -e "${colored_text2}${NC}"
@@ -1176,7 +1180,7 @@ case $choice in
                 ;;
             
             2)
-                clear
+                clear_screen
                 echo " ▼ "
                 echo -e "${CY}安装常用工具 - WARP${NC}"
                 echo -e "${colored_text2}${NC}"
@@ -1215,12 +1219,12 @@ case $choice in
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
-        clear
+        clear_screen
 
         done
         ;;
     6)
-        clear
+        clear_screen
         while true; do
 
         echo " ▼ "
@@ -1246,42 +1250,42 @@ case $choice in
 
         case $sub_choice in
             1)
-                clear
+                clear_screen
                 bash <(curl -Ls https://cdn.jsdelivr.net/gh/missuo/OpenAI-Checker/openai.sh)
                 # bash <(curl -Ls https://cdn.jsdelivr.net/gh/missuo/OpenAI-Checker/openai.sh) -o ~/tse/openai.sh
                 ;;
             2)
-                clear
+                clear_screen
                 bash <(curl -L -s check.unlock.media)
                 rm bahamut_cookie.txt
                 ;;
             3)
-                clear
+                clear_screen
                 wget -qO- https://github.com/yeahwu/check/raw/main/check.sh | bash
                 # wget -qO- https://github.com/yeahwu/check/raw/main/check.sh -O ~/tse/ | bash ~/tse/check.sh
                 ;;
             4)
-                clear
+                clear_screen
                 wget -qO- git.io/besttrace | bash
                 # wget -qO- git.io/besttrace -O ~/tse/ | bash ~/tse/besttrace
                 rm besttrace*
                 ;;
             5)
-                clear
+                clear_screen
                 curl https://raw.githubusercontent.com/zhucaidan/mtr_trace/main/mtr_trace.sh | bash
                 # curl https://raw.githubusercontent.com/zhucaidan/mtr_trace/main/mtr_trace.sh -o ~/tse/ | bash ~/tse/mtr_trace.sh
                 ;;
             6)
-                clear
+                clear_screen
                 bash <(curl -Lso- https://git.io/superspeed_uxh)
                 # bash <(curl -Lso- https://git.io/superspeed_uxh) -o ~/tse/superspeed_uxh
                 ;;
             7)
-                clear
+                clear_screen
                 curl -sL yabs.sh | bash -s -- -i -5
                 ;;
             8)
-                clear
+                clear_screen
                 wget -qO- bench.sh | bash
                 ;;
             0)
@@ -1299,12 +1303,12 @@ case $choice in
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
-        clear
+        clear_screen
         done
         ;;
 
     7)
-        clear
+        clear_screen
         while true; do
             echo " ▼ "
             echo -e "${MA}DOCKER${NC}"
@@ -1332,7 +1336,7 @@ case $choice in
 
         case $sub_choice in
             1)
-                clear
+                clear_screen
                 curl -fsSL https://get.docker.com | sh
                 systemctl start docker
                 systemctl enable docker
@@ -1364,7 +1368,7 @@ case $choice in
                 ;;
             3)
                 while true; do
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}DOCKER 容器列表:${NC}"
                     echo -e "${colored_text2}${NC}"
@@ -1440,7 +1444,7 @@ case $choice in
                             echo "按任意键继续..."
                             read -n 1 -s -r -p ""
                             echo ""
-                            clear
+                            clear_screen
                             ;;
                         13)
                             echo ""
@@ -1467,7 +1471,7 @@ case $choice in
                             echo "按任意键继续..."
                             read -n 1 -s -r -p ""
                             echo ""
-                            clear
+                            clear_screen
                             ;;
 
                         0)
@@ -1482,7 +1486,7 @@ case $choice in
                 ;;
             4)
                 while true; do
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}DOCKER 镜像列表:${NC}"
                     echo -e "${colored_text2}${NC}"
@@ -1537,7 +1541,7 @@ case $choice in
 
             5)
                 while true; do
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}DOCKER 网络列表:${NC}"
                     echo -e "${colored_text2}${NC}"
@@ -1608,7 +1612,7 @@ case $choice in
 
             6)
                 while true; do
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}DOCKER 卷列表:${NC}"
                     echo -e "${colored_text2}${NC}"
@@ -1681,7 +1685,7 @@ case $choice in
                 }
 
                 while true; do
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}DOCKER-COMPOSE 服务列表:${NC}"
                     echo -e "${colored_text2}${NC}"
@@ -1711,12 +1715,12 @@ case $choice in
 
                     case $choice in
                         # 11)
-                        #     clear
+                        #     clear_screen
                         #     # 列出所有 Docker-compose 服务
                         #     #list_docker_compose_services
                         #     ;;
                         1)
-                            clear
+                            clear_screen
                             list_docker_compose_services
                             # 创建新 Docker-compose 服务
                             read -p "请输入新服务的名称: " service_name
@@ -1730,7 +1734,7 @@ case $choice in
                             list_docker_compose_services
                             ;;
                         2)
-                            clear
+                            clear_screen
                             # 修改 Docker Compose 文件
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1752,7 +1756,7 @@ case $choice in
                             fi
                             ;;
                         3)
-                            clear
+                            clear_screen
                             # 启动 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1768,7 +1772,7 @@ case $choice in
                             fi
                             ;;
                         4)
-                            clear
+                            clear_screen
                             # 停止 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1783,7 +1787,7 @@ case $choice in
                             fi
                             ;;
                         5)
-                            clear
+                            clear_screen
                             # 重启 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1798,7 +1802,7 @@ case $choice in
                             fi
                             ;;
                         6)
-                            clear
+                            clear_screen
                             # 升级 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1822,7 +1826,7 @@ case $choice in
                             fi
                             ;;
                         7)
-                            clear
+                            clear_screen
                             # 查询 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1838,7 +1842,7 @@ case $choice in
                             fi
                             ;;
                         8)
-                            clear
+                            clear_screen
                             # 删除 Docker 服务
                             echo "可用的 Docker 服务:"
                             list_docker_compose_services
@@ -1852,7 +1856,7 @@ case $choice in
                             fi
                             ;;
                         9)
-                            clear
+                            clear_screen
                             # 修改自定义文件夹路径
                             echo "修改自定义文件夹路径:"
                             read -p "请输入新的自定义文件夹路径: " custom_dir
@@ -1903,7 +1907,7 @@ case $choice in
                 done
                 ;;
             8)
-                clear
+                clear_screen
                 read -p "确定清理无用的镜像容器网络吗？(Y/N): " choice
                 case "$choice" in
                     [Yy])
@@ -1917,7 +1921,7 @@ case $choice in
                 esac
                 ;;
             9)
-                clear
+                clear_screen
                 read -p "确定卸载docker环境吗？(Y/N): " choice
                 case "$choice" in
                     [Yy])
@@ -1936,7 +1940,7 @@ case $choice in
                 ;;
             10)
                 while true; do
-                    clear
+                    clear_screen
                     echo " ▼ "
                     echo -e "${CY}DOCKER 镜像列表:${NC}"
                     echo -e "${colored_text2}${NC}"
@@ -1990,12 +1994,12 @@ case $choice in
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
-        clear
+        clear_screen
         done
         ;;
 
     8)
-        clear
+        clear_screen
         while true; do
         echo " ▼ "
         echo -e "${MA}我的工作区${NC}"
@@ -2021,7 +2025,7 @@ case $choice in
 
         case $sub_choice in
             a)
-                clear
+                clear_screen
                 if command -v apt &>/dev/null; then
                     apt update -y && apt install -y tmux
                 elif command -v yum &>/dev/null; then
@@ -2032,7 +2036,7 @@ case $choice in
 
                 ;;
             1)
-                clear
+                clear_screen
                 SESSION_NAME="work1"
 
                 # Check if the session already exists
@@ -2048,7 +2052,7 @@ case $choice in
                 fi
                 ;;
             2)
-                clear
+                clear_screen
                 SESSION_NAME="work2"
 
                 # Check if the session already exists
@@ -2064,7 +2068,7 @@ case $choice in
                 fi
                 ;;
             3)
-                clear
+                clear_screen
                 SESSION_NAME="work3"
 
                 # Check if the session already exists
@@ -2080,7 +2084,7 @@ case $choice in
                 fi
                 ;;
             4)
-                clear
+                clear_screen
                 SESSION_NAME="work4"
 
                 # Check if the session already exists
@@ -2096,7 +2100,7 @@ case $choice in
                 fi
                 ;;
             5)
-                clear
+                clear_screen
                 SESSION_NAME="work5"
 
                 # Check if the session already exists
@@ -2113,7 +2117,7 @@ case $choice in
                 ;;
 
             8)
-                clear
+                clear_screen
                 tmux list-sessions
                 ;;
             0)
@@ -2131,12 +2135,12 @@ case $choice in
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
-        clear
+        clear_screen
         done
         ;;
 
     9)
-        clear
+        clear_screen
         while true; do
             echo " ▼ "
             echo -e "${MA}其它设置${NC}"
@@ -2239,7 +2243,7 @@ case $choice in
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
-        clear
+        clear_screen
 
         done
         ;;
@@ -2262,5 +2266,5 @@ echo -e "\033[0;32m操作完成\033[0m"
 echo "按任意键继续..."
 read -n 1 -s -r -p ""
 echo ""
-clear
+clear_screen
 done
