@@ -2268,12 +2268,13 @@ case $choice in
                 check_pve_environment() {
                     kvm_version=$(kvm -version 2>&1)
                     qemu_img_version=$(qemu-img -V 2>&1)
+                    kernel_pve=$(uname -r 2>&1)
                     if [[ $kvm_version == *"pve-qemu-kvm"* && $qemu_img_version == *"pve-qemu-kvm"* ]]; then
-                        if [[ $kernel_version == *pve* ]]; then
-                            testuser=1
+                        if [[ $kernel_pve == *pve* ]]; then
+                            tuser=1
                         fi
                     else
-                        testuser=0
+                        tuser=0
                         echo -e "${MA}以上操作必须在PVE宿主机后台并以root身份执行。${NC}"
                         return
                     fi
@@ -2293,7 +2294,7 @@ case $choice in
                     echo "x.  退出脚本"
                     echo -e "${colored_text1}${NC}"
                     check_pve_environment
-                    if [ $testuser -eq 0 ]; then
+                    if [ $tuser -eq 0 ]; then
                         echo -e "${BK}请输入你的选择: ${NC}"
                         break
                     fi
