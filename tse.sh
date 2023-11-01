@@ -257,9 +257,8 @@ case $choice in
             case "$choice" in
                 [Yy])
                     # 更新并升级
-                    clear_screen
                     echo " ▼ "
-                    echo "系统更新中..."
+                    echo -e "${CY}系统更新中...${NC}"
                     # Update system on Debian-based systems
                     if command -v apt &>/dev/null; then
                         DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
@@ -271,9 +270,8 @@ case $choice in
                     break  # 退出循环
                     ;;
                 [Nn]|"")
-                    clear_screen
                     echo " ▼ "
-                    echo "系统更新中..."
+                    echo -e "${CY}系统更新中...${NC}"
                     # Update system on Debian-based systems
                     if command -v apt &>/dev/null; then
                         DEBIAN_FRONTEND=noninteractive apt update -y
