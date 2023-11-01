@@ -961,7 +961,7 @@ case $choice in
                 echo "无效的输入!"
                 ;;
         esac
-        echo -e "\033[0;32m操作完成\033[0m"
+        echo -e ${GR}操作完成${NC}
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
@@ -1155,7 +1155,7 @@ case $choice in
                 echo "无效的输入!"
                 ;;
         esac
-        echo -e "\033[0;32m操作完成\033[0m"
+        echo -e ${GR}操作完成${NC}
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
@@ -1241,7 +1241,7 @@ case $choice in
                 echo "无效的输入!"
                 ;;
         esac
-        echo -e "\033[0;32m操作完成\033[0m"
+        echo -e ${GR}操作完成${NC}
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
@@ -1325,7 +1325,7 @@ case $choice in
                 echo "无效的输入!"
                 ;;
         esac
-        echo -e "\033[0;32m操作完成\033[0m"
+        echo -e ${GR}操作完成${NC}
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
@@ -1466,7 +1466,7 @@ case $choice in
                         12)
                             read -p "请输入容器名: " dockername
                             docker logs $dockername
-                            echo -e "\033[0;32m操作完成\033[0m"
+                            echo -e ${GR}操作完成${NC}
                             echo "按任意键继续..."
                             read -n 1 -s -r -p ""
                             echo ""
@@ -1493,7 +1493,7 @@ case $choice in
                                 done <<< "$network_info"
                             done
 
-                            echo -e "\033[0;32m操作完成\033[0m"
+                            echo -e ${GR}操作完成${NC}
                             echo "按任意键继续..."
                             read -n 1 -s -r -p ""
                             echo ""
@@ -2016,7 +2016,7 @@ case $choice in
                 echo "无效的输入!"
                 ;;
         esac
-        echo -e "\033[0;32m操作完成\033[0m"
+        echo -e ${GR}操作完成${NC}
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
@@ -2032,7 +2032,7 @@ case $choice in
         echo -e "${colored_text2}${NC}"
         echo "系统将为你提供5个后台运行的工作区，你可以用来执行长时间的任务"
         echo "即使你断开SSH，工作区中的任务也不会中断，非常方便！来试试吧！"
-        echo -e "\033[33m注意: 进入工作区后使用Ctrl+b再单独按d，退出工作区！\033[0m"
+        echo -e "${YE}注意: 进入工作区后使用Ctrl+b再单独按d，退出工作区！${NC}"
         echo -e "${colored_text1}${NC}"
         echo "a.  安装工作区环境"
         echo -e "${colored_text1}${NC}"
@@ -2157,7 +2157,7 @@ case $choice in
                 echo "无效的输入!"
                 ;;
         esac
-        echo -e "\033[0;32m操作完成\033[0m"
+        echo -e ${GR}操作完成${NC}
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
@@ -2265,7 +2265,7 @@ case $choice in
                 echo "无效的输入!"
                 ;;
         esac
-        echo -e "\033[0;32m操作完成\033[0m"
+        echo -e ${GR}操作完成${NC}
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         echo ""
@@ -2288,7 +2288,7 @@ case $choice in
     *)
         echo "无效的输入!"
 esac
-echo -e "\033[0;32m操作完成\033[0m"
+echo -e ${GR}操作完成${NC}
 echo "按任意键继续..."
 read -n 1 -s -r -p ""
 echo ""
