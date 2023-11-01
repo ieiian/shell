@@ -260,13 +260,13 @@ case $choice in
                     # 更新并升级
                     clear_screen
                     echo " ▼ "
-                    echo -e "${CY}系统更新中...${NC}"
+                    echo -e "${CY}系统更新中... ${NC}"
                     # Update system on Debian-based systems
-                    if [ -f "/etc/debian_version" ]; then
+                    if command -v apt &>/dev/null; then
                         DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
                     fi
                     # Update system on Red Hat-based systems
-                    if [ -f "/etc/redhat-release" ]; then
+                    if command -v yum &>/dev/null; then
                         yum -y update && yum -y upgrade
                     fi
                     break  # 退出循环
@@ -274,13 +274,13 @@ case $choice in
                 [Nn]|"")
                     clear_screen
                     echo " ▼ "
-                    echo -e "${CY}系统更新中...${NC}"
+                    echo -e "${CY}系统更新中... ${NC}"
                     # Update system on Debian-based systems
-                    if [ -f "/etc/debian_version" ]; then
+                    if command -v apt &>/dev/null; then
                         DEBIAN_FRONTEND=noninteractive apt update -y
                     fi
                     # Update system on Red Hat-based systems
-                    if [ -f "/etc/redhat-release" ]; then
+                    if command -v yum &>/dev/null; then
                         yum -y update
                     fi
                     break  # 退出循环
