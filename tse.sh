@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export LANG="en_US.UTF-8"
-BL='\033[0;30m'
+export TERM=xterm-256color
+BK='\033[0;30m'
 RE='\033[0;31m'
 GR='\033[0;32m'
 YE='\033[0;33m'
@@ -11,6 +11,7 @@ CY='\033[0;36m'
 WH='\033[0;37m'
 NC='\033[0m'
 # echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
+export LANG="en_US.UTF-8"
 
 clear_screen(){
     printf "\033c"
@@ -51,7 +52,7 @@ if [ "$EUID" -eq 0 ]; then
         echo " ▼ "
         echo -e "${CY}脚本快捷指令设置${NC}"
         echo -e "${colored_text2}${NC}"
-        echo -e "输入关键字 或 直接回车默认为: ${MA}tse${NC} （重启后生效）"
+        echo -e "输入关键字 或 直接回车默认为: ${MA}tse${NC}"
         read -p "输入N/n跳过设置: " shortcut
         if [[ "$shortcut" == "n" || "$shortcut" == "N" ]]; then
             :
@@ -59,10 +60,12 @@ if [ "$EUID" -eq 0 ]; then
             shortcut="tse"
             tsecom="alias $shortcut='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'"
             echo "$tsecom" >> /root/.bashrc
+            source ~/.bashrc
             echo "快捷指令 ${MA}$shortcut${NC} 已经设置并添加到/root/.bashrc中。"
         else
             tsecom="alias $shortcut='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'"
             echo "$tsecom" >> /root/.bashrc
+            source ~/.bashrc
             echo "快捷指令 ${MA}$shortcut${NC} 已经设置并添加到/root/.bashrc中。"
         fi
     fi
@@ -301,11 +304,11 @@ case $choice in
     3)
         clear_screen
         while true; do
-
         echo " ▼ "
-        echo -e "${MA}系统设置${NC}"
+        echo -e "\033[0;36m系统设置\033[0m"
         echo -e "${colored_text2}${NC}"
         echo "1.  设置脚本快捷指令"
+        echo -e "-1. ${MA}清除${NC}脚本快捷指令"
         echo -e "${colored_text1}${NC}"
         echo "2.  修改ROOT密码"
         echo "3.  开启ROOT登录(对于未开启SSH登陆)"
@@ -337,12 +340,32 @@ case $choice in
                 while true; do
                     echo -e "${CY}设置脚本快捷指令${NC}"
                     echo -e "${colored_text2}${NC}"
-                    read -p "请输入你的快捷指令: " kjj
-                    if [ -z "$kjj" ]; then
+                    read -p "请输入你的快捷指令(输入 ${MA}C${NC} 取消操作): " shortcuts
+                    if [ "$shortcuts" = "c" ] || [ "$shortcuts" = "C" ]; then
+                        echo "操作已取消。"
+                        break
+                    elif [ -z "$shortcuts" ]; then
                         echo "错误：快捷指令不能为空，请重新输入。"
                     else
-                        echo "alias $kjj='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'" >> ~/.bashrc
-                        echo "快捷指令 ${MA}$kjj${NC} 已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
+                        echo "alias $shortcuts='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'" >> ~/.bashrc
+                        source ~/.bashrc
+                        echo -e "快捷指令 ${MA}$shortcuts${NC} 已添加。"
+                        break
+                    fi
+                done
+                ;;
+            -1)
+                clear_screen
+                while true; do
+                    echo -e "${MA}清除${NC}${CY}脚本快捷指令${NC}"
+                    echo -e "${colored_text2}${NC}"
+                    if grep -q "https://raw.githubusercontent.com/ieiian/shell/main/tse.sh" ~/.bashrc; then
+                        sed -i '/https:\/\/raw\.githubusercontent\.com\/ieiian\/shell\/main\/tse\.sh/d' ~/.bashrc
+                        source ~/.bashrc
+                        echo "快捷指令已经删除。"
+                        break
+                    else
+                        echo "未找到本脚本快捷键指令。"
                         break
                     fi
                 done
@@ -2159,6 +2182,8 @@ case $choice in
             echo "1.  ubuntu区域语言(locale)中文设置"
             echo "2.  禁止screen改变窗口大小"
             echo -e "${colored_text1}${NC}"
+            echo -e "p.  PVE相关设置(${GR}开发中...${NC})"
+            echo -e "${colored_text1}${NC}"
             echo "0.  返回主菜单"
             echo "x.  退出脚本"
             echo -e "${colored_text1}${NC}"
@@ -2237,6 +2262,64 @@ case $choice in
                         echo "未知系统!"
                     fi
                 fi
+                ;;
+            p)
+                clear_screen
+                check_pve_environment() {
+                    kernel_version=$(uname -r)
+                    if [[ $kernel_version == *pve* ]]; then
+                        kvm_version=$(kvm -version 2>&1)
+                        qemu_img_version=$(qemu-img -V 2>&1)
+                        if [[ $kvm_version == *"pve-qemu-kvm"* && $qemu_img_version == *"pve-qemu-kvm"* ]]; then
+                            :
+                        else
+                            echo "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
+                            return
+                        fi
+                    else
+                        echo "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
+                        return
+                    fi
+                }
+                while true; do
+                    echo " ▼ "
+                    echo -e "${MA}PVE设置${NC}"
+                    echo -e "${colored_text2}${NC}"
+                    echo ""
+                    echo "1.  去掉无效订阅提示"
+                    echo "2.  修复：command 'apt-get update' failed: exit code 100"
+                    echo "3.  开启/关闭-硬件直通"
+                    echo -e "4.  一键更换${CY}中科大${NC}源地址并升级"
+                    echo -e "5.  导入 镜像文件 ${MA}->${NC} 虚拟机"
+                    echo -e "6.  更改 LXC/虚拟机的 ${MA}VMID${NC}"
+                    echo "0.  返回主菜单"
+                    echo "x.  退出脚本"
+                    echo -e "${colored_text1}${NC}"
+                    check_pve_environment
+                    read -p "请输入你的选择: " sub_choice
+                    case $sub_choice in
+                    1)
+                        ;;
+                    2)
+                        ;;
+                    0)
+                        # 退出
+                        break  # 跳出循环，退出菜单
+                        ;;
+                    x|X)
+                        exit
+                        ;;
+                    *)
+                        echo "错误：无效的选项，请重新选择。"
+                        ;;
+                    esac
+                echo -e ${GR}操作完成${NC}
+                echo "按任意键继续..."
+                read -n 1 -s -r -p ""
+                echo ""
+                clear_screen
+
+                done
                 ;;
 
             0)
