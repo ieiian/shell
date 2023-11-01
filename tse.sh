@@ -13,7 +13,13 @@ NC='\033[0m'
 # echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
 
 clear_screen(){
-    printf "\033c"
+    if command -v apt &>/dev/null && clear; then
+        :
+    elif command -v yum &>/dev/null; then
+        printf "\033c"
+    else
+        echo -e "${BK}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${BL}■ ${GR}■ ${BK}■"
+    fi
 }
 
 if [ ! -d ~/.tse ]; then
@@ -256,6 +262,7 @@ case $choice in
     2)
         while true; do
             read -p "是否要进行完全升级(-upgrade)？(Y/N，或C取消，回车默认为N): " -n 1 -r choice
+            echo
             case "$choice" in
                 [Yy])
                     # 更新并升级
@@ -304,7 +311,7 @@ case $choice in
         clear_screen
         while true; do
         echo " ▼ "
-        echo -e "\033[0;36m系统设置\033[0m"
+        echo -e "${MA}系统设置${NC}"
         echo -e "${colored_text2}${NC}"
         echo "1.  设置脚本快捷指令"
         echo -e "-1. ${MA}清除${NC}脚本快捷指令"
@@ -2181,7 +2188,7 @@ case $choice in
             echo "1.  ubuntu区域语言(locale)中文设置"
             echo "2.  禁止screen改变窗口大小"
             echo -e "${colored_text1}${NC}"
-            echo -e "p.  PVE相关设置(${GR}开发中...${NC})"
+            echo -e "p.  PVE相关设置(${GR}进行中...${NC})"
             echo -e "${colored_text1}${NC}"
             echo "0.  返回主菜单"
             echo "x.  退出脚本"
@@ -2282,13 +2289,13 @@ case $choice in
                     echo " ▼ "
                     echo -e "${MA}PVE设置${NC}"
                     echo -e "${colored_text2}${NC}"
-                    echo ""
-                    echo "1.  去除无效订阅提示"
-                    echo "2.  修复：command 'apt-get update' failed: exit code 100"
-                    echo "3.  开启/关闭-硬件直通"
-                    echo -e "4.  一键更换${CY}中科大${NC}源地址并升级"
-                    echo -e "5.  导入 镜像文件 ${MA}->${NC} 虚拟机"
-                    echo -e "6.  更改 LXC/虚拟机的 ${MA}VMID${NC}"
+                    echo -e "1.  导入镜像文件 ${MA}->${NC} 虚拟机"
+                    echo -e "2.  更改 LXC/虚拟机的 ${MA}VMID${NC}"
+                    echo -e "3.  一键更换 ${CY}中科大${NC} 源地址并升级"
+                    echo "4.  去除无效订阅提示"
+                    echo -e "5.  修复 "${MA}command 'apt-get update' failed: exit code 100${NC}""
+                    echo "6.  开启/关闭-硬件直通"
+                    echo -e "${colored_text1}${NC}"
                     echo "0.  返回主菜单"
                     echo "x.  退出脚本"
                     echo -e "${colored_text1}${NC}"
@@ -2300,6 +2307,85 @@ case $choice in
                     read -p "请输入你的选择: " sub_choice
                     case $sub_choice in
                     1)
+                        echo " ▼ "
+                        echo -e "${CY}PVE - 导入镜像文件${NC} ${MA}->${NC} ${CY}虚拟机${NC}"
+                        echo -e "${colored_text2}${NC}"
+
+                        file_path=~/.tse/img2kvm
+                        if [ ! -f "$file_path" ]; then
+                            wget -P ~/.tse/ https://github.com/ieiian/shell/raw/main/img2kvm >/dev/null 2>&1 && chmod +x img2kvm
+                        fi
+
+                        read -p "请输入虚拟机名称: " vmname
+                        name_regex="^[A-Za-z0-9]{1,20}$"
+                        if [[ $vmname =~ $name_regex ]]; then
+                            :
+                        else
+                            echo "输入的名称不合法，请重新输入。"
+                        fi
+
+                        while true; do
+                            read -p "请输入镜像文件地址 (按回车键查找地址，按 C 退出): " img_path
+                            if [ -z "$img_path" ]; then
+                                read -p "请输入查找地址或输入 C 取消: " search_path
+                                if [ "$search_path" == "C" ] || [ "$search_path" == "c" ]; then
+                                    echo "取消操作，退出循环。"
+                                    break
+                                elif [ -e "$search_path" ] && [ -d "$search_path" ]; then
+                                    echo "查找到的地址: $search_path"
+                                    ls -l "$search_path"
+                                else
+                                    echo "未找到文件夹，请重新输入。"
+                                    continue
+                                fi
+                            elif [ "$img_path" == "C" ] || [ "$img_path" == "c" ]; then
+                                echo "取消操作，退出循环。"
+                                break
+                            elif [ -e "$img_path" ] && [ ! -d "$img_path" ] && [ -f "$img_path" ]; then
+                                # echo "找到对应的文件: $img_path"
+                                break
+                            else
+                                echo "未找到文件，请重新输入。"
+                            fi
+                        done
+
+                            echo " ▼ "
+                            echo -e "${CY}当前虚拟机列表:${NC}"
+                            echo -e "${colored_text2}${NC}"
+                            qm list
+                            echo ""
+                            echo "虚拟机名称: $vmname"
+                            echo "找到对应的文件: $img_path"
+                            echo -e "${colored_text1}${NC}"
+                            while true; do
+                                read -p "请输入要导入的VMID (按 C 取消操作): " vmid_choice
+
+                                if [ "$vmid_choice" == "C" ] || [ "$vmid_choice" == "c" ]; then
+                                    echo "取消操作，退出循环。"
+                                    break
+                                fi
+
+                                result=$(qm list | grep -E "\s+$vmid_choice\s+" | awk '{print $1}')
+
+                                if [ -n "$result" ]; then
+                                    echo "找到匹配的VMID: $result"
+                                    read -p "参数已经确定，是否继续操作Y/N: " import_choice
+                                        if [ "$import_choice" == "Y" ] || [ "$import_choice" == "y" ]; then
+                                            ~/.tse/img2kvm "$img_path" "$vmid_choice" "$vmname"
+                                            echo "操作已执行。"
+                                            break
+                                        else
+                                            echo "取消操作，退出循环。"
+                                            break
+                                        fi
+                                    break
+                                else
+                                    echo "未找到VMID，请重新输入。"
+                                fi
+                            done
+
+
+                        # done
                         ;;
                     2)
                         ;;
