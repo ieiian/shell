@@ -2273,11 +2273,11 @@ case $choice in
                         if [[ $kvm_version == *"pve-qemu-kvm"* && $qemu_img_version == *"pve-qemu-kvm"* ]]; then
                             :
                         else
-                            echo "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
+                            echo -e "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
                             return
                         fi
                     else
-                        echo "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
+                        echo -e "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
                         return
                     fi
                 }
@@ -2286,7 +2286,7 @@ case $choice in
                     echo -e "${MA}PVE设置${NC}"
                     echo -e "${colored_text2}${NC}"
                     echo ""
-                    echo "1.  去掉无效订阅提示"
+                    echo "1.  去除无效订阅提示"
                     echo "2.  修复：command 'apt-get update' failed: exit code 100"
                     echo "3.  开启/关闭-硬件直通"
                     echo -e "4.  一键更换${CY}中科大${NC}源地址并升级"
