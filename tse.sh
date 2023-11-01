@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export TERM=xterm-256color
+export LANG="en_US.UTF-8"
 BK='\033[0;30m'
 RE='\033[0;31m'
 GR='\033[0;32m'
@@ -11,7 +11,6 @@ CY='\033[0;36m'
 WH='\033[0;37m'
 NC='\033[0m'
 # echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
-export LANG="en_US.UTF-8"
 
 clear_screen(){
     printf "\033c"
