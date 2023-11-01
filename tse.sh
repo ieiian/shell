@@ -106,7 +106,7 @@ read -p "请输入你的选择: " -n 3 -r choice
 case $choice in
     1)
         clear_screen
-        echo -e "${MA}部分信息需要从网络获取，请耐心等候...${NC}"
+        echo -e "${MA}查询中，请稍后...${NC}"
 
         # 函数: 获取IPv4和IPv6地址
         fetch_ip_addresses() {
@@ -2265,19 +2265,22 @@ case $choice in
                 ;;
             p)
                 clear_screen
+                testuser=""
                 check_pve_environment() {
                     kernel_version=$(uname -r)
                     if [[ $kernel_version == *pve* ]]; then
                         kvm_version=$(kvm -version 2>&1)
                         qemu_img_version=$(qemu-img -V 2>&1)
                         if [[ $kvm_version == *"pve-qemu-kvm"* && $qemu_img_version == *"pve-qemu-kvm"* ]]; then
-                            :
+                            testuser=1
                         else
-                            echo -e "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
+                            testuser=0
+                            echo -e "${MA}以上操作必须在PVE宿主机后台并以root身份执行。${NC}"
                             return
                         fi
                     else
-                        echo -e "${MA}以上操作必须要在PVE后台并以root身份执行。${NC}"
+                        testuser=0
+                        echo -e "${MA}以上操作必须在PVE宿主机后台并以root身份执行。${NC}"
                         return
                     fi
                 }
@@ -2296,6 +2299,9 @@ case $choice in
                     echo "x.  退出脚本"
                     echo -e "${colored_text1}${NC}"
                     check_pve_environment
+                    if [tsetuser=0]; then
+                        echo -e "${BK}请输入你的选择: ${NC}"
+                    fi
                     read -p "请输入你的选择: " sub_choice
                     case $sub_choice in
                     1)
