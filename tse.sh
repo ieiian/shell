@@ -308,7 +308,7 @@ case $choice in
         echo " ▼ "
         echo -e "${MA}系统设置${NC}"
         echo -e "${colored_text2}${NC}"
-        echo "1.  设置脚本快捷键"
+        echo "1.  设置脚本快捷指令"
         echo -e "${colored_text1}${NC}"
         echo "2.  修改ROOT密码"
         echo "3.  开启ROOT登录(对于未开启SSH登陆)"
@@ -338,67 +338,53 @@ case $choice in
             1)
                 clear_screen
                 while true; do
-                    read -p "请输入你的快捷按键: " kjj
+                    echo -e "${CY}设置脚本快捷指令${NC}"
+                    echo -e "${colored_text2}${NC}"
+                    read -p "请输入你的快捷指令: " kjj
                     if [ -z "$kjj" ]; then
-                        echo "错误：快捷按键不能为空，请重新输入。"
+                        echo "错误：快捷指令不能为空，请重新输入。"
                     else
                         echo "alias $kjj='curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh'" >> ~/.bashrc
-                        echo "快捷键 ${MA}$kjj${NC} 已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
+                        echo "快捷指令 ${MA}$kjj${NC} 已添加。请重新启动终端，或运行 'source ~/.bashrc' 以使修改生效。"
                         break
                     fi
                 done
                 ;;
             2)
                 clear_screen
-                echo "设置你的ROOT密码"
+                echo "${MA}设置你的ROOT密码${NC}"
                 passwd
                 ;;
             3)
                 clear_screen
-                echo -e "${MA}设置你的ROOT密码${NC}"
+                echo -e "${MA}开启ROOT登陆${NC}"
                 if [ ! -f "/etc/ssh/sshd_config" ]; then
-                if command -v apt &>/dev/null; then
-                    apt-get update
-                    apt-get install -y openssl openssh-server
-                elif command -v yum &>/dev/null; then
-                    yum install -y openssl openssh-server
-                else
-                    echo "不支持的操作系统类型"
-                    exit 1
+                    if command -v apt &>/dev/null; then
+                        apt-get update
+                        apt-get install -y openssl openssh-server
+                    elif command -v yum &>/dev/null; then
+                        yum install -y openssl openssh-server
+                    else
+                        echo "不支持的操作系统类型"
+                        exit 1
+                    fi
                 fi
-            fi
 
-            if grep -qE '^PermitRootLogin\s+yes' /etc/ssh/sshd_config && grep -qE '^PasswordAuthentication\s+yes' /etc/ssh/sshd_config; then
-                echo "操作之前已经完成，无需再次操作。"
-            else
-                sed -E 's/^#*\s*PermitRootLogin\s+.*/PermitRootLogin yes/' -i /etc/ssh/sshd_config
-                sed -E 's/^#*\s*PasswordAuthentication\s+.*/PasswordAuthentication yes/' -i /etc/ssh/sshd_config
-                read -p "是否需要更改登陆密码？(y/Y 为是，其他为否): " choice
-                if [[ $choice == "y" || $choice == "Y" ]]; then
-                    passwd
+                if grep -qE '^PermitRootLogin\s+yes' /etc/ssh/sshd_config && grep -qE '^PasswordAuthentication\s+yes' /etc/ssh/sshd_config; then
+                    echo "操作之前已经完成，无需再次操作。"
+                else
+                    sed -E 's/^#*\s*PermitRootLogin\s+.*/PermitRootLogin yes/' -i /etc/ssh/sshd_config
+                    sed -E 's/^#*\s*PasswordAuthentication\s+.*/PasswordAuthentication yes/' -i /etc/ssh/sshd_config
+                    read -p "是否需要更改登陆密码？(y/Y 为是，其他为否): " choice
+                    if [[ $choice == "y" || $choice == "Y" ]]; then
+                        passwd
+                    fi
+                    read -p "是否需要重启系统？(y/Y 为是，其他为否): " choice
+                    if [[ $choice == "y" || $choice == "Y" ]]; then
+                        reboot
+                    fi
                 fi
-                read -p "是否需要重启系统？(y/Y 为是，其他为否): " choice
-                if [[ $choice == "y" || $choice == "Y" ]]; then
-                    reboot
-                fi
-            fi
-                # passwd
-                # sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config;
-                # sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config;
-                # service sshd restart
-                # echo "ROOT登录设置完毕！"
-                # read -p "需要重启服务器吗？(Y/N): " choice
-                # case "$choice" in
-                # [Yy])
-                #     reboot
-                #     ;;
-                # [Nn])
-                #     echo "已取消"
-                #     ;;
-                # *)
-                #     echo "无效的选择，请输入 Y 或 N。"
-                #     ;;
-                # esac
+
                 ;;
             4)
                 clear_screen
