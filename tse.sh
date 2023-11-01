@@ -2265,7 +2265,6 @@ case $choice in
                 ;;
             p)
                 clear_screen
-                testuser=""
                 check_pve_environment() {
                     kernel_version=$(uname -r)
                     if [[ $kernel_version == *pve* ]]; then
@@ -2301,6 +2300,7 @@ case $choice in
                     check_pve_environment
                     if [ $testuser -eq 0 ]; then
                         echo -e "${BK}请输入你的选择: ${NC}"
+                        break
                     fi
                     read -p "请输入你的选择: " sub_choice
                     case $sub_choice in
