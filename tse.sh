@@ -2189,7 +2189,7 @@ case $choice in
             echo "1.  ubuntu区域语言(locale)中文设置"
             echo "2.  禁止screen改变窗口大小"
             echo -e "${colored_text1}${NC}"
-            echo -e "p.  PVE相关设置(${GR}进行中...${NC})"
+            echo -e "p.  ${GR}PVE${NC} 相关设置"
             echo -e "${colored_text1}${NC}"
             echo "0.  返回主菜单"
             echo "x.  退出脚本"
@@ -2363,7 +2363,7 @@ case $choice in
                             fi
                         done
                         if [ ! "$noloop" -eq 1 ]; then
-                            echo -e "请输入镜像文件地址，文件名后缀可以是 ${GR}.img${NC} 或 ${GR}.img.gz${NC} "
+                            echo -e "请输入镜像文件地址，文件名后缀可以是${GR}.img${NC} 或${GR}.img.gz${NC}"
                             while true; do
                                 read -p "请输入文件地址 (按回车键查找地址，输入 C 退出): " img_path
                                 if [ -z "$img_path" ]; then
