@@ -2495,7 +2495,7 @@ case $choice in
 
                                         if [ "$found" = true ]; then
                                             # 匹配成功
-                                            echo "磁盘 ${diskname_a[i]} 匹配成功"
+                                            echo "磁盘名称: ${diskname_a[i]} 匹配成功"
                                             
                                             # 根据需求重命名或修改vmid
                                             if [[ "${diskname_a[i]}" == *"$vmid_a"* ]]; then
@@ -2522,7 +2522,7 @@ case $choice in
 
                                     # 如果每个值都能找到则提示匹配成功
                                     if [ "$match_success" = true ]; then
-                                        echo "匹配成功：所有的值在磁盘列表(lvs -a)中都能找到。"
+                                        echo "磁盘列表: 匹配成功"
                                     fi
 
                                     # 获取所有与diskname_a匹配的vgname
@@ -2539,7 +2539,7 @@ case $choice in
 
                                     # 列出diskname_a和diskname_b和vgname的参数
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
-                                        echo "磁盘改动: "${diskname_a[i]}" -> "${diskname_b[i]}" | "${vgname[i]}""
+                                        echo "磁盘参数: ""${vgname[i]}" - "${diskname_a[i]}" -> "${diskname_b[i]}" 匹配成功"
                                     done
 
                                     # 继续执行后续操作
