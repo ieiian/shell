@@ -2539,7 +2539,7 @@ case $choice in
 
                                     # 列出diskname_a和diskname_b和vgname的参数
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
-                                        echo "磁盘参数: ""${vgname[i]}" - "${diskname_a[i]}" -> "${diskname_b[i]}" 匹配成功"
+                                        echo "磁盘参数: "${vgname[i]}" - "${diskname_a[i]}" -> "${diskname_b[i]}" 匹配成功"
                                     done
 
                                     # 继续执行后续操作
