@@ -2459,7 +2459,6 @@ case $choice in
                                     echo "变更前的VMID: $vmid_a"
                                     echo "变更后的VMID: $vmid_b"
                                     echo -e "${CY}正在变更中...${NC}"
-                                    qm stop $vmid_a
 
                                     config_file_a="/etc/pve/nodes/$pve_nodename/qemu-server/${vmid_a}.conf"
                                     config_file_lxc_a="/etc/pve/nodes/$pve_nodename/lxc/${vmid_a}.conf"
@@ -2552,9 +2551,16 @@ case $choice in
                                         break
                                     fi
 
+                                    if [ "$vmpathto" == "qemu-server" ]; then
+                                        qm stop $vmid_a
+                                    fi
+                                    if [ "$vmpathto" == "lxc" ]; then
+                                        lxc-stop $vmid_a
+                                    fi
+
                                     # 替换$vmid_a.conf文件中的diskname_a为diskname_b，并将文件重命名为$vmid_b.conf
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
-                                        sed -i "s/${diskname_a[i]}/${diskname_b[i]}/g" "$config_file_a"
+                                        sed -i "s/${diskname_a[i]}/${diskname_b[i]}/g" "$config_file_aa"
                                     done
                                     mv "$config_file_aa" "/etc/pve/nodes/$pve_nodename/$vmpathto/${vmid_b}.conf"
 
