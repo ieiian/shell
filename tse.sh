@@ -2544,6 +2544,7 @@ case $choice in
                                     done
 
                                     # 继续执行后续操作
+                                    echo "$config_file_aa"
                                     # 提示用户输入(Y/N)
                                     read -p "是否继续操作？(Y/N): " choice
                                     if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
