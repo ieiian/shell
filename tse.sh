@@ -2560,7 +2560,7 @@ case $choice in
 
                                     # 逐个对应地运行lvrename命令
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
-                                        lvrename "${vgname[i]}" "${diskname_a[i]}" "${diskname_b[i]}"
+                                        lvrename "${vgname[i]}" "${diskname_a[i]}" "${diskname_b[i]}" >> /dev/null
                                     done
 
                                     echo "以下查询为确认内容，查询所有包含更改前和更改后的VMID的文件或内容"
