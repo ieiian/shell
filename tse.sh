@@ -2433,10 +2433,10 @@ case $choice in
                         echo -e "${CY}PVE - 变更VMID${NC}"
                         echo -e "${colored_text2}${NC}"
                         echo -e "${CY}虚拟机 ▽${NC}"
-                        qm list
+                        qm list | awk '{$1=$1;print $1, $2, $3}'
                         echo -e "${colored_text1}${NC}"
                         echo -e "${CY}容器 (LXC) ▽${NC}"
-                        lxc-ls --fancy
+                        lxc-ls --fancy | awk '{$1=$1;print $1, $2, $3}'
                         echo -e "${colored_text1}${NC}"
                         pve_nodename=$(uname -n)
                         echo "$pve_nodename"
@@ -2447,114 +2447,138 @@ case $choice in
                             # 检查用户输入的格式是否正确
                             if [[ $vmid_replace =~ ^[0-9]+[[:space:]][0-9]+$ ]]; then
                                 # 提取变更前和变更后的VMID并赋值给两个变量
-                                before_vmid=$(echo $vmid_replace | awk '{print $1}')
-                                after_vmid=$(echo $vmid_replace | awk '{print $2}')
+                                vmid_a=$(echo $vmid_replace | awk '{print $1}')
+                                vmid_b=$(echo $vmid_replace | awk '{print $2}')
                                 
                                 # 检查变更前的VMID是否存在
-                                if ! (qm list | awk '{print $1}' | grep -wq $before_vmid) && ! (lxc-ls --fancy | awk '{print $1}' | grep -wq $before_vmid); then
+                                if ! (qm list | awk '{print $1}' | grep -wq $vmid_a) && ! (lxc-ls --fancy | awk '{print $1}' | grep -wq $vmid_a); then
                                     echo -e "${MA}未找到${NC}${GR}对应的变更前VMID，请重新输入。${NC}"
-                                elif (qm list | awk '{print $1}' | grep -wq $after_vmid) || (lxc-ls --fancy | awk '{print $1}' | grep -wq $after_vmid); then
+                                elif (qm list | awk '{print $1}' | grep -wq $vmid_b) || (lxc-ls --fancy | awk '{print $1}' | grep -wq $vmid_b); then
                                     echo -e "${GR}变更后的VMID${NC}${MA}已经存在${NC}${GR}，请重新输入。${NC}"
                                 else
-                                    echo "变更前的VMID: $before_vmid"
-                                    echo "变更后的VMID: $after_vmid"
+                                    echo "变更前的VMID: $vmid_a"
+                                    echo "变更后的VMID: $vmid_b"
                                     echo -e "${CY}正在变更中...${NC}"
-                                    qm stop $before_vmid
-                                    # 获取/dev/pve/下所有包含before_vmid的文件列表
-                                    file_list=$(find /dev/pve/ -type l -name "*${before_vmid}*")
+                                    qm stop $vmid_a
 
-                                    # 遍历每个文件
-                                    for lv_path in $file_list; do
-                                        # 检查源文件是否存在
-                                        if [ -e "$lv_path" ]; then
-                                            # 获取文件名（即包含before_vmid的文件名）
-                                            disk_name=$(basename "$lv_path")
-                                            # 获取文件所在的目录
-                                            lv_dir=$(dirname "$lv_path")
-                                            # 将文件名中的before_vmid部分替换为after_vmid
-                                            new_lv_filename=$(echo "$disk_name" | sed "s/${before_vmid}/${after_vmid}/")
-                                            # 构建新的逻辑卷路径
-                                            new_lv_path="${lv_dir}/${new_lv_filename}"
-                                            # 只有当新旧路径不同时，才进行重命名操作
-                                            if [[ "$lv_path" != "$new_lv_path" ]]; then
-                                                # 重命名逻辑卷文件名（仅当源文件存在时）
-                                                mv "$lv_path" "$new_lv_path"
-                                                if [[ $? -eq 0 ]]; then
-                                                    echo "逻辑卷重命名成功：$lv_path 已更名为 $new_lv_path."
+                                    config_file_a="/etc/pve/nodes/$pve_nodename/qemu-server/${vmid_a}.conf"
+                                    config_file_lxc_a="/etc/pve/nodes/$pve_nodename/lxc/${vmid_a}.conf"
+                                    # 获取lvs -a命令的输出中的第一列内容
+                                    lvs_output=$(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1}')
+                                    # 获取lvs -a命令的输出中的第一列和第二列内容
+                                    lvs_output=$(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
 
-                                                    # 获取包含before_vmid的行，并将第二个字段作为vg_name
-                                                    matching_lines=$(lvs -a --noheadings -o lv_name,vg_name | awk -v disk="$disk_name" '$1 ~ disk {print $2}')
+                                    # 查找配置文件并提取磁盘文件名到数组
+                                    if [ -f "$config_file_a" ]; then
+                                        diskname_a=($(awk -F 'local-lvm:|,' '/local-lvm:/ {print $2}' "$config_file_a"))
+                                    elif [ -f "$config_file_lxc_a" ]; then
+                                        diskname_a=($(awk -F 'local-lvm:|,' '/local-lvm:/ {print $2}' "$config_file_lxc_a"))
+                                    else
+                                        echo "找不到配置文件"
+                                        exit 1
+                                    fi
 
-                                                    config_file="/etc/pve/nodes/${pve_nodename}/qemu-server/${before_vmid}.conf"
-                                                    # 循环处理所有匹配的行
-                                                    for vg_name in $matching_lines; do
-                                                        # 删除可能的空格
-                                                        vg_name=$(echo "$vg_name" | sed 's/ //g')
-                                                        echo "VG名称: $vg_name"
+                                    # 查询/dev/pve目录下的所有文件
+                                    pve_files=("/dev/pve/"*)
 
-                                                        # 修改${before_vmid}.conf文件内容
-                                                        if [[ -f $config_file ]]; then
-                                                            config_content=$(< "$config_file")
-                                                            updated_content=$(sed "s/${before_vmid}/${after_vmid}/g" <<< "$config_content")
-                                                            echo "$updated_content" > "$config_file"
-
-                                                            if grep -q "$after_vmid" "$config_file"; then
-                                                                echo "配置文件操作成功：已将配置文件中的$before_vmid更改为$after_vmid。"
-                                                                if [[ -f $config_file && ! -f "/etc/pve/nodes/$pve_nodename/qemu-server/${after_vmid}.conf" ]]; then
-                                                                    mv "$config_file" "/etc/pve/nodes/$pve_nodename/qemu-server/${after_vmid}.conf"
-                                                                    echo "配置文件已重命名为${after_vmid}.conf。"
-                                                                fi
-                                                            else
-                                                                echo "配置文件操作失败：无法将配置文件中的$before_vmid更改为$after_vmid。"
-                                                            fi
-                                                        else
-                                                            echo "未找到VMID对应的配置文件：$config_file"
-                                                        fi
-
-                                                        echo "操作已经完成，成功将$before_vmid更改为$after_vmid."
-
-                                                        # 循环处理每个disk_name
-                                                        for disk_path in $file_list; do
-                                                            # 获取文件名（即包含before_vmid的文件名）
-                                                            disk_name=$(basename "$disk_path")
-                                                            # 将文件名中的before_vmid部分替换为after_vmid
-                                                            new_disk_name=$(echo "$disk_name" | sed "s/${before_vmid}/${after_vmid}/")
-
-                                                            # 检查新旧文件名是否相同
-                                                            if [[ "$disk_name" != "$new_disk_name" ]]; then
-                                                                # 执行lvrename指令（使用$vg_name作为第一个参数）
-                                                                lvrename "$vg_name" "$disk_name" "$new_disk_name" > /dev/null 2>&1
-                                                                if [[ $? -eq 0 ]]; then
-                                                                    echo "逻辑卷文件名重命名成功：$disk_name 已更名为 $new_disk_name."
-                                                                else
-                                                                    echo "逻辑卷文件名重命名失败：无法将 $disk_name 更名为 $new_disk_name."
-                                                                fi
-                                                            else
-                                                                echo "逻辑卷文件名未发生变化，无需重命名。"
-                                                            fi
-                                                        done
-                                                        break
-                                                    done
-                                                else
-                                                    echo "逻辑卷重命名失败：无法将 $lv_path 更名为 $new_lv_path."
-                                                fi
-                                            else
-                                                echo "逻辑卷文件名未发生变化，无需重命名。"
+                                    # 遍历diskname_a数组，查找匹配的文件名
+                                    for ((i=0; i<${#diskname_a[@]}; i++)); do
+                                        found=false
+                                        for file in "${pve_files[@]}"; do
+                                            if [[ "$file" == *"${diskname_a[i]}"* ]]; then
+                                                found=true
+                                                break
                                             fi
-                                        # else
-                                            # echo "源文件不存在：$lv_path，无法执行重命名操作。"
+                                        done
+
+                                        if [ "$found" = true ]; then
+                                            # 匹配成功
+                                            echo "磁盘 ${diskname_a[i]} 匹配成功"
+                                            
+                                            # 根据需求重命名或修改vmid
+                                            if [[ "${diskname_a[i]}" == *"$vmid_a"* ]]; then
+                                                diskname_b[i]=$(echo "${diskname_a[i]}" | sed "s/$vmid_a/$vmid_b/")
+                                            else
+                                                diskname_b[i]="vm-${vmid_b}-disk-${i}"
+                                            fi
+                                        else
+                                            # 匹配失败
+                                            echo "磁盘 ${diskname_a[i]} 未匹配成功"
+                                            exit 1
                                         fi
                                     done
-                                    # ls /dev/pve
-                                    # ls /etc/pve/nodes/TSE/qemu-server/
-                                    # cat /etc/pve/nodes/TSE/qemu-server/$after_vmid.conf
-                                    # lvs -a
-                                    echo -e "操作已经完成2，成功将 ${MA}$before_vmid${NC} 更改为 ${MA}$after_vmid${NC} ."
+
+                                    # 检查diskname_a数组中的每个值是否在lvs_output中能够找到
+                                    match_success=true
+                                    for diskname in "${diskname_a[@]}"; do
+                                        if ! echo "$lvs_output" | grep -qw "$diskname"; then
+                                            echo "匹配失败：$diskname 在 lvs -a 的输出中未找到。"
+                                            match_success=false
+                                            break
+                                        fi
+                                    done
+
+                                    # 如果每个值都能找到则提示匹配成功
+                                    if [ "$match_success" = true ]; then
+                                        echo "匹配成功：所有的值在 lvs -a 的输出中都找到了。"
+                                    fi
+
+                                    # 获取所有与diskname_a匹配的vgname
+                                    vgname=()
+                                    while read -r name pve; do
+                                        for diskname in "${diskname_a[@]}"; do
+                                            if [[ "$name" == "$diskname" ]]; then
+                                                vgname+=("$pve")
+                                                break
+                                            fi
+                                        done
+                                    done < <(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
+
+                                    # 列出diskname_a和diskname_b和vgname的参数
+                                    for ((i=0; i<${#diskname_a[@]}; i++)); do
+                                        echo "磁盘改动: "${diskname_a[i]}" -> "${diskname_b[i]}" | "${vgname[i]}""
+                                    done
+
+                                    # 继续执行后续操作
+                                    # 提示用户输入(Y/N)
+                                    read -p "是否继续操作？(Y/N): " choice
+                                    if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
+                                        echo "操作已取消"
+                                        break
+                                    fi
+
+                                    # 替换$vmid_a.conf文件中的diskname_a为diskname_b，并将文件重命名为$vmid_b.conf
+                                    for ((i=0; i<${#diskname_a[@]}; i++)); do
+                                        sed -i "s/${diskname_a[i]}/${diskname_b[i]}/g" "$config_file_a"
+                                    done
+                                    mv "$config_file_a" "/etc/pve/nodes/$pve_nodename/qemu-server/${vmid_b}.conf"
+
+                                    # 将/dev/pve下的文件名从diskname_a改为diskname_b
+                                    for ((i=0; i<${#diskname_a[@]}; i++)); do
+                                        mv "/dev/pve/${diskname_a[i]}" "/dev/pve/${diskname_b[i]}"
+                                    done
+
+                                    # 逐个对应地运行lvrename命令
+                                    for ((i=0; i<${#diskname_a[@]}; i++)); do
+                                        lvrename "${vgname[i]}" "${diskname_a[i]}" "${diskname_b[i]}"
+                                    done
+
+                                    echo "以下查询为确认内容，查询所有包含更改前和更改后的VMID的文件或内容"
+                                    echo -e "${colored_text1}${NC}"
+                                    ls /dev/pve | grep -E "$vmid_a|$vmid_b"
+                                    echo -e "${colored_text1}${NC}"
+                                    ls /etc/pve/nodes/$pve_nodename/qemu-server/  | grep -E "$vmid_a|$vmid_b"
+                                    echo -e "${colored_text1}${NC}"
+                                    cat /etc/pve/nodes/$pve_nodename/qemu-server/$vmid_b.conf | grep -E "$vmid_a|$vmid_b" || (cat /etc/pve/nodes/$pve_nodename/lxc/$vmid_b.conf | grep -E "$vmid_a|$vmid_b")
+                                    echo -e "${colored_text1}${NC}"
+                                    lvs -a | awk '/^  vm-/ {sub(/^ */, ""); print $1, $2}' | grep -E "$vmid_a|$vmid_b"
+                                    echo -e "${colored_text1}${NC}"
+                                    echo -e "操作已经完成2，成功将 ${MA}$vmid_a${NC} 更改为 ${MA}$vmid_b${NC} ."
                                     echo -e "${CY}虚拟机 ▽${NC}"
-                                    qm list
+                                    qm list | awk '{$1=$1;print $1, $2, $3}'
                                     echo -e "${colored_text1}${NC}"
                                     echo -e "${CY}容器 (LXC) ▽${NC}"
-                                    lxc-ls --fancy
+                                    lxc-ls --fancy | awk '{$1=$1;print $1, $2, $3}'
                                     echo -e "${colored_text1}${NC}"
                                     break
                                 fi
