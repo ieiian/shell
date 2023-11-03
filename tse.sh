@@ -2301,7 +2301,7 @@ case $choice in
                     echo -e "2.  变更 ${GR}虚拟机/LXC${NC} 的 ${GR}VMID${NC}"
                     echo -e "3.  一键更换 ${GR}中科大${NC} 源地址 (${GR}基于8.0${NC})"
                     echo "4.  去除无效订阅提示"
-                    echo "5.  开启/关闭-硬件直通"
+                    echo "5.  开启/关闭 - 网卡硬件直通"
                     echo -e "${colored_text1}${NC}"
                     echo "0.  返回主菜单"
                     echo "x.  退出脚本"
@@ -2316,7 +2316,7 @@ case $choice in
                     1)
                         echo " ▼ "
                         echo -e "${CY}PVE - 导入镜像文件${NC} ${MA}->${NC} ${CY}虚拟机磁盘${NC}"
-                        echo -e "现有的${GR}虚拟机磁盘${NC}"
+                        echo -e "现有的${GR}虚拟机磁盘${NC} (虚拟机所使用的磁盘)"
                         echo -e "${colored_text2}${NC}"
                         lvs -a | grep '^  vm-'
                         echo -e "${colored_text1}${NC}"
@@ -2344,10 +2344,9 @@ case $choice in
 
                         noloop=0
                         while true; do
-                            echo -e "请输入虚拟机磁盘(${GR}虚拟机所使用的磁盘${NC})名称"
                             echo -e "为避免出错请采用官方格式(${MA}vm${NC}-${MA}<vmid>${NC}-${MA}disk${NC}-${MA}<diskid>${NC})"
-                            echo -e "输入'C'以取消操作。"
-                            read -p "如 : vm-200-disk-1 : " vmname
+                            echo -e "如 : ${GR}vm-200-disk-1${NC}"
+                            read -p "请输入虚拟机磁盘名称 (输入 C 取消) : " vmname
 
                             # 判断用户输入是否为'C'或'取消'，如果是，则退出循环
                             if [[ "$vmname" == "C" || "$vmname" == "c" ]]; then
@@ -2364,10 +2363,11 @@ case $choice in
                             fi
                         done
                         if [ ! "$noloop" -eq 1 ]; then
+                            echo -e "请输入镜像文件地址，文件名后缀可以是 ${GR}.img${NC} 或 ${GR}.img.gz${NC} "
                             while true; do
-                                read -p "请输入镜像文件地址 (按回车键查找地址，按 C 退出): " img_path
+                                read -p "请输入文件地址 (按回车键查找地址，输入 C 退出): " img_path
                                 if [ -z "$img_path" ]; then
-                                    read -p "请输入查找地址或输入 C 取消: " search_path
+                                    read -p "请输入查找地址 (输入 C 取消): " search_path
                                     if [ "$search_path" == "C" ] || [ "$search_path" == "c" ]; then
                                         echo "取消操作，退出循环。"
                                         noloop=1
@@ -2394,7 +2394,7 @@ case $choice in
                         fi
                         if [ ! "$noloop" -eq 1 ]; then
                             while true; do
-                                read -p "请输入要导入的VMID (按 C 取消操作): " vmid_choice
+                                read -p "请输入要导入的VMID (输入 C 取消): " vmid_choice
 
                                 if [ "$vmid_choice" == "C" ] || [ "$vmid_choice" == "c" ]; then
                                     echo "取消操作，退出循环。"
@@ -2684,14 +2684,76 @@ case $choice in
                         ;;
 
                     5)
-                        echo -e "${MA}制作中...${NC}"
+                        # 检查当前GRUB配置
+                        current_grub=$(cat /etc/default/grub)
+                        initial_grub="GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\""
+
+                        while true; do
+                            if [[ "$current_grub" == *"intel_iommu=on"* || "$current_grub" == *"amd_iommu=on"* ]]; then
+                                echo -e "发现IOMMU（Input-Output Memory Management Unit）为${MA}开启${NC}状态"
+                                echo -e "发现网卡硬件直通已经${MA}开启${NC}，是否要关闭网卡硬件直通？"
+                                read -p "输入 Y 继续操作，输入其它取消: " revert_choice
+                                if [ "$revert_choice" == "Y" ] || [ "$revert_choice" == "y" ]; then
+                                    cp /etc/default/grub /etc/default/grub.tse
+                                    sed -i "s|GRUB_CMDLINE_LINUX_DEFAULT=.*|$initial_grub|" /etc/default/grub
+                                    update-grub
+                                    echo -e "网卡硬件直通已经${MA}关闭${NC}。请重启系统使配置生效。"
+                                    break
+                                else
+                                    echo "操作已取消。"
+                                    break
+                                fi
+                            fi
+
+                            # 提示用户选择开启/关闭网卡直通或取消
+                            read -p "请输入 'O' 开启网卡直通，输入其它取消操作: " choice
+
+                            if [ "$choice" != "O" ] && [ "$choice" != "o" ]; then
+                                echo "操作已取消。"
+                                break
+                            fi
+
+                            noloop=0
+                            while true; do
+                                # 提示用户选择CPU类型
+                                read -p "请选择CPU类型：1. Intel  2. AMD  C. 取消 : " cpu_choice
+
+                                if [ "$cpu_choice" == "1" ]; then
+                                    grub_line="GRUB_CMDLINE_LINUX_DEFAULT=\"quiet intel_iommu=on\""
+                                    break
+                                fi
+                                if [ "$cpu_choice" == "2" ]; then
+                                    grub_line="GRUB_CMDLINE_LINUX_DEFAULT=\"quiet amd_iommu=on\""
+                                    break
+                                fi
+                                if [ "$cpu_choice" == "c" ] || [ "$cpu_choice" == "C" ]; then
+                                    noloop=1
+                                    break
+                                fi
+                                echo "输入有误，请重新输入。"
+                            done
+
+                            if [ ! "$noloop" -eq 1 ]; then
+                                # 提示用户选择是否带显卡
+                                read -p "是否带显卡？(Y/N，回车默认为不带显卡): " gpu_choice
+
+                                if [ "$gpu_choice" == "Y" ] || [ "$gpu_choice" == "y" ]; then
+                                    grub_line="$grub_line video=efifb:off"
+                                fi
+
+                                # 更新GRUB配置并重启
+                                sed -i "s|GRUB_CMDLINE_LINUX_DEFAULT=.*|$grub_line|" /etc/default/grub
+                                update-grub
+
+                                echo "GRUB配置已更新，网卡硬件直通${MA}已开启${NC}。请重启系统使配置生效。"
+                                break
+                            fi
+                            break
+                        done
                         ;;
-                    t)
+                    v|V)
                         pve_nodename=$(uname -n)
-                        path=/root/$pve_nodename/a
-                        echo "测试结果："
-                        echo "$pve_nodename"
-                        echo "$path"
+                        echo "nodename: $pve_nodename"
                         ;;
                     0)
                         # 退出
