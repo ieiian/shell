@@ -2535,8 +2535,8 @@ case $choice in
                                                 break
                                             fi
                                         done
-                                    done < <($lvs_output_12)
-                                    # done < <(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
+                                    # done < <($lvs_output_12)
+                                    done < <(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
 
                                     # 列出diskname_a和diskname_b和vgname的参数
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
