@@ -2439,7 +2439,6 @@ case $choice in
                         lxc-ls --fancy | awk '{$1=$1;print $1, $2, $3}'
                         echo -e "${colored_text1}${NC}"
                         pve_nodename=$(uname -n)
-                        echo "$pve_nodename"
                         while true; do
                             echo -e "请输入 变更${MA}前${NC}的VMID 和 变更${MA}后${NC}的VMID"
                             read -p "格式: 变更前VMID+空格+变更后VMID (如:111 222): " vmid_replace
@@ -2520,7 +2519,7 @@ case $choice in
 
                                     # 如果每个值都能找到则提示匹配成功
                                     if [ "$match_success" = true ]; then
-                                        echo "匹配成功：所有的值在 lvs -a 的输出中都找到了。"
+                                        echo "匹配成功：所有的值在磁盘列表(lvs -a)中都能找到。"
                                     fi
 
                                     # 获取所有与diskname_a匹配的vgname
@@ -2573,7 +2572,7 @@ case $choice in
                                     echo -e "${colored_text1}${NC}"
                                     lvs -a | awk '/^  vm-/ {sub(/^ */, ""); print $1, $2}' | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
-                                    echo -e "操作已经完成2，成功将 ${MA}$vmid_a${NC} 更改为 ${MA}$vmid_b${NC} ."
+                                    echo -e "操作已经完成，成功将 ${MA}$vmid_a${NC} 更改为 ${MA}$vmid_b${NC} ."
                                     echo -e "${CY}虚拟机 ▽${NC}"
                                     qm list | awk '{$1=$1;print $1, $2, $3}'
                                     echo -e "${colored_text1}${NC}"
