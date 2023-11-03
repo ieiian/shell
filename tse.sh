@@ -2552,10 +2552,10 @@ case $choice in
                                     fi
 
                                     if [ "$vmpathto" == "qemu-server" ]; then
-                                        qm stop $vmid_a
+                                        qm stop $vmid_a >> /dev/null
                                     fi
                                     if [ "$vmpathto" == "lxc" ]; then
-                                        lxc-stop $vmid_a
+                                        lxc-stop $vmid_a >> /dev/null
                                     fi
 
                                     # 替换$vmid_a.conf文件中的diskname_a为diskname_b，并将文件重命名为$vmid_b.conf
