@@ -2463,19 +2463,22 @@ case $choice in
                                     config_file_a="/etc/pve/nodes/$pve_nodename/qemu-server/${vmid_a}.conf"
                                     config_file_lxc_a="/etc/pve/nodes/$pve_nodename/lxc/${vmid_a}.conf"
                                     # 获取lvs -a命令的输出中的第一列内容
-                                    lvs_output=$(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1}')
+                                    lvs_output_1=$(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1}')
                                     # 获取lvs -a命令的输出中的第一列和第二列内容
-                                    lvs_output=$(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
+                                    lvs_output_12=$(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
 
                                     # 查找配置文件并提取磁盘文件名到数组
                                     if [ -f "$config_file_a" ]; then
+                                        vmpathto="qemu-server"
                                         diskname_a=($(awk -F 'local-lvm:|,' '/local-lvm:/ {print $2}' "$config_file_a"))
                                     elif [ -f "$config_file_lxc_a" ]; then
+                                        vmpathto="lxc"
                                         diskname_a=($(awk -F 'local-lvm:|,' '/local-lvm:/ {print $2}' "$config_file_lxc_a"))
                                     else
                                         echo "找不到配置文件"
                                         exit 1
                                     fi
+                                    config_file_aa="/etc/pve/nodes/$pve_nodename/$vmpathto/${vmid_a}.conf"
 
                                     # 查询/dev/pve目录下的所有文件
                                     pve_files=("/dev/pve/"*)
@@ -2550,7 +2553,7 @@ case $choice in
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
                                         sed -i "s/${diskname_a[i]}/${diskname_b[i]}/g" "$config_file_a"
                                     done
-                                    mv "$config_file_a" "/etc/pve/nodes/$pve_nodename/qemu-server/${vmid_b}.conf"
+                                    mv "$config_file_aa" "/etc/pve/nodes/$pve_nodename/$vmpathto/${vmid_b}.conf"
 
                                     # 将/dev/pve下的文件名从diskname_a改为diskname_b
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
@@ -2566,9 +2569,9 @@ case $choice in
                                     echo -e "${colored_text1}${NC}"
                                     ls /dev/pve | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
-                                    ls /etc/pve/nodes/$pve_nodename/qemu-server/  | grep -E "$vmid_a|$vmid_b"
+                                    ls /etc/pve/nodes/$pve_nodename/$vmpathto/  | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
-                                    cat /etc/pve/nodes/$pve_nodename/qemu-server/$vmid_b.conf | grep -E "$vmid_a|$vmid_b" || (cat /etc/pve/nodes/$pve_nodename/lxc/$vmid_b.conf | grep -E "$vmid_a|$vmid_b")
+                                    cat /etc/pve/nodes/$pve_nodename/$vmpathto/$vmid_b.conf | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
                                     lvs -a | awk '/^  vm-/ {sub(/^ */, ""); print $1, $2}' | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
