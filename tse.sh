@@ -2514,7 +2514,7 @@ case $choice in
                                     # 检查diskname_a数组中的每个值是否在lvs_output中能够找到
                                     match_success=true
                                     for diskname in "${diskname_a[@]}"; do
-                                        if ! echo "$lvs_output12" | grep -qw "$diskname"; then
+                                        if ! echo "$lvs_output_1" | grep -qw "$diskname"; then
                                             echo "匹配失败：$diskname 在 lvs -a 的输出中未找到。"
                                             match_success=false
                                             break
@@ -2535,8 +2535,8 @@ case $choice in
                                                 break
                                             fi
                                         done
-                                    # done < <($lvs_output12)
-                                    done < <(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
+                                    done < <($lvs_output_12)
+                                    # done < <(lvs -a | grep '^  vm-' | awk '{sub(/^ */, ""); print $1, $2}')
 
                                     # 列出diskname_a和diskname_b和vgname的参数
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
