@@ -47,7 +47,8 @@ for ((i=0; i<${#text2}; i++)); do
     colored_text2="${colored_text2}${color}${text2:$i:1}"
 done
 
-EUID=$(id -u)
+(EUID=$(id -u)) 2>/dev/null
+
 clear_screen
 if [ "$EUID" -eq 0 ]; then
     grep -q "curl -sS -o ~/.tse/tse.sh https://raw.githubusercontent.com/ieiian/shell/main/tse.sh && chmod +x ~/.tse/tse.sh && ~/.tse/tse.sh" /root/.bashrc
@@ -2274,10 +2275,13 @@ case $choice in
                 check_pve_environment() {
                     kvm_version=$(kvm -version 2>&1)
                     qemu_img_version=$(qemu-img -V 2>&1)
+                    pveversion=$(pveversion -v 2>&1 | grep pve-kernel)
                     kernel_pve=$(uname -r 2>&1)
                     if [[ $kvm_version == *"pve-qemu-kvm"* && $qemu_img_version == *"pve-qemu-kvm"* ]]; then
-                        if [[ $kernel_pve == *pve* ]]; then
-                            tuser=1
+                        if [[ $pveversion == *"pve-kernel"* ]]; then
+                            if [[ $kernel_pve == *pve* ]]; then
+                                tuser=1
+                            fi
                         fi
                     else
                         tuser=0
@@ -2285,21 +2289,24 @@ case $choice in
                         return
                     fi
                 }
+                echo " ▼ "
+                echo -e "检查本机是否为${MA}PVE宿主机${NC}..."
+                check_pve_environment
+                clear_screen
                 while true; do
                     echo " ▼ "
                     echo -e "${MA}PVE设置${NC}"
                     echo -e "${colored_text2}${NC}"
-                    echo -e "1.  导入镜像文件 ${GR}->${NC} 虚拟机"
-                    echo -e "2.  更改 LXC/虚拟机的 ${GR}VMID${NC}"
-                    echo -e "3.  一键更换 ${GR}中科大${NC} 源地址并升级"
+                    echo -e "1.  导入镜像文件 ${GR}->${NC} 虚拟机磁盘"
+                    echo -e "2.  变更 ${GR}虚拟机/LXC${NC} 的 ${GR}VMID${NC}"
+                    echo -e "3.  一键更换 ${GR}中科大${NC} 源地址 (${GR}基于8.0${NC})"
                     echo "4.  去除无效订阅提示"
-                    echo -e "5.  修复 "${GR}command 'apt-get update' failed: exit code 100${NC}""
-                    echo "6.  开启/关闭-硬件直通"
+                    echo "5.  开启/关闭-硬件直通"
                     echo -e "${colored_text1}${NC}"
                     echo "0.  返回主菜单"
                     echo "x.  退出脚本"
                     echo -e "${colored_text1}${NC}"
-                    check_pve_environment
+                    #check_pve_environment
                     if [ $tuser -eq 0 ]; then
                         echo -e "${BK}请输入你的选择: ${NC}"
                         break
@@ -2308,9 +2315,10 @@ case $choice in
                     case $sub_choice in
                     1)
                         echo " ▼ "
-                        echo -e "${CY}PVE - 导入镜像文件${NC} ${MA}->${NC} ${CY}虚拟机${NC}"
+                        echo -e "${CY}PVE - 导入镜像文件${NC} ${MA}->${NC} ${CY}虚拟机磁盘${NC}"
+                        echo -e "现有的${GR}虚拟机磁盘${NC}"
                         echo -e "${colored_text2}${NC}"
-                        qm list
+                        lvs -a | grep '^  vm-'
                         echo -e "${colored_text1}${NC}"
 
                         process_img_path() {
@@ -2334,9 +2342,20 @@ case $choice in
                             wget -P ~/.tse/ https://github.com/ieiian/shell/raw/main/img2kvm >/dev/null 2>&1 && chmod +x img2kvm
                         fi
 
+                        noloop=0
                         while true; do
                             echo -e "请输入虚拟机磁盘(${GR}虚拟机所使用的磁盘${NC})名称"
-                            read -p "建议采用vm-<vmid>-disk-<diskid> (如:vm-200-disk-1): " vmname
+                            echo -e "为避免出错请采用官方格式(${MA}vm${NC}-${MA}<vmid>${NC}-${MA}disk${NC}-${MA}<diskid>${NC})"
+                            echo -e "输入'C'以取消操作。"
+                            read -p "如 : vm-200-disk-1 : " vmname
+
+                            # 判断用户输入是否为'C'或'取消'，如果是，则退出循环
+                            if [[ "$vmname" == "C" || "$vmname" == "c" ]]; then
+                                echo "取消操作。"
+                                noloop=1
+                                break
+                            fi
+
                             name_regex="^[A-Za-z0-9_-]{1,20}$"
                             if [[ $vmname =~ $name_regex ]]; then
                                 break
@@ -2344,68 +2363,335 @@ case $choice in
                                 echo "输入的名称不合法，请重新输入。"
                             fi
                         done
+                        if [ ! "$noloop" -eq 1 ]; then
+                            while true; do
+                                read -p "请输入镜像文件地址 (按回车键查找地址，按 C 退出): " img_path
+                                if [ -z "$img_path" ]; then
+                                    read -p "请输入查找地址或输入 C 取消: " search_path
+                                    if [ "$search_path" == "C" ] || [ "$search_path" == "c" ]; then
+                                        echo "取消操作，退出循环。"
+                                        noloop=1
+                                        break
+                                    elif [ -e "$search_path" ] && [ -d "$search_path" ]; then
+                                        echo "查找到的地址: $search_path"
+                                        ls -l "$search_path"
+                                    else
+                                        echo "未找到文件夹，请重新输入。"
+                                        continue
+                                    fi
+                                elif [ "$img_path" == "C" ] || [ "$img_path" == "c" ]; then
+                                    echo "取消操作，退出循环。"
+                                    noloop=1
+                                    break
+                                elif [ -e "$img_path" ] && [ ! -d "$img_path" ] && [ -f "$img_path" ]; then
+                                    process_img_path "$img_path"
+                                    # echo "找到对应的文件: $img_path"
+                                    break
+                                else
+                                    echo "未找到文件，请重新输入。"
+                                fi
+                            done
+                        fi
+                        if [ ! "$noloop" -eq 1 ]; then
+                            while true; do
+                                read -p "请输入要导入的VMID (按 C 取消操作): " vmid_choice
 
-                        while true; do
-                            read -p "请输入镜像文件地址 (按回车键查找地址，按 C 退出): " img_path
-                            if [ -z "$img_path" ]; then
-                                read -p "请输入查找地址或输入 C 取消: " search_path
-                                if [ "$search_path" == "C" ] || [ "$search_path" == "c" ]; then
+                                if [ "$vmid_choice" == "C" ] || [ "$vmid_choice" == "c" ]; then
                                     echo "取消操作，退出循环。"
                                     break
-                                elif [ -e "$search_path" ] && [ -d "$search_path" ]; then
-                                    echo "查找到的地址: $search_path"
-                                    ls -l "$search_path"
-                                else
-                                    echo "未找到文件夹，请重新输入。"
-                                    continue
                                 fi
-                            elif [ "$img_path" == "C" ] || [ "$img_path" == "c" ]; then
-                                echo "取消操作，退出循环。"
-                                break
-                            elif [ -e "$img_path" ] && [ ! -d "$img_path" ] && [ -f "$img_path" ]; then
-                                process_img_path "$img_path"
-                                # echo "找到对应的文件: $img_path"
-                                break
-                            else
-                                echo "未找到文件，请重新输入。"
-                            fi
-                        done
 
-                        while true; do
-                            read -p "请输入要导入的VMID (按 C 取消操作): " vmid_choice
+                                result=$(qm list | grep -E "\s+$vmid_choice\s+" | awk '{print $1}')
 
-                            if [ "$vmid_choice" == "C" ] || [ "$vmid_choice" == "c" ]; then
-                                echo "取消操作，退出循环。"
-                                break
-                            fi
-
-                            result=$(qm list | grep -E "\s+$vmid_choice\s+" | awk '{print $1}')
-
-                            if [ -n "$result" ]; then
-                                echo -e "${colored_text1}${NC}"
-                                echo "磁盘名称: $vmname"
-                                echo "镜像文件: $img_path"
-                                echo "虚拟机VMID: $result"
-                                echo -e "${colored_text1}${NC}"
-                                read -p "参数确认，是否继续操作 (Y/N): " import_choice
-                                    if [ "$import_choice" == "Y" ] || [ "$import_choice" == "y" ]; then
-                                        ~/.tse/img2kvm "$img_path" "$vmid_choice" "$vmname"
-                                        echo "操作已执行。"
-                                        break
-                                    else
-                                        echo "取消操作，退出循环。"
-                                        break
-                                    fi
-                                break
-                            else
-                                echo "未找到VMID，请重新输入。"
-                            fi
-                        done
+                                if [ -n "$result" ]; then
+                                    echo -e "${colored_text1}${NC}"
+                                    echo "磁盘名称: $vmname"
+                                    echo "镜像文件: $img_path"
+                                    echo "虚拟机VMID: $result"
+                                    echo -e "${colored_text1}${NC}"
+                                    read -p "参数确认，是否继续操作 (Y/N): " import_choice
+                                        if [ "$import_choice" == "Y" ] || [ "$import_choice" == "y" ]; then
+                                            ~/.tse/img2kvm "$img_path" "$vmid_choice" "$vmname"
+                                            echo "操作已执行。"
+                                            break
+                                        else
+                                            echo "取消操作，退出循环。"
+                                            break
+                                        fi
+                                    break
+                                else
+                                    echo "未找到VMID，请重新输入。"
+                                fi
+                            done
+                        fi
 
 
                         # done
                         ;;
                     2)
+                        echo " ▼ "
+                        echo -e "${CY}PVE - 变更VMID${NC}"
+                        echo -e "${colored_text2}${NC}"
+                        echo -e "${CY}虚拟机 ▽${NC}"
+                        qm list
+                        echo -e "${colored_text1}${NC}"
+                        echo -e "${CY}容器 (LXC) ▽${NC}"
+                        lxc-ls --fancy
+                        echo -e "${colored_text1}${NC}"
+                        pve_nodename=$(uname -n)
+                        echo "$pve_nodename"
+                        while true; do
+                            echo -e "请输入 变更${MA}前${NC}的VMID 和 变更${MA}后${NC}的VMID"
+                            read -p "格式: 变更前VMID+空格+变更后VMID (如:111 222): " vmid_replace
+
+                            # 检查用户输入的格式是否正确
+                            if [[ $vmid_replace =~ ^[0-9]+[[:space:]][0-9]+$ ]]; then
+                                # 提取变更前和变更后的VMID并赋值给两个变量
+                                before_vmid=$(echo $vmid_replace | awk '{print $1}')
+                                after_vmid=$(echo $vmid_replace | awk '{print $2}')
+                                
+                                # 检查变更前的VMID是否存在
+                                if ! (qm list | awk '{print $1}' | grep -wq $before_vmid) && ! (lxc-ls --fancy | awk '{print $1}' | grep -wq $before_vmid); then
+                                    echo -e "${MA}未找到${NC}${GR}对应的变更前VMID，请重新输入。${NC}"
+                                elif (qm list | awk '{print $1}' | grep -wq $after_vmid) || (lxc-ls --fancy | awk '{print $1}' | grep -wq $after_vmid); then
+                                    echo -e "${GR}变更后的VMID${NC}${MA}已经存在${NC}${GR}，请重新输入。${NC}"
+                                else
+                                    echo "变更前的VMID: $before_vmid"
+                                    echo "变更后的VMID: $after_vmid"
+                                    echo -e "${CY}正在变更中...${NC}"
+                                    qm stop $before_vmid
+                                    # 获取/dev/pve/下所有包含before_vmid的文件列表
+                                    file_list=$(find /dev/pve/ -type l -name "*${before_vmid}*")
+
+                                    # 遍历每个文件
+                                    for lv_path in $file_list; do
+                                        # 检查源文件是否存在
+                                        if [ -e "$lv_path" ]; then
+                                            # 获取文件名（即包含before_vmid的文件名）
+                                            disk_name=$(basename "$lv_path")
+                                            # 获取文件所在的目录
+                                            lv_dir=$(dirname "$lv_path")
+                                            # 将文件名中的before_vmid部分替换为after_vmid
+                                            new_lv_filename=$(echo "$disk_name" | sed "s/${before_vmid}/${after_vmid}/")
+                                            # 构建新的逻辑卷路径
+                                            new_lv_path="${lv_dir}/${new_lv_filename}"
+                                            # 只有当新旧路径不同时，才进行重命名操作
+                                            if [[ "$lv_path" != "$new_lv_path" ]]; then
+                                                # 重命名逻辑卷文件名（仅当源文件存在时）
+                                                mv "$lv_path" "$new_lv_path"
+                                                if [[ $? -eq 0 ]]; then
+                                                    echo "逻辑卷重命名成功：$lv_path 已更名为 $new_lv_path."
+
+                                                    # 获取包含before_vmid的行，并将第二个字段作为vg_name
+                                                    matching_lines=$(lvs -a --noheadings -o lv_name,vg_name | awk -v disk="$disk_name" '$1 ~ disk {print $2}')
+
+                                                    config_file="/etc/pve/nodes/${pve_nodename}/qemu-server/${before_vmid}.conf"
+                                                    # 循环处理所有匹配的行
+                                                    for vg_name in $matching_lines; do
+                                                        # 删除可能的空格
+                                                        vg_name=$(echo "$vg_name" | sed 's/ //g')
+                                                        echo "VG名称: $vg_name"
+
+                                                        # 修改${before_vmid}.conf文件内容
+                                                        if [[ -f $config_file ]]; then
+                                                            config_content=$(< "$config_file")
+                                                            updated_content=$(sed "s/${before_vmid}/${after_vmid}/g" <<< "$config_content")
+                                                            echo "$updated_content" > "$config_file"
+
+                                                            if grep -q "$after_vmid" "$config_file"; then
+                                                                echo "配置文件操作成功：已将配置文件中的$before_vmid更改为$after_vmid。"
+                                                                if [[ -f $config_file && ! -f "/etc/pve/nodes/$pve_nodename/qemu-server/${after_vmid}.conf" ]]; then
+                                                                    mv "$config_file" "/etc/pve/nodes/$pve_nodename/qemu-server/${after_vmid}.conf"
+                                                                    echo "配置文件已重命名为${after_vmid}.conf。"
+                                                                fi
+                                                            else
+                                                                echo "配置文件操作失败：无法将配置文件中的$before_vmid更改为$after_vmid。"
+                                                            fi
+                                                        else
+                                                            echo "未找到VMID对应的配置文件：$config_file"
+                                                        fi
+
+                                                        echo "操作已经完成，成功将$before_vmid更改为$after_vmid."
+
+                                                        # 循环处理每个disk_name
+                                                        for disk_path in $file_list; do
+                                                            # 获取文件名（即包含before_vmid的文件名）
+                                                            disk_name=$(basename "$disk_path")
+                                                            # 将文件名中的before_vmid部分替换为after_vmid
+                                                            new_disk_name=$(echo "$disk_name" | sed "s/${before_vmid}/${after_vmid}/")
+
+                                                            # 检查新旧文件名是否相同
+                                                            if [[ "$disk_name" != "$new_disk_name" ]]; then
+                                                                # 执行lvrename指令（使用$vg_name作为第一个参数）
+                                                                lvrename "$vg_name" "$disk_name" "$new_disk_name" > /dev/null 2>&1
+                                                                if [[ $? -eq 0 ]]; then
+                                                                    echo "逻辑卷文件名重命名成功：$disk_name 已更名为 $new_disk_name."
+                                                                else
+                                                                    echo "逻辑卷文件名重命名失败：无法将 $disk_name 更名为 $new_disk_name."
+                                                                fi
+                                                            else
+                                                                echo "逻辑卷文件名未发生变化，无需重命名。"
+                                                            fi
+                                                        done
+                                                        break
+                                                    done
+                                                else
+                                                    echo "逻辑卷重命名失败：无法将 $lv_path 更名为 $new_lv_path."
+                                                fi
+                                            else
+                                                echo "逻辑卷文件名未发生变化，无需重命名。"
+                                            fi
+                                        # else
+                                            # echo "源文件不存在：$lv_path，无法执行重命名操作。"
+                                        fi
+                                    done
+                                    # ls /dev/pve
+                                    # ls /etc/pve/nodes/TSE/qemu-server/
+                                    # cat /etc/pve/nodes/TSE/qemu-server/$after_vmid.conf
+                                    # lvs -a
+                                    echo -e "操作已经完成2，成功将 ${MA}$before_vmid${NC} 更改为 ${MA}$after_vmid${NC} ."
+                                    echo -e "${CY}虚拟机 ▽${NC}"
+                                    qm list
+                                    echo -e "${colored_text1}${NC}"
+                                    echo -e "${CY}容器 (LXC) ▽${NC}"
+                                    lxc-ls --fancy
+                                    echo -e "${colored_text1}${NC}"
+                                    break
+                                fi
+                            else
+                                echo -e "${GR}输入${NC}${MA}格式错误${NC}${GR}，请重新输入。${NC}"
+                            fi
+
+                        done
+                        ;;
+
+                    3)
+                        # 检查并添加源到sources.list
+                        add_sources() {
+                            local file_path="$1"
+                            local source_content="$2"
+                            
+                            if grep -qF "$source_content" "$file_path"; then
+                                # if [ "$has_echo_run" != "1" ]; then
+                                #     echo "内容已存在，请勿重复操作。"
+                                #     has_echo_run=1
+                                # fi
+                                echo -e "${MA}$addtag${NC} 内容已存在，请勿重复操作。"
+                            else
+
+                                # 添加源内容
+                                if ! grep -qF "# tse |" "$file_path"; then
+                                    # 检查包含" bookworm"但不以"deb https://mirrors.ustc.edu.cn"开头的行
+                                    if grep -qF " bookworm" "$file_path" && ! grep -qF "deb https://mirrors.ustc.edu.cn" "$file_path"; then
+                                    # 注释掉符合条件的行
+                                    sed -i_tse -e "/ bookworm/!b; /deb https:\/\/mirrors.ustc.edu.cn/!s/^/# tse |/" "$file_path"
+                                    fi
+                                fi
+                                echo "$source_content" >> "$file_path"
+                                echo -e "${MA}$addtag${NC} 源已成功添加。"
+                            fi
+                        }
+
+                        # 检查并下载GPG公钥
+                        add_gpg_keys() {
+                            local gpg_url="$1"
+                            local gpg_file="$2"
+
+                            if [ ! -f "$gpg_file" ]; then
+                                wget "$gpg_url" -O "$gpg_file" > /dev/null 2>&1
+                                echo -e "${MA}$addtag${NC} GPG公钥已下载。"
+                            else
+                                # if [ "$has_echo_run" != "2" ]; then
+                                #     echo "GPG公钥文件已存在，请勿重复下载。"
+                                #     has_echo_run=2
+                                # fi
+                                echo -e "${MA}$addtag${NC} GPG公钥文件已存在，请勿重复下载。"
+                            fi
+                        }
+
+                        # 修改sources.list文件
+                        sources_list="/etc/apt/sources.list"
+                        ceph_list="/etc/apt/sources.list.d/ceph.list"
+                        pve_enterprise_list="/etc/apt/sources.list.d/pve-enterprise.list"
+
+                        # 要添加的源内容
+                        debian_sources="deb https://mirrors.ustc.edu.cn/debian/ bookworm main contrib non-free non-free-firmware"
+                        debian_updates_sources="deb https://mirrors.ustc.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware"
+                        debian_backports_sources="deb https://mirrors.ustc.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware"
+                        debian_security_sources="deb https://mirrors.ustc.edu.cn/debian-security bookworm-security main"
+
+                        ceph_sources="deb https://mirrors.ustc.edu.cn/proxmox/debian/ceph-quincy bookworm no-subscription"
+                        pve_sources="deb https://mirrors.ustc.edu.cn/proxmox/debian bookworm pve-no-subscription"
+
+                        # 添加Debian源
+                        addtag="debian_sources"
+                        add_sources "$sources_list" "$debian_sources"
+                        addtag="debian_updates_sources"
+                        add_sources "$sources_list" "$debian_updates_sources"
+                        addtag="debian_backports_sources"
+                        add_sources "$sources_list" "$debian_backports_sources"
+                        addtag="debian_security_sources"
+                        add_sources "$sources_list" "$debian_security_sources"
+
+                        # 添加Ceph源
+                        addtag="ceph_sources"
+                        add_sources "$ceph_list" "$ceph_sources"
+
+                        # 添加PVE源
+                        addtag="pve_sources"
+                        add_sources "$pve_enterprise_list" "$pve_sources"
+
+                        # 下载GPG公钥
+                        proxmox_release_bookworm_gpg_url="https://mirrors.ustc.edu.cn/proxmox/debian/proxmox-release-bookworm.gpg"
+                        proxmox_release_bookworm_gpg="/etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg"
+
+                        proxmox_release_bullseye_gpg_url="http://mirrors.ustc.edu.cn/proxmox/debian/proxmox-release-bullseye.gpg"
+                        proxmox_release_bullseye_gpg="/etc/apt/trusted.gpg.d/proxmox-release-bullseye.gpg"
+
+                        proxmox_release_6_url="http://mirrors.ustc.edu.cn/proxmox/debian/proxmox-ve-release-6.x.gpg"
+                        proxmox_release_6_gpg="/etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg"
+
+                        ceph_release_gpg_url="https://mirrors.ustc.edu.cn/proxmox/debian/ceph-quincy/dists/bookworm/Release.gpg"
+                        ceph_release_gpg="/etc/apt/trusted.gpg.d/Release.gpg"
+
+                        addtag="proxmox_release_bookworm_gpg (for 8.0)"
+                        add_gpg_keys "$proxmox_release_bookworm_gpg_url" "$proxmox_release_bookworm_gpg"
+                        addtag="proxmox_release_bullseye_gpg (for 7.x)"
+                        add_gpg_keys "$proxmox_release_bullseye_gpg_url" "$proxmox_release_bullseye_gpg"
+                        addtag="proxmox_release_6_gpg (for 6.x)"
+                        add_gpg_keys "$proxmox_release_6_url" "$proxmox_release_6_gpg"
+                        addtag="ceph_release_gpg"
+                        add_gpg_keys "$ceph_release_gpg_url" "$ceph_release_gpg"
+                        ;;
+
+                    4)
+                        # 检查文件是否包含指定的关键字
+                        if ! grep -q "data.status === 'Active'" /usr/share/pve-manager/js/pvemanagerlib.js \
+                            || ! grep -q "if (res === null || res === undefined || !res || res" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js \
+                            || ! grep -q ".data.status.toLowerCase() !== 'active'" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; then
+                            echo -e "找不到关键字，文件可能被修改，${MA}中止本次操作${NC}。"
+                        else
+                            # 替换相关文件中的文本
+                            sed -i_tse "s/data.status === 'Active'/true/g" /usr/share/pve-manager/js/pvemanagerlib.js
+                            sed -i_tse "s/if (res === null || res === undefined || \!res || res/if(/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+                            sed -i_tse "s/.data.status.toLowerCase() !== 'active'/false/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+                            
+                            # 重新启动 pveproxy 服务
+                            systemctl restart pveproxy
+                            
+                            echo -e "文件${MA}修改完成${NC}，已去除未订阅的提示，有时需要更改语言登陆一次才能生效。"
+                        fi
+                        ;;
+
+                    5)
+                        echo -e "${MA}制作中...${NC}"
+                        ;;
+                    t)
+                        pve_nodename=$(uname -n)
+                        path=/root/$pve_nodename/a
+                        echo "测试结果："
+                        echo "$pve_nodename"
+                        echo "$path"
                         ;;
                     0)
                         # 退出
