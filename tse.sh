@@ -2367,7 +2367,7 @@ case $choice in
                             while true; do
                                 read -p "请输入文件地址 (按回车键查找地址，输入 C 退出): " img_path
                                 if [ -z "$img_path" ]; then
-                                    read -p "请输入查找地址 (输入 C 取消): " search_path
+                                    read -p "请输入查找路径 (输入 C 取消): " search_path
                                     if [ "$search_path" == "C" ] || [ "$search_path" == "c" ]; then
                                         echo "取消操作，退出循环。"
                                         noloop=1
