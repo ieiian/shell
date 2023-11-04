@@ -1,4 +1,4 @@
 # install：
 
-curl -sS -O https://raw.githubusercontent.com/ieiian/Shell/main/tse.sh && chmod +x tse.sh && ./tse.sh
+mkdir -p /root/.tse/ && curl -o /root/.tse/tse.sh https://raw.githubusercontent.com/ieiian/Shell/main/tse.sh && chmod +x /root/.tse/tse.sh && /root/.tse/tse.sh
 
