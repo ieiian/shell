@@ -2300,7 +2300,7 @@ case $choice in
                     echo -e "1.  导入镜像文件 ${GR}->${NC} 虚拟机磁盘"
                     echo -e "2.  变更 ${GR}虚拟机/LXC${NC} 的 ${GR}VMID${NC}"
                     echo -e "3.  一键更换 ${GR}中科大${NC} 源地址 (${GR}基于8.0${NC})"
-                    echo "4.  去除无效订阅提示"
+                    echo -e "4.  一键去除 ${GR}无有效订阅${NC} 提示"
                     echo "5.  开启/关闭 - 网卡硬件直通"
                     echo -e "${colored_text1}${NC}"
                     echo "0.  返回主菜单"
@@ -2441,7 +2441,7 @@ case $choice in
                         echo -e "${colored_text1}${NC}"
                         pve_nodename=$(uname -n)
                         while true; do
-                            echo -e "请输入 变更${MA}前${NC}的VMID 和 变更${MA}后${NC}的VMID"
+                            echo -e "请输入 变更${MA}前${NC}的VMID 和 变更${MA}后${NC}的VMID (输入 C 取消)"
                             read -p "格式: 变更前VMID+空格+变更后VMID (如:111 222): " vmid_replace
 
                             # 检查用户输入的格式是否正确
@@ -2458,7 +2458,7 @@ case $choice in
                                 else
                                     echo "变更前的VMID: $vmid_a"
                                     echo "变更后的VMID: $vmid_b"
-                                    echo -e "${CY}正在变更中...${NC}"
+                                    echo -e "${CY}正在匹配中...${NC}"
 
                                     config_file_a="/etc/pve/nodes/$pve_nodename/qemu-server/${vmid_a}.conf"
                                     config_file_lxc_a="/etc/pve/nodes/$pve_nodename/lxc/${vmid_a}.conf"
@@ -2469,16 +2469,17 @@ case $choice in
 
                                     # 查找配置文件并提取磁盘文件名到数组
                                     if [ -f "$config_file_a" ]; then
-                                        vmpathto="qemu-server"
+                                        vmclass="qemu-server"
                                         diskname_a=($(awk -F 'local-lvm:|,' '/local-lvm:/ {print $2}' "$config_file_a"))
                                     elif [ -f "$config_file_lxc_a" ]; then
-                                        vmpathto="lxc"
+                                        vmclass="lxc"
                                         diskname_a=($(awk -F 'local-lvm:|,' '/local-lvm:/ {print $2}' "$config_file_lxc_a"))
                                     else
-                                        echo "找不到配置文件"
+                                        echo -e "${MA}找不到配置文件${NC}"
                                         exit 1
                                     fi
-                                    config_file_aa="/etc/pve/nodes/$pve_nodename/$vmpathto/${vmid_a}.conf"
+                                    config_file_aa="/etc/pve/nodes/$pve_nodename/$vmclass/${vmid_a}.conf"
+                                    echo "配置文件地址: "$config_file_aa""
 
                                     # 查询/dev/pve目录下的所有文件
                                     pve_files=("/dev/pve/"*)
@@ -2495,7 +2496,7 @@ case $choice in
 
                                         if [ "$found" = true ]; then
                                             # 匹配成功
-                                            echo "磁盘名称: ${diskname_a[i]} 匹配成功"
+                                            echo -e "磁盘名称: ${diskname_a[i]} ${GR}匹配成功${NC}"
                                             
                                             # 根据需求重命名或修改vmid
                                             if [[ "${diskname_a[i]}" == *"$vmid_a"* ]]; then
@@ -2505,7 +2506,7 @@ case $choice in
                                             fi
                                         else
                                             # 匹配失败
-                                            echo "磁盘 ${diskname_a[i]} 未匹配成功"
+                                            echo -e "磁盘名称: ${diskname_a[i]} ${MA}匹配失败${NC}"
                                             exit 1
                                         fi
                                     done
@@ -2514,7 +2515,7 @@ case $choice in
                                     match_success=true
                                     for diskname in "${diskname_a[@]}"; do
                                         if ! echo "$lvs_output_1" | grep -qw "$diskname"; then
-                                            echo "匹配失败：$diskname 在 lvs -a 的输出中未找到。"
+                                            echo -e "磁盘列表: ${MA}匹配失败${NC}"
                                             match_success=false
                                             break
                                         fi
@@ -2522,7 +2523,7 @@ case $choice in
 
                                     # 如果每个值都能找到则提示匹配成功
                                     if [ "$match_success" = true ]; then
-                                        echo "磁盘列表: 匹配成功"
+                                        echo -e "磁盘列表: ${GR}匹配成功${NC}"
                                     fi
 
                                     # 获取所有与diskname_a匹配的vgname
@@ -2539,11 +2540,10 @@ case $choice in
 
                                     # 列出diskname_a和diskname_b和vgname的参数
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
-                                        echo "磁盘参数: "${vgname[i]}" - "${diskname_a[i]}" -> "${diskname_b[i]}" 匹配成功"
+                                        echo -e "磁盘参数: "${vgname[i]}" ${MA}--${NC} "${diskname_a[i]}" ${MA}->${NC} "${diskname_b[i]}" ${GR}匹配成功${NC}"
                                     done
 
                                     # 继续执行后续操作
-                                    echo "$config_file_aa"
                                     # 提示用户输入(Y/N)
                                     read -p "是否继续操作？(Y/N): " choice
                                     if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
@@ -2551,10 +2551,10 @@ case $choice in
                                         break
                                     fi
 
-                                    if [ "$vmpathto" == "qemu-server" ]; then
+                                    if [ "$vmclass" == "qemu-server" ]; then
                                         qm stop $vmid_a >> /dev/null
                                     fi
-                                    if [ "$vmpathto" == "lxc" ]; then
+                                    if [ "$vmclass" == "lxc" ]; then
                                         lxc-stop $vmid_a >> /dev/null
                                     fi
 
@@ -2562,7 +2562,7 @@ case $choice in
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
                                         sed -i "s/${diskname_a[i]}/${diskname_b[i]}/g" "$config_file_aa"
                                     done
-                                    mv "$config_file_aa" "/etc/pve/nodes/$pve_nodename/$vmpathto/${vmid_b}.conf"
+                                    mv "$config_file_aa" "/etc/pve/nodes/$pve_nodename/$vmclass/${vmid_b}.conf"
 
                                     # 将/dev/pve下的文件名从diskname_a改为diskname_b
                                     for ((i=0; i<${#diskname_a[@]}; i++)); do
@@ -2574,25 +2574,55 @@ case $choice in
                                         lvrename "${vgname[i]}" "${diskname_a[i]}" "${diskname_b[i]}" >> /dev/null
                                     done
 
-                                    echo "以下查询为确认内容，查询所有包含更改前和更改后的VMID的文件或内容"
+                                    echo -e "${CY}查询所有包含更改前和更改后的VMID的文件或内容${NC}"
                                     echo -e "${colored_text1}${NC}"
                                     ls /dev/pve | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
-                                    ls /etc/pve/nodes/$pve_nodename/$vmpathto/  | grep -E "$vmid_a|$vmid_b"
+                                    ls /etc/pve/nodes/$pve_nodename/$vmclass/  | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
-                                    cat /etc/pve/nodes/$pve_nodename/$vmpathto/$vmid_b.conf | grep -E "$vmid_a|$vmid_b"
+                                    cat /etc/pve/nodes/$pve_nodename/$vmclass/$vmid_b.conf | grep -E "$vmid_a|$vmid_b"
                                     echo -e "${colored_text1}${NC}"
-                                    lvs -a | awk '/^  vm-/ {sub(/^ */, ""); print $1, $2}' | grep -E "$vmid_a|$vmid_b"
+                                    if [[ $vmclass == "qemu-server" ]]; then
+                                        lvs -a | awk '/^  vm-/ {sub(/^ */, ""); print $1, $2}' | grep -E "$vmid_a|$vmid_b"
+                                        echo -e "${colored_text1}${NC}"
+                                        if [[ -z $(ls -1 /dev/pve | grep -qE "$vmid_a") \
+                                            && -z $(ls -1 /etc/pve/nodes/$pve_nodename/$vmclass/ | grep -qE "$vmid_a") \
+                                            && -z $(cat /etc/pve/nodes/$pve_nodename/$vmclass/$vmid_b.conf | grep -qE "$vmid_a") \
+                                            && -z $(qm list | awk '{print $1, $2, $3}' | grep -qE "$vmid_a") ]]; then
+                                            echo -e "${GR}校验成功${NC}"
+                                        else
+                                            echo -e "${MA}校验失败${NC}"
+                                        fi
+                                    elif [[ $vmclass == "lxc" ]]; then
+                                        lxc-ls --fancy | awk '{$1=$1;print $1, $2, $3}'
+                                        echo -e "${colored_text1}${NC}"
+                                        if [[ -z $(ls /dev/pve | grep -E "$vmid_a") \
+                                            && -z $(ls /etc/pve/nodes/$pve_nodename/$vmclass/ | grep -E "$vmid_a") \
+                                            && -z $(cat /etc/pve/nodes/$pve_nodename/$vmclass/$vmid_b.conf | grep -E "$vmid_a") \
+                                            && -z $(lxc-ls --fancy | awk '{$1=$1;print $1, $2, $3}' | grep -qE "$vmid_a") ]]; then
+                                            echo -e "${GR}校验成功${NC}"
+                                            lxc-destroy -n $vmid_a
+                                        else
+                                            echo -e "${MA}校验失败${NC}"
+                                        fi
+                                    fi
                                     echo -e "${colored_text1}${NC}"
                                     echo -e "操作已经完成，成功将 ${MA}$vmid_a${NC} 更改为 ${MA}$vmid_b${NC} ."
-                                    echo -e "${CY}虚拟机 ▽${NC}"
-                                    qm list | awk '{$1=$1;print $1, $2, $3}'
                                     echo -e "${colored_text1}${NC}"
-                                    echo -e "${CY}容器 (LXC) ▽${NC}"
-                                    lxc-ls --fancy | awk '{$1=$1;print $1, $2, $3}'
-                                    echo -e "${colored_text1}${NC}"
+                                    if [[ $vmclass == "qemu-server" ]]; then
+                                        echo -e "${CY}虚拟机 ▽${NC}"
+                                        qm list | awk '{$1=$1;print $1, $2, $3}'
+                                        echo -e "${colored_text1}${NC}"
+                                    elif [[ $vmclass == "lxc" ]]; then
+                                        echo -e "${CY}容器 (LXC) ▽${NC}"
+                                        lxc-ls --fancy | awk '{$1=$1;print $1, $2, $3}'
+                                        echo -e "${MA}注意${NC}: 改动后的 $vmid_b ，在列表中可能无法显示，需要到 ${CY}WEB${NC} 端启动一次."
+                                        echo -e "${colored_text1}${NC}"
+                                    fi
                                     break
                                 fi
+                            elif [[ $vmid_replace = "C" || $vmid_replace = "c" ]]; then
+                                break
                             else
                                 echo -e "${GR}输入${NC}${MA}格式错误${NC}${GR}，请重新输入。${NC}"
                             fi
@@ -2725,9 +2755,9 @@ case $choice in
 
                         while true; do
                             if [[ "$current_grub" == *"intel_iommu=on"* || "$current_grub" == *"amd_iommu=on"* ]]; then
-                                echo -e "发现IOMMU（Input-Output Memory Management Unit）为${MA}开启${NC}状态"
-                                echo -e "发现网卡硬件直通已经${MA}开启${NC}，是否要关闭网卡硬件直通？"
-                                read -p "输入 Y 继续操作，输入其它取消: " revert_choice
+                                # echo -e "发现 ${GR}IOMMU${NC} 为${MA}开启${NC}状态"
+                                echo -e "发现网卡硬件直通 (${GR}IOMMU${NC}) 已经${MA}开启${NC}，是否要关闭网卡硬件直通？"
+                                read -p "输入 Y 继续关闭的操作，输入其它取消: " revert_choice
                                 if [ "$revert_choice" == "Y" ] || [ "$revert_choice" == "y" ]; then
                                     cp /etc/default/grub /etc/default/grub.tse
                                     sed -i "s|GRUB_CMDLINE_LINUX_DEFAULT=.*|$initial_grub|" /etc/default/grub
