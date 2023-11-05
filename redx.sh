@@ -13,11 +13,12 @@ NC='\033[0m'
 # echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
 
 clear_screen(){
-    if command -v apt &>/dev/null && clear; then
-        :
+    if command -v apt &>/dev/null; then
+        clear
     elif command -v yum &>/dev/null; then
         printf "\033c"
     else
+        echo
         echo -e "${BK}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${BL}■ ${GR}■ ${BK}■"
     fi
 }
