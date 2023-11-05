@@ -295,7 +295,8 @@ case $choice in
     *)
         echo
         echo "无效的选项，请重新输入。"
-        sleep 2
+        echo "按任意键继续..."
+        read -n 1 -s -r -p ""
         ;;
 esac
 done
