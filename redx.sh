@@ -93,14 +93,14 @@ case $choice in
         while true; do
         if command -v v2ray &> /dev/null; then
             v2ver=$(v2ray version | head -n 1 | awk '{print $1, $2}')
-            v2tag="*"
+            v2tag=""
         else
             v2ver="未安装"
-            v2tag=""
+            v2tag="*"
         fi
         clear_screen
         echo -e "${GR}▼▼${NC}"
-        echo -e "${GR}V2RAY${NC}        ${MA}$v2ver${NC}"
+        echo -e "${GR}V2RAY${NC}          ${MA}$v2ver${NC}"
         echo -e "${colored_text2}${NC}"
         echo -e "1.  创建节点"
         echo -e "2.  查询节点"
