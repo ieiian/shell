@@ -286,6 +286,7 @@ case $choice in
     4|44)
         ;;
     o|O|oo|OO)
+        curl -o redx.sh https://raw.githubusercontent.com/ieiian/Shell/dev/redx.sh && chmod +x redx.sh && ./redx.sh
         ;;
     x|X|xx|XX)
         echo
