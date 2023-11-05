@@ -90,6 +90,11 @@ read -p "请输入你的选择: " -n 2 -r choice
 
 case $choice in
     1|11)
+        if command -v v2ray &> /dev/null; then
+            v2ver=$(v2ray version | head -n 1 | awk '{print $1, $2}')
+        else
+            v2ver="未安装"
+        fi
         while true; do
         clear_screen
         echo -e "${GR}▼▼${NC}"
@@ -99,7 +104,7 @@ case $choice in
         echo -e "3.  修改节点"
         echo -e "4.  删除节点"
         echo -e "${colored_text1}${NC}"
-        echo -e "i.  安装/更新 V2RAY 官方脚本"
+        echo -e "i.  安装/更新 V2RAY 官方脚本 ${MA}$v2ver${NC}"
         echo -e "u.  更新 .dat 文件"
         echo -e "d.  删除 V2RAY 官方脚本"
         echo -e "${colored_text1}${NC}"
