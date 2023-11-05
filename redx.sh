@@ -118,12 +118,7 @@ case $choice in
                 ;;
             i|ii|I|II)
                 echo
-                acme.sh --upgrade
-                echo "JUMP" && sleep 2
-                if [ $? -ne 0 ]; then
-                    echo "IN" && sleep 2
-                    # bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
-                fi
+                bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
                 ;;
             u|U|uu|UU)
                 echo
