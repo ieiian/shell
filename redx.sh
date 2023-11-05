@@ -119,6 +119,8 @@ case $choice in
             i|ii|I|II)
                 echo
                 bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
+                sudo sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/v2ray.service"
+                sudo systemctl daemon-reload
                 ;;
             u|U|uu|UU)
                 echo
@@ -173,10 +175,10 @@ case $choice in
                 echo -e "${GR}▼▼▼${NC}"
                 echo -e "${GR}申请证书${NC}"
                 echo -e "${colored_text2}${NC}"
-                echo -e "1.  方法一: 80 端口空闲的验证申请"
-                echo -e "2.  方法二: Nginx 的方式验证申请 (需要安装Nginx)"
-                echo -e "3.  方法三: http 的方式验证申请"
-                echo -e "4.  方法四: DNS 验证申请证书"
+                echo -e "1.  方法一: 采用端口 80 验证方式申请"
+                echo -e "2.  方法二: 采用 Nginx 验证方式申请 (需要安装Nginx)"
+                echo -e "3.  方法三: 采用 http 绝对路径方式验证申请"
+                echo -e "4.  方法四: 采用 cloudflare 的 DNS 验证方式申请"
                 echo -e "${colored_text1}${NC}"
                 echo -e "r.  返回上层菜单"
                 echo -e "${colored_text1}${NC}"
