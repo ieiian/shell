@@ -90,12 +90,12 @@ read -p "请输入你的选择: " -n 2 -r choice
 
 case $choice in
     1|11)
+        while true; do
         if command -v v2ray &> /dev/null; then
             v2ver=$(v2ray version | head -n 1 | awk '{print $1, $2}')
         else
             v2ver="未安装"
         fi
-        while true; do
         clear_screen
         echo -e "${GR}▼▼${NC}"
         echo -e "${colored_text2}${NC}"
