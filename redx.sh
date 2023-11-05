@@ -98,6 +98,7 @@ case $choice in
         fi
         clear_screen
         echo -e "${GR}▼▼${NC}"
+        echo -e "${GR}V2RAY${NC}"
         echo -e "${colored_text2}${NC}"
         echo -e "1.  创建节点"
         echo -e "2.  查询节点"
@@ -157,6 +158,7 @@ case $choice in
         while true; do
         clear_screen
         echo -e "${GR}▼▼${NC}"
+        echo -e "${GR}ACME${NC}"
         echo -e "${colored_text2}${NC}"
         echo -e "1.  安装/更新 ACME 官方脚本"
         echo -e "2.  申请证书"
@@ -179,7 +181,7 @@ case $choice in
                 while true; do
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
-                echo -e "${GR}申请证书${NC}"
+                echo -e "${GR}ACME - 申请证书${NC}"
                 echo -e "${colored_text2}${NC}"
                 echo -e "1.  方法一: 采用端口 80 验证方式申请"
                 echo -e "2.  方法二: 采用 Nginx 验证方式申请 (需要安装Nginx)"
@@ -224,7 +226,7 @@ case $choice in
                 while true; do
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
-                echo -e "${GR}更新证书${NC}"
+                echo -e "${GR}ACME - 更新证书${NC}"
                 echo -e "${colored_text2}${NC}"
                 echo -e "1.  方法一: 更新全部证书"
                 echo -e "2.  方法二: 强制更新全部证书"
