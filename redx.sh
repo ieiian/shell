@@ -98,14 +98,14 @@ case $choice in
         fi
         clear_screen
         echo -e "${GR}▼▼${NC}"
-        echo -e "${GR}V2RAY${NC}"
+        echo -e "${GR}V2RAY${NC}        ${MA}$v2ver${NC}"
         echo -e "${colored_text2}${NC}"
         echo -e "1.  创建节点"
         echo -e "2.  查询节点"
         echo -e "3.  修改节点"
         echo -e "4.  删除节点"
         echo -e "${colored_text1}${NC}"
-        echo -e "i.  安装/更新 V2RAY 官方脚本 ${MA}$v2ver${NC}"
+        echo -e "i.  安装/更新 V2RAY 官方脚本 ${MA}*${NC}"
         echo -e "u.  更新 .dat 文件"
         echo -e "d.  删除 V2RAY 官方脚本"
         echo -e "${colored_text1}${NC}"
