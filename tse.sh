@@ -2197,18 +2197,24 @@ case $choice in
             read -p "请输入你的选择: " sub_choice
         case $sub_choice in
             1)
-                # 字符集设置
-                if ! grep -q "export LANG=zh_CN.UTF-8" ~/.bashrc; then
-                    echo 'export LANG=zh_CN.UTF-8' >> ~/.bashrc
-                    echo 'export LC_ALL=zh_CN.UTF-8' >> ~/.bashrc
-                    source ~/.bashrc
-                    echo 'LANG="zh_US.UTF-8"' | sudo tee -a /etc/environment
-                    echo 'LC_ALL=' | sudo tee -a /etc/environment
-                    source /etc/environment
-                    echo '字符集设置已添加到 .bashrc 文件。请重新登录以使设置生效。'
-                else
-                    echo '字符集设置已存在于 .bashrc 文件中。'
-                fi
+                # 字符集设置(需要加以判断进行修改)
+                # if ! grep -q "export LANG=zh_CN.UTF-8" ~/.bashrc; then
+                    # echo 'export LANG=zh_CN.UTF-8' >> ~/.bashrc
+                    # echo 'export LC_ALL=zh_CN.UTF-8' >> ~/.bashrc
+                    # source ~/.bashrc
+                    # echo '字符集设置已添加到 .bashrc 文件。请重新登录以使设置生效。'
+                # else
+                    # echo '字符集设置已存在于 .bashrc 文件中。'
+                # fi
+                # echo 'LANG="zh_US.UTF-8"' | sudo tee -a /etc/environment
+                # echo 'LC_ALL=' | sudo tee -a /etc/environment
+                # source /etc/environment
+                # if [ ! -d /etc/sysconfig ]; then
+                    # mkdir /etc/sysconfig
+                    # touch /etc/sysconfig/i18n
+                # fi
+                # echo 'LANG="zh_CN.UTF-8"' | sudo tee -a /etc/sysconfig/i18n
+                # localedef -v -c -i zh_CN -f UTF-8 zh_CN.UTF-8
 
                 # Backup function
                 backup_file() {
