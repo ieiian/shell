@@ -189,7 +189,11 @@ case $choice in
         read -p "请输入你的选择: " -n 2 -r choice
         case $choice in
             1|11)
+                if [ ! -d ~/cert ]; then
+                    mkdir ~/cert
+                fi
                 while true; do
+                random=$((RANDOM % 1000000))
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
                 echo -e "${GR}ACME - 申请证书${NC}"
@@ -197,16 +201,17 @@ case $choice in
                 echo -e "1.  方法一: 采用端口 80 验证方式申请"
                 echo -e "2.  方法二: 采用 Nginx 验证方式申请 (需要安装Nginx)"
                 echo -e "3.  方法三: 采用 http 绝对路径方式验证申请"
-                echo -e "4.  方法四: 采用 cloudflare 的 DNS 验证方式申请"
+                echo -e "4.  方法四: 采用 cloudflare 的 API 验证方式申请"
                 echo -e "${colored_text1}${NC}"
                 echo -e "r.  返回上层菜单"
                 echo -e "x.  退出脚本"
+                echo -e "${colored_text1}${NC}"
+                echo -e "${MA}注${NC}: 证书申请成功后将自动保存至: ${GR}$user_path/cert${NC} 文件夹中"
                 echo -e "${colored_text1}${NC}"
                 read -p "请输入你的选择: " -n 2 -r choice
                 case $choice in
                     1|11)
                         while true; do
-                            random=$((RANDOM % 1000000))
                             read -p "请输入申请证书的域名: " domain
                             if [[ $domain == *.* ]]; then
                                 pids=$(lsof -t -i :80)
@@ -217,6 +222,7 @@ case $choice in
                                 fi
                                 ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                                 ~/.acme.sh/acme.sh --issue -d $domain --standalone
+                                ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
                                 break
                             else
                                 echo "输入的域名不合法, 请重新输入。"
@@ -235,48 +241,40 @@ case $choice in
                                 fi
                                 if ! command -v nginx &> /dev/null; then
                                     read -p "请系统未检测到Nginx, 是否进行Nginx安装 (Y/其它跳过): " choice
-                                    if [[ ! $choice == "Y" || ! $choice == "y" ]]; then
+                                    if [[ ! $choice == "Y" && ! $choice == "y" ]]; then
                                         break
                                     fi
                                     $pm -y install nginx
                                 fi
-
+                                cp /etc/nginx/nginx.conf /etc/nginx/nginx_bak.conf
                                 write_conf() {
                                     echo "user www-data;
-                                        worker_processes auto;
-                                        pid /run/nginx.pid;
-                                        events {
-                                            worker_connections 768;
+                                    events {
+                                        worker_connections 768;
+                                    }
+                                    http {
+                                        server {
+                                        listen 80 default_server;
+                                        listen [::]:80 default_server;
+                                        root /var/www/html;
+                                        index index.html index.htm index.nginx-debian.html;
+                                        server_name $domain;
                                         }
-                                        http {
-                                            sendfile on;
-                                            tcp_nopush on;
-                                            types_hash_max_size 2048;
-                                            include /etc/nginx/mime.types;
-                                            default_type application/octet-stream;
-                                            server {
-                                            listen 80 default_server;
-                                            listen [::]:80 default_server;
-                                            root /var/www/html;
-                                            index index.html index.htm index.nginx-debian.html;
-                                            server_name $domain;
-                                            location / {
-                                                try_files \$uri \$uri/ =404;
-                                            }
-                                        }
-                                    }" > /etc/nginx/conf.d/redx.conf
-                                    nginx -c /etc/nginx/conf.d/redx.conf
-                                    systemctl status nginx
+                                    }" > /etc/nginx/nginx.conf
+                                    systemctl start nginx
                                     ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                                     ~/.acme.sh/acme.sh --issue -d $domain --nginx
-                                    rm -f /etc/nginx/conf.d/redx.conf
+                                    ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
+                                    mv /etc/nginx/nginx_bak.conf /etc/nginx/nginx.conf
                                 }
                                 if systemctl is-active --quiet nginx; then
                                     systemctl stop nginx
                                     write_conf
-                                    systemctl start nginx
-                                fi
+                                    systemctl restart nginx
+                                else
                                     write_conf
+                                    systemctl stop nginx
+                                fi
                                 break
                             else
                                 echo "输入的域名不合法, 请重新输入。"
@@ -285,8 +283,54 @@ case $choice in
                         done
                         ;;
                     3|33)
+                        while true; do
+                            echo -e "请输入申请证书的域名, 主体名和可选主体名, 以空格格开, (如: do1.com do2.com)"
+                            read -p "请输入域名: " domain1 domain2
+                            if [[ -n "$domain1" && -z "${domain1##*.*}" ]]; then
+                                if [[ -z "$domain2" || (-n "$domain2" && -z "${domain2##*.*}") ]]; then
+                                    break
+                                else
+                                    echo "请输入有效的第二个域名."
+                                fi
+                            else
+                                echo "请输入有效的域名."
+                            fi
+                        done
+                        read -p "请输入网站根路径 (如: /home/webroot): " webroot
+                        if [[ -n "$domain2" ]]; then
+                            ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                            ~/.acme.sh/acme.sh --issue -d "$domain1" -d "$domain2" -w "$webroot"
+                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
+                        else
+                            ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                            ~/.acme.sh/acme.sh --issue -d "$domain1" -w "$webroot"
+                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
+                        fi
                         ;;
                     4|44)
+                        while true; do
+                            echo -e "请输入申请证书的域名, 输入子域名, 自动添加泛域名"
+                            read -p "请输入域名: " domain
+                            if [[ $domain == *.* ]]; then
+                                read -p "请输入Cloudflare API Key: " cf_key
+                                read -p "请输入Cloudflare 邮箱: " cf_email
+                                export CF_Key="$cf_key"
+                                export CF_Email="$cf_email"
+                                wildcard_domain="*.${domain#*.}"
+                                ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                                ~/.acme.sh/acme.sh --issue -d "$domain" -d "$wildcard_domain" --dns dns_cf \
+                                --key-file       ~/cert/"$domain.key"  \
+                                --fullchain-file ~/cert/"$domain.pem"
+                                if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.pem" ]]; then
+                                    echo "证书已生成并保存到 ~/cert 目录下。"
+                                    break
+                                else
+                                    echo "证书生成失败，请检查输入的域名和Cloudflare配置是否正确。"
+                                fi
+                            else
+                                echo "输入的域名不合法，请重新输入。"
+                            fi
+                        done
                         ;;
                     r|R|rr|RR)
                         echo
