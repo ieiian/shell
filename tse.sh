@@ -2201,6 +2201,10 @@ case $choice in
                 if ! grep -q "export LANG=zh_CN.UTF-8" ~/.bashrc; then
                     echo 'export LANG=zh_CN.UTF-8' >> ~/.bashrc
                     echo 'export LC_ALL=zh_CN.UTF-8' >> ~/.bashrc
+                    source ~/.bashrc
+                    echo 'LANG="zh_US.UTF-8"' | sudo tee -a /etc/environment
+                    echo 'LC_ALL=' | sudo tee -a /etc/environment
+                    source /etc/environment
                     echo '字符集设置已添加到 .bashrc 文件。请重新登录以使设置生效。'
                 else
                     echo '字符集设置已存在于 .bashrc 文件中。'
