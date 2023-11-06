@@ -66,7 +66,7 @@ if [ "$EUID" -eq 0 ]; then
     user_path="/root"
 else
     user_path="/home/$(whoami)"
-    echo -e "${GR}当前用户为非root用户，部分操作可能无法顺利进行。${NC}"
+    echo -e "${GR}当前用户为非root用户, 部分操作可能无法顺利进行。${NC}"
 fi
 
 echo -e "${RE}RedX 一键脚本工具 v1.0${NC}"
@@ -83,7 +83,6 @@ echo -e "3.  BBR   安装及相关操作 ▶"
 echo -e "4.  WARP  安装及相关操作 ▶"
 echo -e "${colored_text1}${NC}"
 echo -e "o.  更新脚本"
-echo -e "${colored_text1}${NC}"
 echo -e "x.  退出脚本"
 echo -e "${colored_text1}${NC}"
 read -p "请输入你的选择: " -n 2 -r choice
@@ -112,7 +111,6 @@ case $choice in
         echo -e "d.  删除 V2RAY 官方脚本"
         echo -e "${colored_text1}${NC}"
         echo -e "r.  返回主菜单"
-        echo -e "${colored_text1}${NC}"
         echo -e "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
         read -p "请输入你的选择: " -n 2 -r choice
@@ -138,6 +136,15 @@ case $choice in
             d|D|dd|DD)
                 echo
                 bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh) --remove
+
+                read -p "是否要删除所有残留(包括配置文件)? (Y/其它跳过): " choice
+                if [[ $choice == "Y" || $choice == "y" ]]; then
+                    rm -rf /usr/local/etc/v2ray
+                    rm -rf /var/log/v2ray
+                fi
+                ### 以下两行为删除/tmp下所有带v2ray关健定的文件或文件夹 (额外添加, 可以去除)
+                # find /tmp -type f -name "*v2ray*" -exec rm -f {} +
+                # find /tmp -type d -name "*v2ray*" -exec rm -rf {} +
                 ;;
             r|R|rr|RR)
                 echo
@@ -148,7 +155,7 @@ case $choice in
                 exit 0
                 ;;
             *)
-                echo "无效的选项，请重新输入。"
+                echo "无效的选项, 请重新输入。"
                 ;;
         esac
         echo -e ${GR}操作完成${NC}
@@ -158,28 +165,30 @@ case $choice in
         ;;
     2|22)
         while true; do
+        if [ -x "/root/.acme.sh/acme.sh" ]; then
+            acmever=$(~/.acme.sh/acme.sh --version | sed -n '2p' | awk '{print $1}')
+        else
+            acmever="未安装"
+            acmetag="*"
+        fi
         clear_screen
         echo -e "${GR}▼▼${NC}"
-        echo -e "${GR}ACME${NC}"
+        echo -e "${GR}ACME${NC}          ${MA}$acmever${NC}"
         echo -e "${colored_text2}${NC}"
-        echo -e "1.  安装/更新 ACME 官方脚本"
-        echo -e "2.  申请证书"
-        echo -e "3.  查询证书"
-        echo -e "4.  更新证书"
-        echo -e "5.  删除证书"
+        echo -e "1.  申请证书"
+        echo -e "2.  查询证书"
+        echo -e "3.  更新证书"
+        echo -e "4.  删除证书"
+        echo -e "${colored_text1}${NC}"
+        echo -e "i.  安装/更新 ACME 官方脚本 ${MA}$acmetag${NC}"
+        echo -e "d.  删除 ACME 官方脚本"
         echo -e "${colored_text1}${NC}"
         echo -e "r.  返回主菜单"
-        echo -e "${colored_text1}${NC}"
         echo -e "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
         read -p "请输入你的选择: " -n 2 -r choice
         case $choice in
             1|11)
-                echo
-                $pm install -y socat
-                curl https://get.acme.sh | sh
-                ;;
-            2|22)
                 while true; do
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
@@ -191,14 +200,89 @@ case $choice in
                 echo -e "4.  方法四: 采用 cloudflare 的 DNS 验证方式申请"
                 echo -e "${colored_text1}${NC}"
                 echo -e "r.  返回上层菜单"
-                echo -e "${colored_text1}${NC}"
                 echo -e "x.  退出脚本"
                 echo -e "${colored_text1}${NC}"
                 read -p "请输入你的选择: " -n 2 -r choice
                 case $choice in
                     1|11)
+                        while true; do
+                            random=$((RANDOM % 1000000))
+                            read -p "请输入申请证书的域名: " domain
+                            if [[ $domain == *.* ]]; then
+                                pids=$(lsof -t -i :80)
+                                if [ -n "$pids" ]; then
+                                    for pid in $pids; do
+                                        kill -9 $pid
+                                    done
+                                fi
+                                ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                                ~/.acme.sh/acme.sh --issue -d $domain --standalone
+                                break
+                            else
+                                echo "输入的域名不合法, 请重新输入。"
+                            fi
+                        done
                         ;;
                     2|22)
+                        while true; do
+                            read -p "请输入申请证书的域名: " domain
+                            if [[ $domain == *.* ]]; then
+                                pids=$(lsof -t -i :80)
+                                if [ -n "$pids" ]; then
+                                    for pid in $pids; do
+                                        kill -9 $pid
+                                    done
+                                fi
+                                if ! command -v nginx &> /dev/null; then
+                                    read -p "请系统未检测到Nginx, 是否进行Nginx安装 (Y/其它跳过): " choice
+                                    if [[ ! $choice == "Y" || ! $choice == "y" ]]; then
+                                        break
+                                    fi
+                                    $pm -y install nginx
+                                fi
+
+                                write_conf() {
+                                    echo "user www-data;
+                                        worker_processes auto;
+                                        pid /run/nginx.pid;
+                                        events {
+                                            worker_connections 768;
+                                        }
+                                        http {
+                                            sendfile on;
+                                            tcp_nopush on;
+                                            types_hash_max_size 2048;
+                                            include /etc/nginx/mime.types;
+                                            default_type application/octet-stream;
+                                            server {
+                                            listen 80 default_server;
+                                            listen [::]:80 default_server;
+                                            root /var/www/html;
+                                            index index.html index.htm index.nginx-debian.html;
+                                            server_name $domain;
+                                            location / {
+                                                try_files \$uri \$uri/ =404;
+                                            }
+                                        }
+                                    }" > /etc/nginx/conf.d/redx.conf
+                                    nginx -c /etc/nginx/conf.d/redx.conf
+                                    systemctl status nginx
+                                    ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                                    ~/.acme.sh/acme.sh --issue -d $domain --nginx
+                                    rm -f /etc/nginx/conf.d/redx.conf
+                                }
+                                if systemctl is-active --quiet nginx; then
+                                    systemctl stop nginx
+                                    write_conf
+                                    systemctl start nginx
+                                fi
+                                    write_conf
+                                break
+                            else
+                                echo "输入的域名不合法, 请重新输入。"
+                            fi
+                            
+                        done
                         ;;
                     3|33)
                         ;;
@@ -213,7 +297,7 @@ case $choice in
                         exit 0
                         ;;
                     *)
-                        echo "无效的选项，请重新输入。"
+                        echo "无效的选项, 请重新输入。"
                         ;;
                     esac
                     echo -e ${GR}操作完成${NC}
@@ -221,10 +305,10 @@ case $choice in
                     read -n 1 -s -r -p ""
                     done
                 ;;
-            3|33)
+            2|22)
                 ~/.acme.sh/acme.sh --list
                 ;;
-            4|44)
+            3|33)
                 while true; do
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
@@ -236,7 +320,6 @@ case $choice in
                 echo -e "3.  方法三: 更新指定证书"
                 echo -e "${colored_text1}${NC}"
                 echo -e "r.  返回上层菜单"
-                echo -e "${colored_text1}${NC}"
                 echo -e "x.  退出脚本"
                 echo -e "${colored_text1}${NC}"
                 read -p "请输入你的选择: " -n 2 -r choice
@@ -256,7 +339,7 @@ case $choice in
                         exit 0
                         ;;
                     *)
-                        echo "无效的选项，请重新输入。"
+                        echo "无效的选项, 请重新输入。"
                         ;;
                     esac
                     echo -e ${GR}操作完成${NC}
@@ -264,7 +347,16 @@ case $choice in
                     read -n 1 -s -r -p ""
                     done
                 ;;
-            5|55)
+            4|44)
+                ;;
+            i|I|ii|II)
+                echo
+                $pm install -y socat
+                curl https://get.acme.sh | sh
+                ;;
+            d|D|dd|DD)
+                ~/.acme.sh/acme.sh --uninstall
+                rm -rf ~/.acme.sh
                 ;;
             r|R|rr|RR)
                 echo
@@ -275,7 +367,7 @@ case $choice in
                 exit 0
                 ;;
             *)
-                echo "无效的选项，请重新输入。"
+                echo "无效的选项, 请重新输入。"
                 ;;
         esac
         echo -e ${GR}操作完成${NC}
@@ -296,7 +388,7 @@ case $choice in
         ;;
     *)
         echo
-        echo "无效的选项，请重新输入。"
+        echo "无效的选项, 请重新输入。"
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         ;;
