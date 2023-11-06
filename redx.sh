@@ -69,7 +69,24 @@ else
     echo -e "${GR}当前用户为非root用户, 部分操作可能无法顺利进行.${NC}"
 fi
 
+if ifconfig | grep -v '^ ' | grep -q '^eth'; then
+    if [ -d /proc/xen/ ]; then
+        systype="Xen PV"
+    else
+        systype="KVM"
+    fi
+elif ifconfig | grep -v '^ ' | grep -q '^venet'; then
+    if [ -e /proc/vz ]; then
+        systype="OpenVZ"
+    fi
+else
+    systype=""
+fi
+
 echo -e "${RE}RedX 一键脚本工具 v1.0${NC}"
+if [ "$systype" != "" ]; then
+    echo -e "VPS虚拟化类型: ${GR}$systype${NC}"
+fi
 echo -e " ____  _____ ______  __ "
 echo -e "|  _ \| ____|  _ \ \/ / "
 echo -e "| |_) |  _| | | | \  /  "
@@ -254,6 +271,9 @@ case $choice in
                                         break
                                     fi
                                     $pm -y install nginx
+                                fi
+                                if [[ ! -f "/etc/nginx/nginx.redx" ]]; then
+                                    cp /etc/nginx/nginx.conf /etc/nginx/nginx.redx
                                 fi
                                 cp /etc/nginx/nginx.conf /etc/nginx/nginx_bak.conf
                                 write_conf() {
