@@ -222,16 +222,14 @@ case $choice in
                                 fi
                                 ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                                 ~/.acme.sh/acme.sh --issue -d $domain --standalone
-                                if [[ $? -eq 0 ]]; then
-                                    ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
-                                    if [ s "$domain.key" && s "$domain.crt" ]; then
-                                        rm ~/cert/$domain.key
-                                        rm ~/cert/$domain.crt
-                                    fi
-                                    if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.crt" ]]; then
-                                        echo "证书已生成并保存到 ~/cert 目录下."
-                                        break
-                                    fi
+                                ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.cer
+                                if [ ! -s "~/cert/$domain.key" ] && [ ! -s "~/cert/$domain.cer" ]; then
+                                    rm ~/cert/$domain.key
+                                    rm ~/cert/$domain.cer
+                                fi
+                                if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.cer" ]]; then
+                                    echo "证书已生成并保存到 ~/cert 目录下."
+                                    break
                                 fi
                                 echo "证书生成失败."
                                 break
@@ -275,17 +273,15 @@ case $choice in
                                     systemctl start nginx
                                     ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                                     ~/.acme.sh/acme.sh --issue -d $domain --nginx
-                                    if [[ $? -eq 0 ]]; then
-                                        ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
-                                        if [ s "$domain.key" && s "$domain.crt" ]; then
-                                            rm ~/cert/$domain.key
-                                            rm ~/cert/$domain.crt
-                                        fi
-                                        if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.crt" ]]; then
-                                            mv /etc/nginx/nginx_bak.conf /etc/nginx/nginx.conf
-                                            echo "证书已生成并保存到 ~/cert 目录下."
-                                            break
-                                        fi
+                                    ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.cer
+                                    if [ ! -s "~/cert/$domain.key" ] && [ ! -s "~/cert/$domain.cer" ]; then
+                                        rm ~/cert/$domain.key
+                                        rm ~/cert/$domain.cer
+                                    fi
+                                    if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.cer" ]]; then
+                                        echo "证书已生成并保存到 ~/cert 目录下."
+                                        mv /etc/nginx/nginx_bak.conf /etc/nginx/nginx.conf
+                                        break
                                     fi
                                     echo "证书生成失败."
                                     mv /etc/nginx/nginx_bak.conf /etc/nginx/nginx.conf
@@ -323,31 +319,27 @@ case $choice in
                         if [[ -n "$domain2" ]]; then
                             ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                             ~/.acme.sh/acme.sh --issue -d "$domain1" -d "$domain2" -w "$webroot"
-                            if [[ $? -eq 0 ]]; then
-                                ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
-                                if [ s "$domain1.key" && s "$domain1.crt" ]; then
-                                    rm ~/cert/$domain1.key
-                                    rm ~/cert/$domain1.crt
-                                fi
-                                if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.crt" ]]; then
-                                    echo "证书已生成并保存到 ~/cert 目录下."
-                                    break
-                                fi
+                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.cer
+                            if [ ! -s "~/cert/$domain1.key" ] && [ ! -s "~/cert/$domain1.cer" ]; then
+                                rm ~/cert/$domain1.key
+                                rm ~/cert/$domain1.cer
+                            fi
+                            if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.cer" ]]; then
+                                echo "证书已生成并保存到 ~/cert 目录下."
+                                break
                             fi
                             echo "证书生成失败."
                         else
                             ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                             ~/.acme.sh/acme.sh --issue -d "$domain1" -w "$webroot"
-                            if [[ $? -eq 0 ]]; then
-                                ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
-                                if [ s "$domain1.key" && s "$domain1.crt" ]; then
-                                    rm ~/cert/$domain1.key
-                                    rm ~/cert/$domain1.crt
-                                fi
-                                if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.crt" ]]; then
-                                    echo "证书已生成并保存到 ~/cert 目录下."
-                                    break
-                                fi
+                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.cer
+                            if [ ! -s "~/cert/$domain1.key" ] && [ ! -s "~/cert/$domain1.cer" ]; then
+                                rm ~/cert/$domain1.key
+                                rm ~/cert/$domain1.cer
+                            fi
+                            if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.cer" ]]; then
+                                echo "证书已生成并保存到 ~/cert 目录下."
+                                break
                             fi
                             echo "证书生成失败."
                         fi
@@ -366,15 +358,13 @@ case $choice in
                                 ~/.acme.sh/acme.sh --issue -d "$domain" -d "$wildcard_domain" --dns dns_cf \
                                 --key-file       ~/cert/"$domain.key"  \
                                 --fullchain-file ~/cert/"$domain.pem"
-                                if [[ $? -eq 0 ]]; then
-                                    if [ s "$domain.key" && s "$domain.pem" ]; then
-                                        rm ~/cert/$domain.key
-                                        rm ~/cert/$domain.pem
-                                    fi
-                                    if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.pem" ]]; then
-                                        echo "证书已生成并保存到 ~/cert 目录下."
-                                        break
-                                    fi
+                                if [ ! -s "~/cert/$domain.key" ] && [ ! -s "~/cert/$domain.pem" ]; then
+                                    rm ~/cert/$domain.key
+                                    rm ~/cert/$domain.pem
+                                fi
+                                if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.pem" ]]; then
+                                    echo "证书已生成并保存到 ~/cert 目录下."
+                                    break
                                 fi
                                 echo "证书生成失败."
                             else
@@ -442,6 +432,55 @@ case $choice in
                     done
                 ;;
             4|44)
+                while true; do
+                clear_screen
+                echo -e "${GR}▼▼▼${NC}"
+                echo -e "${GR}ACME - 删除证书${NC}"
+                echo -e "${colored_text2}${NC}"
+                ~/.acme.sh/acme.sh --list
+                echo -e "${colored_text2}${NC}"
+                echo -e "1.  删除指定证书"
+                echo -e "2.  删除全部证书"
+                echo -e "${colored_text1}${NC}"
+                echo -e "r.  返回上层菜单"
+                echo -e "x.  退出脚本"
+                echo -e "${colored_text1}${NC}"
+                read -p "请输入你的选择: " -n 2 -r choice
+                case $choice in
+                    1|11)
+                        read -p "请输请输入要删除的证书的域名: " domain
+                        ~/.acme.sh/acme.sh --remove -d $domain
+                        if [[ $? -eq 0 ]]; then
+                            echo "证书删除成功."
+                        else
+                            echo -e "证书删除${MA}失败${NC}."
+                        fi
+                        ;;
+                    2|22)
+                        list_output=$(~/.acme.sh/acme.sh --list)
+                        readarray -t domain_array <<< "$(echo "$list_output" | sed -n '2,$p' | awk '{print $1}')"
+                        echo "${domain_array[@]}"
+                        for domain in "${domain_array[@]}"; do
+                            ~/.acme.sh/acme.sh --remove -d "$domain"
+                            echo "已删除域名: $domain"
+                        done
+                        ;;
+                    r|R|rr|RR)
+                        echo
+                        break
+                        ;;
+                    x|X|xx|XX)
+                        echo
+                        exit 0
+                        ;;
+                    *)
+                        echo "无效的选项, 请重新输入."
+                        ;;
+                    esac
+                    echo -e ${GR}操作完成${NC}
+                    echo "按任意键继续..."
+                    read -n 1 -s -r -p ""
+                    done
                 ;;
             i|I|ii|II)
                 echo
