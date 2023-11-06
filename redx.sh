@@ -66,7 +66,7 @@ if [ "$EUID" -eq 0 ]; then
     user_path="/root"
 else
     user_path="/home/$(whoami)"
-    echo -e "${GR}当前用户为非root用户, 部分操作可能无法顺利进行。${NC}"
+    echo -e "${GR}当前用户为非root用户, 部分操作可能无法顺利进行.${NC}"
 fi
 
 echo -e "${RE}RedX 一键脚本工具 v1.0${NC}"
@@ -155,7 +155,7 @@ case $choice in
                 exit 0
                 ;;
             *)
-                echo "无效的选项, 请重新输入。"
+                echo "无效的选项, 请重新输入."
                 ;;
         esac
         echo -e ${GR}操作完成${NC}
@@ -222,10 +222,21 @@ case $choice in
                                 fi
                                 ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                                 ~/.acme.sh/acme.sh --issue -d $domain --standalone
-                                ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
+                                if [[ $? -eq 0 ]]; then
+                                    ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
+                                    if [ s "$domain.key" && s "$domain.crt" ]; then
+                                        rm ~/cert/$domain.key
+                                        rm ~/cert/$domain.crt
+                                    fi
+                                    if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.crt" ]]; then
+                                        echo "证书已生成并保存到 ~/cert 目录下."
+                                        break
+                                    fi
+                                fi
+                                echo "证书生成失败."
                                 break
                             else
-                                echo "输入的域名不合法, 请重新输入。"
+                                echo "输入的域名不合法, 请重新输入."
                             fi
                         done
                         ;;
@@ -264,7 +275,19 @@ case $choice in
                                     systemctl start nginx
                                     ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                                     ~/.acme.sh/acme.sh --issue -d $domain --nginx
-                                    ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
+                                    if [[ $? -eq 0 ]]; then
+                                        ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.crt
+                                        if [ s "$domain.key" && s "$domain.crt" ]; then
+                                            rm ~/cert/$domain.key
+                                            rm ~/cert/$domain.crt
+                                        fi
+                                        if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.crt" ]]; then
+                                            mv /etc/nginx/nginx_bak.conf /etc/nginx/nginx.conf
+                                            echo "证书已生成并保存到 ~/cert 目录下."
+                                            break
+                                        fi
+                                    fi
+                                    echo "证书生成失败."
                                     mv /etc/nginx/nginx_bak.conf /etc/nginx/nginx.conf
                                 }
                                 if systemctl is-active --quiet nginx; then
@@ -277,7 +300,7 @@ case $choice in
                                 fi
                                 break
                             else
-                                echo "输入的域名不合法, 请重新输入。"
+                                echo "输入的域名不合法, 请重新输入."
                             fi
                             
                         done
@@ -300,11 +323,33 @@ case $choice in
                         if [[ -n "$domain2" ]]; then
                             ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                             ~/.acme.sh/acme.sh --issue -d "$domain1" -d "$domain2" -w "$webroot"
-                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
+                            if [[ $? -eq 0 ]]; then
+                                ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
+                                if [ s "$domain1.key" && s "$domain1.crt" ]; then
+                                    rm ~/cert/$domain1.key
+                                    rm ~/cert/$domain1.crt
+                                fi
+                                if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.crt" ]]; then
+                                    echo "证书已生成并保存到 ~/cert 目录下."
+                                    break
+                                fi
+                            fi
+                            echo "证书生成失败."
                         else
                             ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                             ~/.acme.sh/acme.sh --issue -d "$domain1" -w "$webroot"
-                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
+                            if [[ $? -eq 0 ]]; then
+                                ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.crt
+                                if [ s "$domain1.key" && s "$domain1.crt" ]; then
+                                    rm ~/cert/$domain1.key
+                                    rm ~/cert/$domain1.crt
+                                fi
+                                if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.crt" ]]; then
+                                    echo "证书已生成并保存到 ~/cert 目录下."
+                                    break
+                                fi
+                            fi
+                            echo "证书生成失败."
                         fi
                         ;;
                     4|44)
@@ -321,14 +366,19 @@ case $choice in
                                 ~/.acme.sh/acme.sh --issue -d "$domain" -d "$wildcard_domain" --dns dns_cf \
                                 --key-file       ~/cert/"$domain.key"  \
                                 --fullchain-file ~/cert/"$domain.pem"
-                                if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.pem" ]]; then
-                                    echo "证书已生成并保存到 ~/cert 目录下。"
-                                    break
-                                else
-                                    echo "证书生成失败，请检查输入的域名和Cloudflare配置是否正确。"
+                                if [[ $? -eq 0 ]]; then
+                                    if [ s "$domain.key" && s "$domain.pem" ]; then
+                                        rm ~/cert/$domain.key
+                                        rm ~/cert/$domain.pem
+                                    fi
+                                    if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.pem" ]]; then
+                                        echo "证书已生成并保存到 ~/cert 目录下."
+                                        break
+                                    fi
                                 fi
+                                echo "证书生成失败."
                             else
-                                echo "输入的域名不合法，请重新输入。"
+                                echo "输入的域名不合法，请重新输入."
                             fi
                         done
                         ;;
@@ -341,7 +391,7 @@ case $choice in
                         exit 0
                         ;;
                     *)
-                        echo "无效的选项, 请重新输入。"
+                        echo "无效的选项, 请重新输入."
                         ;;
                     esac
                     echo -e ${GR}操作完成${NC}
@@ -383,7 +433,7 @@ case $choice in
                         exit 0
                         ;;
                     *)
-                        echo "无效的选项, 请重新输入。"
+                        echo "无效的选项, 请重新输入."
                         ;;
                     esac
                     echo -e ${GR}操作完成${NC}
@@ -411,7 +461,7 @@ case $choice in
                 exit 0
                 ;;
             *)
-                echo "无效的选项, 请重新输入。"
+                echo "无效的选项, 请重新输入."
                 ;;
         esac
         echo -e ${GR}操作完成${NC}
@@ -432,7 +482,7 @@ case $choice in
         ;;
     *)
         echo
-        echo "无效的选项, 请重新输入。"
+        echo "无效的选项, 请重新输入."
         echo "按任意键继续..."
         read -n 1 -s -r -p ""
         ;;
