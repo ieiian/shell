@@ -399,11 +399,12 @@ case $choice in
                 echo -e "${GR}ACME - 更新证书${NC}"
                 echo -e "${colored_text2}${NC}"
                 ~/.acme.sh/acme.sh --list
-                echo -e "${colored_text2}${NC}"
-                echo -e "1.  方法一: 更新全部证书"
-                echo -e "2.  方法二: 强制更新全部证书"
                 echo -e "${colored_text1}${NC}"
-                echo -e "3.  方法三: 更新指定证书"
+                echo -e "1.  更新指定证书"
+                echo -e "2.  方法一: 更新全部证书"
+                echo -e "3.  方法二: 强制更新全部证书"
+                echo -e "${colored_text1}${NC}"
+                echo -e "4.  设置定时更新证书"
                 echo -e "${colored_text1}${NC}"
                 echo -e "r.  返回上层菜单"
                 echo -e "x.  退出脚本"
@@ -411,14 +412,6 @@ case $choice in
                 read -p "请输入你的选择: " -n 2 -r choice
                 case $choice in
                     1|11)
-                        ~/.acme.sh/acme.sh --renew-all
-                        echo "更新证书完成."
-                        ;;
-                    2|22)
-                        ~/.acme.sh/acme.sh --cron --home /root/.acme.sh --force
-                        echo "更新证书完成."
-                        ;;
-                    3|33)
                         read -p "请输请输入要删除的证书的域名: " domain
                         ~/.acme.sh/acme.sh --renew -d $domain
                         if [[ $? -eq 0 ]]; then
@@ -426,6 +419,16 @@ case $choice in
                         else
                             echo -e "证书更新${MA}失败${NC}."
                         fi
+                        ;;
+                    2|22)
+                        ~/.acme.sh/acme.sh --renew-all
+                        echo "更新证书完成."
+                        ;;
+                    3|33)
+                        ~/.acme.sh/acme.sh --cron --home /root/.acme.sh --force
+                        echo "更新证书完成."
+                        ;;
+                    4|44)
                         ;;
                     r|R|rr|RR)
                         echo
