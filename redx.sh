@@ -40,11 +40,11 @@ waitfor() {
 }
 virt_check() {
     cname=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
-    virtualx=$(dmesg) &>/dev/null
+    virtualx=$(dmesg 2>/dev/null)
     if [ $(which dmidecode) ]; then
-        sys_manu=$(dmidecode -s system-manufacturer) 2>/dev/null
-        sys_product=$(dmidecode -s system-product-name) 2>/dev/null
-        sys_ver=$(dmidecode -s system-version) 2>/dev/null
+        sys_manu=$(dmidecode -s system-manufacturer 2>/dev/null)
+        sys_product=$(dmidecode -s system-product-name 2>/dev/null)
+        sys_ver=$(dmidecode -s system-version 2>/dev/null)
     else
         sys_manu=""
         sys_product=""
@@ -153,6 +153,7 @@ case $choice in
             v2ver="未安装"
             v2tag="*"
         fi
+        node=()
         clear_screen
         echo -e "${GR}▼▼${NC}"
         echo -e "${GR}V2RAY${NC}          ${MA}$v2ver${NC}"
@@ -173,6 +174,57 @@ case $choice in
         read -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
+                nodetitle() {
+                    clear_screen
+                    echo -e "${GR}▼▼▼${NC}"
+                    echo -e "${GR}节点信息${NC}"
+                    echo -e "${colored_text2}${NC}"
+                    for ((i=1; i<=${#node[@]}; i++)); do
+                        echo "节点 $i 类型: ${node[$i]}"
+                    done
+                    echo -e "${colored_text1}${NC}"
+                    remind
+                }
+                while true; do
+                nodetitle
+                echo "节点类型: 1.Vmess  2.Vless"
+                read -p "请先择创建节点类型 (1/2/C取消): " -n 2 -r choice && echoo
+                case $choice in
+                    1|11)
+                        node[1]="Vmess"
+                        ;;
+                    2|22)
+                        node[1]="Vless"
+                        ;;
+                    c|cc|C|CC)
+                        break
+                        ;;
+                    *)
+                        etag=1
+                        ;;
+
+                esac
+                done
+                while true; do
+                nodetitle
+                echo "节点类型: 1.Vmess  2.Vless"
+                read -p "请先择创建节点类型 (1/2/C取消): " -n 2 -r choice && echoo
+                case $choice in
+                    1|11)
+                        node[2]="Vmess"
+                        ;;
+                    2|22)
+                        node[2]="Vless"
+                        ;;
+                    c|cc|C|CC)
+                        break
+                        ;;
+                    *)
+                        etag=1
+                        ;;
+
+                esac
+                done
                 ;;
             2|22)
                 ;;
@@ -476,8 +528,8 @@ case $choice in
                     *)
                         etag=1
                         ;;
-                    esac
-                    done
+                esac
+                done
                 ;;
             2|22)
                 ~/.acme.sh/acme.sh --list
@@ -565,8 +617,8 @@ case $choice in
                     *)
                         etag=1
                         ;;
-                    esac
-                    done
+                esac
+                done
                 ;;
             4|44)
                 while true; do
@@ -614,8 +666,8 @@ case $choice in
                     *)
                         etag=1
                         ;;
-                    esac
-                    done
+                esac
+                done
                 ;;
             i|I|ii|II)
                 $pm install -y socat
