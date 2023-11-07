@@ -294,7 +294,7 @@ case $choice in
                     mkdir ~/cert
                 fi
                 while true; do
-                random=$((RANDOM % 1000000))
+                random=$((100000 + RANDOM % 900000))
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
                 echo -e "${GR}ACME - 申请证书${NC}"
