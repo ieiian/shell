@@ -25,6 +25,19 @@ echoo() {
         echo
     fi
 }
+remind() {
+    if [ "$etag" == 1 ]; then
+        echo -e "${MA}无效的选项, 请重新输入.${NC}"
+        etag=0
+    else
+        echo -e "${GR}● ● ● ${NC}"
+    fi
+}
+waitfor() {
+    echo -e ${GR}操作完成${NC}
+    echo "按任意键继续..."
+    read -n 1 -s -r -p ""
+}
 get_random_color() {
     colors=($BL $RE $GR $YE $MA $CY $WH)  # Array of available colors
     random_index=$((RANDOM % ${#colors[@]}))
@@ -102,11 +115,7 @@ echo -e "${colored_text1}${NC}"
 echo -e "o.  更新脚本"
 echo -e "x.  退出脚本"
 echo -e "${colored_text1}${NC}"
-if [ "$etag" == 1 ]; then
-    echo -e "${MA}无效的选项, 请重新输入.${NC}"
-else
-    echo -e "${GR}■${NC}"
-fi
+remind
 read -p "请输入你的选择: " -n 2 -r choice && echoo
 case $choice in
     1|11)
@@ -134,6 +143,7 @@ case $choice in
         echo -e "r.  返回主菜单"
         echo -e "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
+        remind
         read -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
@@ -170,12 +180,9 @@ case $choice in
                 exit 0
                 ;;
             *)
-                echo "无效的选项, 请重新输入."
+                etag=1
                 ;;
         esac
-        echo -e ${GR}操作完成${NC}
-        echo "按任意键继续..."
-        read -n 1 -s -r -p ""
         done
         ;;
     2|22)
@@ -201,6 +208,7 @@ case $choice in
         echo -e "r.  返回主菜单"
         echo -e "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
+        remind
         read -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
@@ -223,6 +231,7 @@ case $choice in
                 echo -e "${colored_text1}${NC}"
                 echo -e "${MA}注${NC}: 证书申请成功后将自动保存至: ${GR}$user_path/cert${NC} 文件夹中"
                 echo -e "${colored_text1}${NC}"
+                remind
                 read -p "请输入你的选择: " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
@@ -256,6 +265,7 @@ case $choice in
                                 echo "输入的域名不合法, 请重新输入."
                             fi
                         done
+                        waitfor
                         ;;
                     2|22)
                         while true; do
@@ -325,6 +335,7 @@ case $choice in
                                 echo "输入的域名不合法, 请重新输入."
                             fi
                         done
+                        waitfor
                         ;;
                     3|33)
                         noloop=0
@@ -388,6 +399,7 @@ case $choice in
                             echo "证书生成失败."
                         fi
                         fi
+                        waitfor
                         ;;
                     4|44)
                         while true; do
@@ -425,6 +437,7 @@ case $choice in
                                 echo "输入的域名不合法，请重新输入."
                             fi
                         done
+                        waitfor
                         ;;
                     r|R|rr|RR)
                         break
@@ -433,16 +446,14 @@ case $choice in
                         exit 0
                         ;;
                     *)
-                        echo "无效的选项, 请重新输入."
+                        etag=1
                         ;;
                     esac
-                    echo -e ${GR}操作完成${NC}
-                    echo "按任意键继续..."
-                    read -n 1 -s -r -p ""
                     done
                 ;;
             2|22)
                 ~/.acme.sh/acme.sh --list
+                waitfor
                 ;;
             3|33)
                 while true; do
@@ -461,6 +472,7 @@ case $choice in
                 echo -e "r.  返回上层菜单"
                 echo -e "x.  退出脚本"
                 echo -e "${colored_text1}${NC}"
+                remind
                 read -p "请输入你的选择: " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
@@ -471,14 +483,17 @@ case $choice in
                         else
                             echo -e "证书更新${MA}失败${NC}."
                         fi
+                        waitfor
                         ;;
                     2|22)
                         ~/.acme.sh/acme.sh --renew-all
                         echo "更新证书完成."
+                        waitfor
                         ;;
                     3|33)
                         ~/.acme.sh/acme.sh --cron --home /root/.acme.sh --force
                         echo "更新证书完成."
+                        waitfor
                         ;;
                     4|44)
                         echo -e "${colored_text1}${NC}"
@@ -490,22 +505,26 @@ case $choice in
                         echo "2.  删除所有 ACME 定时任务"
                         echo "3.  手动修改 ACME 定时任务"
                         echo -e "${colored_text1}${NC}"
+                        remind
                         read -p "请输入操作编号 (1/2/3/其它退出操作): " choice
                         case "$choice" in
-                            1)
+                            1|11)
                                 read -p "请输入新的定时任务时间表达式 (例如：* * * * * 表示每分钟执行一次): " schedule
                                 (crontab -l ; echo "$schedule /root/.acme.sh/acme.sh --cron --home /root/.acme.sh --force > /dev/null") | crontab -
                                 crontab -l | grep 'acme.sh'
                                 echo "新的 ACME 定时任务已添加."
+                                waitfor
                                 ;;
-                            2)
+                            2|22)
                                 crontab -l | grep -v 'acme.sh' | crontab -
                                 echo "所有 ACME 定时任务已删除."
+                                waitfor
                                 ;;
-                            3)
+                            3|33)
                                 crontab -e
                                 ;;
                             *)
+                                etag=1
                                 ;;
                         esac
                         ;;
@@ -516,12 +535,9 @@ case $choice in
                         exit 0
                         ;;
                     *)
-                        echo "无效的选项, 请重新输入."
+                        etag=1
                         ;;
                     esac
-                    echo -e ${GR}操作完成${NC}
-                    echo "按任意键继续..."
-                    read -n 1 -s -r -p ""
                     done
                 ;;
             4|44)
@@ -538,6 +554,7 @@ case $choice in
                 echo -e "r.  返回上层菜单"
                 echo -e "x.  退出脚本"
                 echo -e "${colored_text1}${NC}"
+                remind
                 read -p "请输入你的选择: " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
@@ -548,6 +565,7 @@ case $choice in
                         else
                             echo -e "证书删除${MA}失败${NC}."
                         fi
+                        waitfor
                         ;;
                     2|22)
                         list_output=$(~/.acme.sh/acme.sh --list)
@@ -557,6 +575,7 @@ case $choice in
                             ~/.acme.sh/acme.sh --remove -d "$domain"
                             echo "已删除域名: $domain"
                         done
+                        waitfor
                         ;;
                     r|R|rr|RR)
                         break
@@ -565,12 +584,9 @@ case $choice in
                         exit 0
                         ;;
                     *)
-                        echo "无效的选项, 请重新输入."
+                        etag=1
                         ;;
                     esac
-                    echo -e ${GR}操作完成${NC}
-                    echo "按任意键继续..."
-                    read -n 1 -s -r -p ""
                     done
                 ;;
             i|I|ii|II)
@@ -588,12 +604,9 @@ case $choice in
                 exit 0
                 ;;
             *)
-                echo "无效的选项, 请重新输入."
+                etag=1
                 ;;
         esac
-        echo -e ${GR}操作完成${NC}
-        echo "按任意键继续..."
-        read -n 1 -s -r -p ""
         done
         ;;
     3|33)
@@ -613,9 +626,6 @@ case $choice in
         ;;
     *)
         etag=1
-        # echo "无效的选项, 请重新输入."
-        # echo "按任意键继续..."
-        # read -n 1 -s -r -p ""
         ;;
 esac
 done
