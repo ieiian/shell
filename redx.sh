@@ -395,6 +395,7 @@ case $choice in
                                 echo "路径 $webroot 不存在，请重新输入。"
                             fi
                         done
+                        if [[ $noloop != 1 ]]; then
                         if [[ -n "$domain2" ]]; then
                             ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
                             ~/.acme.sh/acme.sh --issue -d "$domain1" -d "$domain2" -w "$webroot"
@@ -423,6 +424,7 @@ case $choice in
                                 break
                             fi
                             echo "证书生成失败."
+                        fi
                         fi
                         fi
                         waitfor
