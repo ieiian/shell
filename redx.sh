@@ -38,6 +38,44 @@ waitfor() {
     echo "按任意键继续..."
     read -n 1 -s -r -p ""
 }
+virt_check() {
+    cname=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
+    virtualx=$(dmesg) &>/dev/null
+    if [ $(which dmidecode) ]; then
+        sys_manu=$(dmidecode -s system-manufacturer) 2>/dev/null
+        sys_product=$(dmidecode -s system-product-name) 2>/dev/null
+        sys_ver=$(dmidecode -s system-version) 2>/dev/null
+    else
+        sys_manu=""
+        sys_product=""
+        sys_ver=""
+    fi
+    if grep docker /proc/1/cgroup -qa; then
+        virtual="Docker"
+    elif grep lxc /proc/1/cgroup -qa || grep -qa container=lxc /proc/1/environ; then
+        virtual="Lxc"
+    elif [ -f /proc/user_beancounters ]; then
+        virtual="OpenVZ"
+    elif [[ "$virtualx" == *kvm-clock* || "$cname" == *KVM* || "$cname" == *QEMU* ]]; then
+        virtual="KVM"
+    elif [[ "$virtualx" == *"VMware Virtual Platform"* ]]; then
+        virtual="VMware"
+    elif [[ "$virtualx" == *"Parallels Software International"* ]]; then
+        virtual="Parallels"
+    elif [[ "$virtualx" == *VirtualBox* ]]; then
+        virtual="VirtualBox"
+    elif [ -e /proc/xen ]; then
+        virtual="Xen"
+    elif [[ "$sys_manu" == *"Microsoft Corporation"* && "$sys_product" == *"Virtual Machine"* ]]; then
+        if [[ "$sys_ver" == *"7.0"* || "$sys_ver" == *"Hyper-V"* ]]; then
+            virtual="Hyper-V"
+        else
+            virtual="Microsoft Virtual Machine"
+        fi
+    else
+        virtual="Dedicated"
+    fi
+}
 get_random_color() {
     colors=($BL $RE $GR $YE $MA $CY $WH)  # Array of available colors
     random_index=$((RANDOM % ${#colors[@]}))
@@ -75,6 +113,7 @@ if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -
     fi
 fi
 (EUID=$(id -u)) 2>/dev/null
+virt_check
 while true; do
 clear_screen
 if [ "$EUID" -eq 0 ]; then
@@ -83,22 +122,9 @@ else
     user_path="/home/$(whoami)"
     echo -e "${GR}当前用户为非root用户, 部分操作可能无法顺利进行.${NC}"
 fi
-if ifconfig | grep -v '^ ' | grep -q '^eth'; then
-    if [ -d /proc/xen/ ]; then
-        systype="Xen PV"
-    else
-        systype="KVM"
-    fi
-elif ifconfig | grep -v '^ ' | grep -q '^venet'; then
-    if [ -e /proc/vz ]; then
-        systype="OpenVZ"
-    fi
-else
-    systype=""
-fi
 echo -e "${RE}RedX 一键脚本工具 v1.0${NC}"
-if [ "$systype" != "" ]; then
-    echo -e "VPS虚拟化类型: ${GR}$systype${NC}"
+if [ "$virtual" != "" ]; then
+    echo -e "VPS虚拟化类型: ${GR}$virtual${NC}"
 fi
 echo -e " ____  _____ ______  __ "
 echo -e "|  _ \| ____|  _ \ \/ / "
