@@ -76,6 +76,7 @@ virt_check() {
         virtual="Dedicated"
     fi
 }
+# ipaddress=$(curl ifconfig.me)
 get_random_color() {
     colors=($BL $RE $GR $YE $MA $CY $WH)  # Array of available colors
     random_index=$((RANDOM % ${#colors[@]}))
@@ -102,14 +103,14 @@ else
     echo "不支持的Linux包管理器"
     exit 1
 fi
-if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -v ifconfig &>/dev/null; then
+if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -v ifconfig &>/dev/null || ! command -v jq &>/dev/null; then
     clear_screen
     echo -e "${GR}▼${NC}"
     echo -e "${colored_text2}${NC}"
-    echo -e "CURL/WGET/NET-TOOLS"
+    echo -e "CURL/WGET/NET-TOOLS/JQ"
     read -p "检查到部分依赖工具没有安装, 是否要进行安装? (Y/其它跳过): " -n 3 -r choice
     if [[ $choice == "Y" || $choice == "y" ]]; then
-        $pm install -y curl wget net-tools
+        $pm install -y curl wget net-tools jq
     fi
 fi
 (EUID=$(id -u)) 2>/dev/null
@@ -145,15 +146,79 @@ remind
 read -p "请输入你的选择: " -n 2 -r choice && echoo
 case $choice in
     1|11)
+        protocol=".protocol"
+
+        vless_port=".port"
+        vless_id=".settings.clients[0].id"
+        vless_network=".streamSettings.network"
+        vless_security=".streamSettings.security"
+        vless_tls_flow=".settings.clients[0].flow"
+        vless_tls_serverName=".streamSettings.tlsSettings.serverName"
+        vless_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
+        vless_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
+        vless_reality_dest=".streamSettings.realitySettings.dest"
+        vless_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
+        vless_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
+        vless_reality_privateKey=".streamSettings.realitySettings.privateKey"
+        vless_reality_publicKey=".streamSettings.realitySettings.publicKey"
+        vless_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
+        vless_ws_path=".streamSettings.wsSettings.path"
+        vless_ws_host=".streamSettings.wsSettings.headers.Host"
+
+        vmess_port=".port"
+        vmess_id=".settings.clients[0].id"
+        vmess_network=".streamSettings.network"
+        vmess_security=".streamSettings.security"
+        vmess_tls_flow=".settings.clients[0].flow"
+        vmess_tls_serverName=".streamSettings.tlsSettings.serverName"
+        vmess_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
+        vmess_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
+        vmess_reality_dest=".streamSettings.realitySettings.dest"
+        vmess_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
+        vmess_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
+        vmess_reality_privateKey=".streamSettings.realitySettings.privateKey"
+        vmess_reality_publicKey=".streamSettings.realitySettings.publicKey"
+        vmess_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
+        vmess_ws_path=".streamSettings.wsSettings.path"
+        vmess_ws_host=".streamSettings.wsSettings.headers.Host"
+
+        protocol_array=()
+        port_array=()
+        id_array=()
+        network_array=()
+        security_array=()
+        tls_flow_array=()
+        tls_serverName_array=()
+        tls_certificateFile_array=()
+        tls_keyFile_array=()
+        reality_dest_array=()
+        reality_fingerprint_array=()
+        reality_serverNames_array=()
+        reality_privateKey_array=()
+        reality_publicKey_array=()
+        reality_shortIds_array=()
+        ws_path_array=()
+        ws_host_array=()
+
+        get_protocol_value() {
+            local suffix="$1"
+            local protocol="$2"
+            local varname="${protocol}${suffix}"
+            local config_value=$(echo "$node" | jq -r "${!varname}")
+            echo "$config_value"
+        }
+
         while true; do
+        v2tag=""
+        if ! command -v jq &>/dev/null; then
+            v2tag="${YE}*${NC}"
+        fi
         if command -v v2ray &>/dev/null; then
             v2ver=$(v2ray version | head -n 1 | awk '{print $1, $2}')
-            v2tag=""
         else
             v2ver="未安装"
-            v2tag="*"
+            v2tag="${MA}*${NC}"
         fi
-        node=()
         clear_screen
         echo -e "${GR}▼▼${NC}"
         echo -e "${GR}V2RAY${NC}          ${MA}$v2ver${NC}"
@@ -163,7 +228,7 @@ case $choice in
         echo -e "3.  修改节点"
         echo -e "4.  删除节点"
         echo -e "${colored_text1}${NC}"
-        echo -e "i.  安装/更新 V2RAY 官方脚本 ${MA}$v2tag${NC}"
+        echo -e "i.  安装/更新 V2RAY 官方脚本 $v2tag"
         echo -e "u.  更新 .dat 文件"
         echo -e "d.  删除 V2RAY 官方脚本"
         echo -e "${colored_text1}${NC}"
@@ -174,59 +239,279 @@ case $choice in
         read -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
-                nodetitle() {
-                    clear_screen
-                    echo -e "${GR}▼▼▼${NC}"
-                    echo -e "${GR}节点信息${NC}"
-                    echo -e "${colored_text2}${NC}"
-                    for ((i=1; i<=${#node[@]}; i++)); do
-                        echo "节点 $i 类型: ${node[$i]}"
-                    done
+            # jq '.inbounds[1].settings.clients[0].id = "112233445566"' /usr/local/etc/v2ray/config.json > tmp_config.json && mv tmp_config.json /usr/local/etc/v2ray/config.json
+                while true; do
+                echo -e "${colored_text1}${NC}"
+                remind
+                echo "节点类型: 1.Vmess  2.Vless"
+                read -p "请先择创建节点类型 (1/2/C取消): " -n 2 -r choice && echoo
+                case $choice in
+                    1|11)
+                        en_protocol="vmess"
+                        ;;
+                    2|22)
+                        en_protocol="vless"
+                        ;;
+                    c|cc|C|CC)
+                        break
+                        ;;
+                    *)
+                        etag=1
+                        break
+                        ;;
+                esac
+                if [[ $en_protocol == "vmess" || $en_protocol == "vless" ]]; then
                     echo -e "${colored_text1}${NC}"
                     remind
-                }
-                while true; do
-                nodetitle
-                echo "节点类型: 1.Vmess  2.Vless"
-                read -p "请先择创建节点类型 (1/2/C取消): " -n 2 -r choice && echoo
-                case $choice in
-                    1|11)
-                        node[1]="Vmess"
-                        ;;
-                    2|22)
-                        node[1]="Vless"
-                        ;;
-                    c|cc|C|CC)
-                        break
-                        ;;
-                    *)
+                    echo "端口范围: 1-65535, 请自行规避占用端口."
+                    read -p "请输入端口号: " number
+                    if [[ $number =~ ^[0-9]+$ && $number -ge 1 && $number -le 65535 ]]; then
+                        en_port=$number
+                    else
                         etag=1
-                        ;;
-
-                esac
-                done
-                while true; do
-                nodetitle
-                echo "节点类型: 1.Vmess  2.Vless"
-                read -p "请先择创建节点类型 (1/2/C取消): " -n 2 -r choice && echoo
-                case $choice in
-                    1|11)
-                        node[2]="Vmess"
-                        ;;
-                    2|22)
-                        node[2]="Vless"
-                        ;;
-                    c|cc|C|CC)
                         break
-                        ;;
-                    *)
-                        etag=1
-                        ;;
+                    fi
+                    echo -e "${colored_text1}${NC}"
+                    remind
+                    echo "传输协议类型: 1.tcp  2.kcp  3.ws  4.http  5.quic  6.grpc"
+                    read -p "请先择 (1/2/3/4/5/6/C取消): " -n 2 -r choice && echoo
+                    case $choice in
+                        1|11)
+                            en_network="tcp"
+                            ;;
+                        2|22)
+                            en_network="kcp"
+                            ;;
+                        3|33)
+                            en_network="ws"
+                            ;;
+                        4|44)
+                            en_network="http"
+                            ;;
+                        5|55)
+                            en_network="quic"
+                            ;;
+                        6|66)
+                            en_network="grpc"
+                            ;;
+                        c|cc|C|CC)
+                            break
+                            ;;
+                        *)
+                            etag=1
+                            break
+                            ;;
+                    esac
+                    if [[ $en_network == "tcp" ]]; then
+                        echo -e "${colored_text1}${NC}"
+                        remind
+                        echo "传输协议类型: 1.tls  2.http"
+                        read -p "请先择 (1/2/C取消): " -n 2 -r choice && echoo
+                        case $choice in
+                            1|11)
+                                en_security="tls"
+                                ;;
+                            2|22)
+                                en_security="http"
+                                ;;
+                            c|cc|C|CC)
+                                break
+                                ;;
+                            *)
+                                etag=1
+                                break
+                                ;;
+                        esac
+                        if [[ $en_security == "tls" ]]; then
+                            echo -e "${colored_text1}${NC}"
+                            remind
+                            read -p "请输入tls域名: " url
+                            en_tls_serverName="$url"
+                            read -p "请输入公钥文件路径: " url
+                            en_tls_certificateFile="$url"
+                            read -p "请输入密钥文件路径: " url
+                            en_tls_keyFile="$url"
+                        fi
+                        if [[ $en_security == "http" ]]; then
+                            echo -e "${colored_text1}${NC}"
+                            remind
+                            read -p "请输入请求路径: " url
+                            en_http_path="$url"
+                            read -p "请输入请求头: " url
+                            en_http_head="$url"
+                        fi
+                        echo -e "${colored_text1}${NC}"
+                        echo -e "${GR}信息确认${NC}"
+                        echo "节点类型: $en_protocol"
+                        echo "占用端口: $en_port"
+                        echo "传输协议: $en_network"
+                        echo "安全加密: $en_security"
+                        echo "TLS域名: $en_tls_serverName"
+                        echo "公钥文件路径: $en_tls_certificateFile"
+                        echo "密钥文件路径: $en_tls_keyFile"
+                        echo "..."
 
-                esac
+                        read -p "请确认信息，是否决定创建? (Y/其它跳过): " choice
+                        if [[ $choice == "Y" || $choice == "y" ]]; then
+                            echo "创建执行中..."
+                            sleep 2
+                            break
+                        fi
+                    fi
+                    if [[ $en_network == "tcp" ]]; then
+                        :
+                    fi
+                fi
+                break
                 done
                 ;;
             2|22)
+                clear
+                confile=""
+                confiletag=""
+                confilen=0
+                if [ -f /usr/local/x-ui/bin/config.json ]; then
+                    confile="/usr/local/x-ui/bin/config.json"
+                    confiletag="X-UI"
+                    confilen=$((confilen+1))
+                fi
+                if [ -f /usr/local/etc/v2ray/config.json ]; then
+                    confile="/usr/local/etc/v2ray/config.json"
+                    confiletag="V2RAY"
+                    confilen=$((confilen+1))
+                fi
+                if [ $confilen -eq 2 ]; then
+                    while true; do
+                    echo "系统发现以下配置文件:"
+                    echo "1. XUI面板配置文件   2. V2RAY官方脚本配置文件"
+                    read -p "请选择查询配置文件编号: " choice
+                    if [ $choice -eq 1 ]; then
+                        confile="/usr/local/x-ui/bin/config.json"
+                        confiletag="X-UI"
+                        break
+                    elif [ $choice -eq 2 ]; then
+                        confile="/usr/local/etc/v2ray/config.json"
+                        confiletag="V2RAY"
+                        break
+                    else
+                        echo "请重新选择."
+                    fi
+                    done
+                fi
+                #############################################
+
+                inbounds=$(jq '.inbounds' "$confile")
+                if [ "$inbounds" == "null" ]; then
+                    echo "配置文件中没有inbounds数组。"
+                    exit 1
+                fi
+                for node in $(echo "$inbounds" | jq -c '.[]'); do
+                    protocol=$(echo "$node" | jq -r '.protocol')
+                    if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
+
+                        port=$(get_protocol_value "_port" "$protocol")
+                        id=$(get_protocol_value "_id" "$protocol")
+                        network=$(get_protocol_value "_network" "$protocol")
+                        security=$(get_protocol_value "_security" "$protocol")
+                        if [[ "$security" == "tls" ]]; then
+                            tls_flow=$(get_protocol_value "_tls_flow" "$protocol")
+                            tls_serverName=$(get_protocol_value "_tls_serverName" "$protocol")
+                            tls_certificateFile=$(get_protocol_value "_tls_certificateFile" "$protocol")
+                            tls_keyFile=$(get_protocol_value "_tls_keyFile" "$protocol")
+                        fi
+                        if [[ "$security" == "reality" ]]; then
+                            reality_dest=$(get_protocol_value "_reality_dest" "$protocol")
+                            reality_fingerprint=$(get_protocol_value "_reality_fingerprint" "$protocol")
+                            reality_serverNames=$(get_protocol_value "_reality_serverNames" "$protocol")
+                            reality_privateKey=$(get_protocol_value "_reality_privateKey" "$protocol")
+                            reality_publicKey=$(get_protocol_value "_reality_publicKey" "$protocol")
+                            reality_shortIds=$(get_protocol_value "_reality_shortIds" "$protocol")
+                        fi
+                        if [[ "$network" == "ws" ]]; then
+                            ws_path=$(get_protocol_value "_ws_path" "$protocol")
+                            ws_host=$(get_protocol_value "_ws_host" "$protocol")
+                        fi
+                        protocol_array+=("$protocol")
+                        port_array+=("$port")
+                        id_array+=("$id")
+                        network_array+=("$network")
+                        security_array+=("$security")
+                        tls_flow_array+=("$tls_flow")
+                        tls_serverName_array+=("$tls_serverName")
+                        tls_certificateFile_array+=("$tls_certificateFile")
+                        tls_keyFile_array+=("$tls_keyFile")
+                        reality_dest_array+=("$reality_dest")
+                        reality_fingerprint_array+=("$reality_fingerprint")
+                        reality_serverNames_array+=("$reality_serverNames")
+                        reality_privateKey_array+=("$reality_privateKey")
+                        reality_publicKey_array+=("$reality_publicKey")
+                        reality_shortIds_array+=("$reality_shortIds")
+                        ws_path_array+=("$ws_path")
+                        ws_host_array+=("$ws_host")
+                    fi
+                done
+                echo -e "${GR}▼▼${NC}"
+                for i in "${!protocol_array[@]}"; do
+                    echo -e "${colored_text1}${NC}"
+                    echo "节点 $((i+1))"
+
+                    if [[ ! "${protocol_array[$i]}" = "" && ! "${protocol_array[$i]}" = "null" ]]; then
+                        echo "协议: ${protocol_array[$i]}"
+                        protocol_array[$i]=""
+                    fi
+                    if [[ ! "${port_array[$i]}" = "" && ! "${port_array[$i]}" = "null" ]]; then
+                        echo "端口: ${port_array[$i]}"
+                        port_array[$i]=""
+                    fi
+                    if [[ ! "${id_array[$i]}" = "" && ! "${id_array[$i]}" = "null" ]]; then
+                        echo "ID: ${id_array[$i]}"
+                    fi
+                    if [[ ! "${network_array[$i]}" = "" && ! "${network_array[$i]}" = "null" ]]; then
+                        echo "传输: ${network_array[$i]}"
+                    fi
+                    if [[ ! "${security_array[$i]}" = "" && ! "${security_array[$i]}" = "null" ]]; then
+                        echo "加密: ${security_array[$i]}"
+                    fi
+                    if [[ ! "${tls_flow_array[$i]}" = "" && ! "${tls_flow_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
+                        echo "flow: ${tls_flow_array[$i]}"
+                    fi
+                    if [[ ! "${tls_serverName_array[$i]}" = "" && ! "${tls_serverName_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
+                        echo "serverName: ${tls_serverName_array[$i]}"
+                    fi
+                    if [[ ! "${tls_certificateFile_array[$i]}" = "" && ! "${tls_certificateFile_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
+                        echo "公钥文件路径: ${tls_certificateFile_array[$i]}"
+                    fi
+                    if [[ ! "${tls_keyFile_array[$i]}" = "" && ! "${tls_keyFile_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
+                        echo "密钥文件路径: ${tls_keyFile_array[$i]}"
+                    fi
+                    if [[ "$protocol" == "vless" && ! "${reality_dest_array[$i]}" = "" && ! "${reality_dest_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
+                        echo "Reality_dest: ${reality_dest_array[$i]}"
+                    fi
+                    if [[ ! "${reality_fingerprint_array[$i]}" = "" && ! "${reality_fingerprint_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
+                        echo "Reality_fingerprint: ${reality_fingerprint_array[$i]}"
+                    fi
+                    if [[ "$protocol" == "vmess" && ! "${reality_serverNames_array[$i]}" = "" && ! "${reality_serverNames_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
+                        echo "Reality_serverNames: ${reality_serverNames_array[$i]}"
+                    fi
+                    if [[ ! "${reality_privateKey_array[$i]}" = "" && ! "${reality_privateKey_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
+                        echo "Reality_privateKey: ${reality_privateKey_array[$i]}"
+                    fi
+                    if [[ ! "${reality_publicKey_array[$i]}" = "" && ! "${reality_publicKey_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
+                        echo "Reality_publicKey: ${reality_publicKey_array[$i]}"
+                    fi
+                    if [[ ! "${reality_shortIds_array[$i]}" = "" && ! "${reality_shortIds_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
+                        echo "Reality_shortIds: ${reality_shortIds_array[$i]}"
+                    fi
+                    if [[ ! "${ws_path_array[$i]}" = "" && ! "${ws_path_array[$i]}" = "null" && "${network_array[$i]}" = "ws" ]]; then
+                        echo "WS_path: ${ws_path_array[$i]}"
+                    fi
+                    if [[ ! "${ws_host_array[$i]}" = "" && ! "${ws_host_array[$i]}" = "null" && "${network_array[$i]}" = "ws" ]]; then
+                        echo "WS_host: ${ws_host_array[$i]}"
+                    fi
+                done
+                echo -e "${colored_text2}${NC}"
+
+                waitfor
                 ;;
             3|33)
                 ;;
@@ -234,8 +519,11 @@ case $choice in
                 ;;
             i|ii|I|II)
                 bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
-                sudo sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/v2ray.service"
-                sudo systemctl daemon-reload
+                sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/v2ray.service"
+                systemctl daemon-reload
+                if ! command -v jq &>/dev/null; then
+                    $pm -y install jq
+                fi
                 ;;
             u|U|uu|UU)
                 bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-dat-release.sh)
