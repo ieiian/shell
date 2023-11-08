@@ -30,7 +30,7 @@ remind() {
         echo -e "${MA}无效的选项, 请重新输入.${NC}"
         etag=0
     else
-        echo -e "${GR}● ● ● ${NC}"
+        echo -e "${GR}● ● ●${NC}"
     fi
 }
 waitfor() {
@@ -146,6 +146,7 @@ remind
 read -p "请输入你的选择: " -n 2 -r choice && echoo
 case $choice in
     1|11)
+        jsonfile="/root/new.json" ### new.json for test
         protocol=".protocol"
 
         vless_port=".port"
@@ -239,10 +240,11 @@ case $choice in
         read -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
+                #jsonfile="/usr/local/etc/v2ray/config.json"
             # jq '.inbounds[1].settings.clients[0].id = "112233445566"' /usr/local/etc/v2ray/config.json > tmp_config.json && mv tmp_config.json /usr/local/etc/v2ray/config.json
                 while true; do
                 echo -e "${colored_text1}${NC}"
-                remind
+                echo -e "${GR}●${NC}"
                 echo "节点类型: 1.Vmess  2.Vless"
                 read -p "请先择创建节点类型 (1/2/C取消): " -n 2 -r choice && echoo
                 case $choice in
@@ -262,17 +264,29 @@ case $choice in
                 esac
                 if [[ $en_protocol == "vmess" || $en_protocol == "vless" ]]; then
                     echo -e "${colored_text1}${NC}"
-                    remind
-                    echo "端口范围: 1-65535, 请自行规避占用端口."
+                    echo -e "${GR}● ●${NC}"
+                    echo "使用中的端口:"
+                    check_port_array=($(jq '.inbounds[] | .port' "$jsonfile"))
+                    for check_port in "${check_port_array[@]}"; do
+                        echo "$check_port"
+                    done
+                    echo "端口范围: 1-65535, 请自行规避其它程序占用的端口."
                     read -p "请输入端口号: " number
                     if [[ $number =~ ^[0-9]+$ && $number -ge 1 && $number -le 65535 ]]; then
+                        for check_port in "${check_port_array[@]}"; do
+                        if [[ $check_port -eq $number ]]; then
+                            echo "端口 $number 已经被使用, 操作中止."
+                            waitfor
+                            break 2
+                        fi
+                        done
                         en_port=$number
                     else
                         etag=1
                         break
                     fi
                     echo -e "${colored_text1}${NC}"
-                    remind
+                    echo -e "${GR}● ● ●${NC}"
                     echo "传输协议类型: 1.tcp  2.kcp  3.ws  4.http  5.quic  6.grpc"
                     read -p "请先择 (1/2/3/4/5/6/C取消): " -n 2 -r choice && echoo
                     case $choice in
@@ -304,15 +318,18 @@ case $choice in
                     esac
                     if [[ $en_network == "tcp" ]]; then
                         echo -e "${colored_text1}${NC}"
-                        remind
-                        echo "传输协议类型: 1.tls  2.http"
-                        read -p "请先择 (1/2/C取消): " -n 2 -r choice && echoo
+                        echo -e "${GR}● ● ● ●${NC}"
+                        echo "传输协议类型: 1.tls  2.http  0/回车.不使用"
+                        read -p "请先择 (1/2/0/C取消): " -n 2 -r choice && echoo
                         case $choice in
                             1|11)
                                 en_security="tls"
                                 ;;
                             2|22)
                                 en_security="http"
+                                ;;
+                            0|"")
+                                en_security=""
                                 ;;
                             c|cc|C|CC)
                                 break
@@ -324,7 +341,7 @@ case $choice in
                         esac
                         if [[ $en_security == "tls" ]]; then
                             echo -e "${colored_text1}${NC}"
-                            remind
+                            echo -e "${GR}● ● ● ● ●${NC}"
                             read -p "请输入tls域名: " url
                             en_tls_serverName="$url"
                             read -p "请输入公钥文件路径: " url
@@ -334,7 +351,7 @@ case $choice in
                         fi
                         if [[ $en_security == "http" ]]; then
                             echo -e "${colored_text1}${NC}"
-                            remind
+                            echo -e "${GR}● ● ● ● ●${NC}"
                             read -p "请输入请求路径: " url
                             en_http_path="$url"
                             read -p "请输入请求头: " url
@@ -354,7 +371,33 @@ case $choice in
                         read -p "请确认信息，是否决定创建? (Y/其它跳过): " choice
                         if [[ $choice == "Y" || $choice == "y" ]]; then
                             echo "创建执行中..."
-                            sleep 2
+                            # 添加新对象到 .inbounds[] 数组
+                            jq --argjson en_port "$en_port" --arg en_protocol "$en_protocol" \
+                            '.inbounds += [{"port": $en_port, "protocol": $en_protocol}]' \
+                            "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                            jq --arg en_network "$en_network" '
+                            .inbounds[-1] |= . + { "settings": {}, "streamSettings": { "network": $en_network } }
+                            ' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                            if [[ $en_security != "" ]]; then
+                                jq --arg en_security "$en_security" '
+                                .inbounds[-1] |= . + { "streamSettings": { "security": $en_security } }
+                                ' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                                if [[ $en_security == "tls" ]]; then
+                                    jq --arg en_tls_serverName "$en_tls_serverName" --arg en_tls_certificateFile "$en_tls_certificateFile" --arg en_tls_keyFile "$en_tls_keyFile" '
+                                    .inbounds[-1] |= . + { "streamSettings": { "tlsSettings": {
+                                        "serverName": $en_tls_serverName,
+                                        "certificates": [
+                                        { "certificateFile": $en_tls_certificateFile, "keyFile": $en_tls_keyFile }
+                                        ]
+                                    } } }
+                                    ' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                                fi
+                            fi
+
+
+
+                            cat $jsonfile
+                            waitfor
                             break
                         fi
                     fi
@@ -367,31 +410,31 @@ case $choice in
                 ;;
             2|22)
                 clear
-                confile=""
-                confiletag=""
-                confilen=0
+                jsonfile=""
+                jsonfiletag=""
+                jsonfilen=0
                 if [ -f /usr/local/x-ui/bin/config.json ]; then
-                    confile="/usr/local/x-ui/bin/config.json"
-                    confiletag="X-UI"
-                    confilen=$((confilen+1))
+                    jsonfile="/usr/local/x-ui/bin/config.json"
+                    jsonfiletag="X-UI"
+                    jsonfilen=$((jsonfilen+1))
                 fi
                 if [ -f /usr/local/etc/v2ray/config.json ]; then
-                    confile="/usr/local/etc/v2ray/config.json"
-                    confiletag="V2RAY"
-                    confilen=$((confilen+1))
+                    jsonfile="/usr/local/etc/v2ray/config.json"
+                    jsonfiletag="V2RAY"
+                    jsonfilen=$((jsonfilen+1))
                 fi
-                if [ $confilen -eq 2 ]; then
+                if [ $jsonfilen -eq 2 ]; then
                     while true; do
                     echo "系统发现以下配置文件:"
                     echo "1. XUI面板配置文件   2. V2RAY官方脚本配置文件"
                     read -p "请选择查询配置文件编号: " choice
                     if [ $choice -eq 1 ]; then
-                        confile="/usr/local/x-ui/bin/config.json"
-                        confiletag="X-UI"
+                        jsonfile="/usr/local/x-ui/bin/config.json"
+                        jsonfiletag="X-UI"
                         break
                     elif [ $choice -eq 2 ]; then
-                        confile="/usr/local/etc/v2ray/config.json"
-                        confiletag="V2RAY"
+                        jsonfile="/usr/local/etc/v2ray/config.json"
+                        jsonfiletag="V2RAY"
                         break
                     else
                         echo "请重新选择."
@@ -399,8 +442,9 @@ case $choice in
                     done
                 fi
                 #############################################
+                jsonfile="/root/new.json" ### for test
 
-                inbounds=$(jq '.inbounds' "$confile")
+                inbounds=$(jq '.inbounds' "$jsonfile")
                 if [ "$inbounds" == "null" ]; then
                     echo "配置文件中没有inbounds数组。"
                     exit 1
