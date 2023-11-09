@@ -122,6 +122,7 @@ if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -
 fi
 (EUID=$(id -u)) 2>/dev/null
 virt_check
+onlyone=1
 while true; do
 clear_screen
 if [ "$EUID" -eq 0 ]; then
@@ -141,15 +142,19 @@ echo -e "|  _ <| |___| |_| | ${MA}/  \  ${NC}"
 echo -e "|_| \_\_____|____ /${MA}/_/\_\ ${NC}"
 echo -e "${BK}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${BL}■ ${GR}■ ${BK}■"
 echo -e "${colored_text2}${NC}"
-echo -e "1.  XRAY 节点搭建及相关操作 ▶"
-echo -e "2.  ACME  证书申请及相关操作 ▶"
-echo -e "3.  BBR   安装及相关操作 ▶"
-echo -e "4.  WARP  安装及相关操作 ▶"
+echo -e "1.  XRAY  节点搭建相关操作 ▶"
+echo -e "2.  ACME  证书申请相关操作 ▶"
+echo -e "3.  BBR   相关操作 ▶"
+echo -e "4.  WARP  相关操作 ▶"
 echo -e "${colored_text1}${NC}"
 echo -e "o.  更新脚本"
 echo -e "x.  退出脚本"
 echo -e "${colored_text1}${NC}"
-remind3p
+if [[ $onlyone == 1 ]]; then
+    echo -e "${MA}支持双击操作...${NC}"
+else
+    remind3p
+fi
 read -p "请输入你的选择: " -n 2 -r choice && echoo
 case $choice in
     1|11)
@@ -293,7 +298,7 @@ case $choice in
                 while true; do
                 remind1p
                 echo "节点类型: 1.Vmess  2.Vless  3.Trojan  4.Shadowsocks  5.dokodemo-door  6.socks  7.http"
-                read -p "请先择创建节点类型 (1/2/C取消): " -n 2 -r choice && echoo
+                read -p "请先择创建节点类型 (1/2/3/4/5/6/7/C取消): " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
                         en_protocol="vmess"
@@ -431,7 +436,7 @@ case $choice in
                                     en_security="reality"
                                     break
                                 else
-                                    echo "注意, 只有当协议为Vless或Trojan的时候才能使用Reality传输层安全传输."
+                                    echo "注意, 只有当协议为Vless或Trojan的时候才能使用Reality传输."
                                     etag=1
                                 fi
                                 ;;
@@ -857,6 +862,7 @@ case $choice in
                 ;;
         esac
         done
+        onlyone=0
         ;;
     2|22)
         while true; do
@@ -1324,28 +1330,33 @@ case $choice in
                 ;;
         esac
         done
+        onlyone=0
         ;;
     3|33)
         wget --no-check-certificate -O tcpx.sh https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcpx.sh
         chmod +x tcpx.sh
         bash tcpx.sh
         rm -f tcpx.sh
+        onlyone=0
         ;;
     4|44)
         wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh
         bash menu.sh [option] [lisence/url/token]
         rm -f menu.sh
+        onlyone=0
         ;;
     o|O|oo|OO)
         echo "调试阶段停用."
         waitfor
         # curl -o redx.sh https://raw.githubusercontent.com/ieiian/Shell/dev/redx.sh && chmod +x redx.sh && ./redx.sh
+        onlyone=0
         ;;
     x|X|xx|XX)
-        exit
+        exit 0
         ;;
     *)
         etag=1
+        onlyone=0
         ;;
 esac
 done
