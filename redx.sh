@@ -190,7 +190,7 @@ case $choice in
         #     done
         # fi
         #############################################
-        jsonfile="/root/new.json" ### new.json for test
+        jsonfile="$user_path/new.json" ### new.json for test
 
         if [ ! -e "$jsonfile" ]; then
             read -p "文件 $jsonfile 不存在。是否创建? (Y/其它跳过): " create
@@ -872,7 +872,7 @@ case $choice in
         ;;
     2|22)
         while true; do
-        if [ -x "/root/.acme.sh/acme.sh" ]; then
+        if [ -x "$user_path/.acme.sh/acme.sh" ]; then
             acmever=$($user_path/.acme.sh/acme.sh --version | sed -n '2p' | awk '{print $1}')
         else
             acmever="未安装"
@@ -1198,7 +1198,7 @@ case $choice in
                             echo "未查询到证书."
                             waitfor
                         else
-                            $user_path/.acme.sh/acme.sh --cron --home /root/.acme.sh --force
+                            $user_path/.acme.sh/acme.sh --cron --home $user_path/.acme.sh --force
                         echo "强制更新证书完成."
                         waitfor
                         fi
