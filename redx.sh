@@ -281,6 +281,8 @@ case $choice in
         echo -e "3.  修改节点"
         echo -e "4.  删除节点"
         echo -e "${colored_text1}${NC}"
+        echo -e "5.  手动编辑配置文件"
+        echo -e "${colored_text1}${NC}"
         echo -e "i.  安装/更新 XRAY 官方脚本 $xtag"
         echo -e "u.  更新 geodata 文件"
         echo -e "d.  删除 XRAY 官方脚本"
@@ -826,6 +828,10 @@ case $choice in
                 etag=1
                 fi
                 ;;
+            5|55)
+                nano $jsonfile
+                waitfor
+                ;;
             i|ii|I|II)
                 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
                 sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/xray.service"
@@ -867,7 +873,7 @@ case $choice in
     2|22)
         while true; do
         if [ -x "/root/.acme.sh/acme.sh" ]; then
-            acmever=$(~/.acme.sh/acme.sh --version | sed -n '2p' | awk '{print $1}')
+            acmever=$($user_path/.acme.sh/acme.sh --version | sed -n '2p' | awk '{print $1}')
         else
             acmever="未安装"
             acmetag="*"
@@ -891,8 +897,8 @@ case $choice in
         read -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
-                if [ ! -d ~/cert ]; then
-                    mkdir ~/cert
+                if [ ! -d $user_path/cert ]; then
+                    mkdir $user_path/cert
                 fi
                 while true; do
                 random=$((100000 + RANDOM % 900000))
@@ -923,16 +929,16 @@ case $choice in
                                         kill -9 $pid &>/dev/null
                                     done
                                 fi
-                                ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
-                                ~/.acme.sh/acme.sh --issue -d $domain --standalone
-                                ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.cer
-                                if [ ! -s "~/cert/$domain.key" ] && [ ! -s "~/cert/$domain.cer" ]; then
-                                    rm ~/cert/$domain.key &>/dev/null
-                                    rm ~/cert/$domain.cer &>/dev/null
-                                    rm -rf ~/.acme.sh/${domain}_ecc &>/dev/null
+                                $user_path/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                                $user_path/.acme.sh/acme.sh --issue -d $domain --standalone
+                                $user_path/.acme.sh/acme.sh --installcert -d $domain --key-file $user_path/cert/$domain.key --fullchain-file $user_path/cert/$domain.cer
+                                if [ ! -s "$user_path/cert/$domain.key" ] && [ ! -s "$user_path/cert/$domain.cer" ]; then
+                                    rm $user_path/cert/$domain.key &>/dev/null
+                                    rm $user_path/cert/$domain.cer &>/dev/null
+                                    rm -rf $user_path/.acme.sh/${domain}_ecc &>/dev/null
                                 fi
-                                if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.cer" ]]; then
-                                    echo "证书已生成并保存到 ~/cert 目录下."
+                                if [[ -f "$user_path/cert/$domain.key" && -f "$user_path/cert/$domain.cer" ]]; then
+                                    echo "证书已生成并保存到 $user_path/cert 目录下."
                                     break
                                 fi
                                 echo "证书生成失败."
@@ -982,16 +988,16 @@ case $choice in
                                         }
                                     }" > /etc/nginx/nginx.conf
                                     systemctl start nginx
-                                    ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
-                                    ~/.acme.sh/acme.sh --issue -d $domain --nginx
-                                    ~/.acme.sh/acme.sh --installcert -d $domain --key-file ~/cert/$domain.key --fullchain-file ~/cert/$domain.cer
-                                    if [ ! -s "~/cert/$domain.key" ] && [ ! -s "~/cert/$domain.cer" ]; then
-                                        rm ~/cert/$domain.key &>/dev/null
-                                        rm ~/cert/$domain.cer &>/dev/null
-                                        rm -rf ~/.acme.sh/${domain}_ecc &>/dev/null
+                                    $user_path/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                                    $user_path/.acme.sh/acme.sh --issue -d $domain --nginx
+                                    $user_path/.acme.sh/acme.sh --installcert -d $domain --key-file $user_path/cert/$domain.key --fullchain-file $user_path/cert/$domain.cer
+                                    if [ ! -s "$user_path/cert/$domain.key" ] && [ ! -s "$user_path/cert/$domain.cer" ]; then
+                                        rm $user_path/cert/$domain.key &>/dev/null
+                                        rm $user_path/cert/$domain.cer &>/dev/null
+                                        rm -rf $user_path/.acme.sh/${domain}_ecc &>/dev/null
                                     fi
-                                    if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.cer" ]]; then
-                                        echo "证书已生成并保存到 ~/cert 目录下."
+                                    if [[ -f "$user_path/cert/$domain.key" && -f "$user_path/cert/$domain.cer" ]]; then
+                                        echo "证书已生成并保存到 $user_path/cert 目录下."
                                         mv /etc/nginx/nginx_bak.conf /etc/nginx/nginx.conf
                                         break
                                     fi
@@ -1050,30 +1056,30 @@ case $choice in
                         done
                         if [[ $noloop != 1 ]]; then
                         if [[ -n "$domain2" ]]; then
-                            ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
-                            ~/.acme.sh/acme.sh --issue -d "$domain1" -d "$domain2" -w "$webroot"
-                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.cer
-                            if [ ! -s "~/cert/$domain1.key" ] && [ ! -s "~/cert/$domain1.cer" ]; then
-                                rm ~/cert/$domain1.key &>/dev/null
-                                rm ~/cert/$domain1.cer &>/dev/null
-                                rm -rf ~/.acme.sh/${domain1}_ecc &>/dev/null
+                            $user_path/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                            $user_path/.acme.sh/acme.sh --issue -d "$domain1" -d "$domain2" -w "$webroot"
+                            $user_path/.acme.sh/acme.sh --installcert -d $domain1 --key-file $user_path/cert/$domain1.key --fullchain-file $user_path/cert/$domain1.cer
+                            if [ ! -s "$user_path/cert/$domain1.key" ] && [ ! -s "$user_path/cert/$domain1.cer" ]; then
+                                rm $user_path/cert/$domain1.key &>/dev/null
+                                rm $user_path/cert/$domain1.cer &>/dev/null
+                                rm -rf $user_path/.acme.sh/${domain1}_ecc &>/dev/null
                             fi
-                            if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.cer" ]]; then
-                                echo "证书已生成并保存到 ~/cert 目录下."
+                            if [[ -f "$user_path/cert/$domain1.key" && -f "$user_path/cert/$domain1.cer" ]]; then
+                                echo "证书已生成并保存到 $user_path/cert 目录下."
                                 break
                             fi
                             echo "证书生成失败."
                         else
-                            ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
-                            ~/.acme.sh/acme.sh --issue -d "$domain1" -w "$webroot"
-                            ~/.acme.sh/acme.sh --installcert -d $domain1 --key-file ~/cert/$domain1.key --fullchain-file ~/cert/$domain1.cer
-                            if [ ! -s "~/cert/$domain1.key" ] && [ ! -s "~/cert/$domain1.cer" ]; then
-                                rm ~/cert/$domain1.key &>/dev/null
-                                rm ~/cert/$domain1.cer &>/dev/null
-                                rm -rf ~/.acme.sh/${domain1}_ecc &>/dev/null
+                            $user_path/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                            $user_path/.acme.sh/acme.sh --issue -d "$domain1" -w "$webroot"
+                            $user_path/.acme.sh/acme.sh --installcert -d $domain1 --key-file $user_path/cert/$domain1.key --fullchain-file $user_path/cert/$domain1.cer
+                            if [ ! -s "$user_path/cert/$domain1.key" ] && [ ! -s "$user_path/cert/$domain1.cer" ]; then
+                                rm $user_path/cert/$domain1.key &>/dev/null
+                                rm $user_path/cert/$domain1.cer &>/dev/null
+                                rm -rf $user_path/.acme.sh/${domain1}_ecc &>/dev/null
                             fi
-                            if [[ -f "~/cert/$domain1.key" && -f "~/cert/$domain1.cer" ]]; then
-                                echo "证书已生成并保存到 ~/cert 目录下."
+                            if [[ -f "$user_path/cert/$domain1.key" && -f "$user_path/cert/$domain1.cer" ]]; then
+                                echo "证书已生成并保存到 $user_path/cert 目录下."
                                 break
                             fi
                             echo "证书生成失败."
@@ -1096,17 +1102,17 @@ case $choice in
                                 export CF_Key="$cf_key"
                                 export CF_Email="$cf_email"
                                 wildcard_domain="*.${domain#*.}"
-                                ~/.acme.sh/acme.sh --register-account -m $random@gmail.com
-                                ~/.acme.sh/acme.sh --issue -d "$domain" -d "$wildcard_domain" --dns dns_cf \
-                                --key-file       ~/cert/"$domain.key"  \
-                                --fullchain-file ~/cert/"$domain.pem"
-                                if [ ! -s "~/cert/$domain.key" ] && [ ! -s "~/cert/$domain.pem" ]; then
-                                    rm ~/cert/$domain.key &>/dev/null
-                                    rm ~/cert/$domain.pem &>/dev/null
-                                    rm -rf ~/.acme.sh/${domain}_ecc &>/dev/null
+                                $user_path/.acme.sh/acme.sh --register-account -m $random@gmail.com
+                                $user_path/.acme.sh/acme.sh --issue -d "$domain" -d "$wildcard_domain" --dns dns_cf \
+                                --key-file       $user_path/cert/"$domain.key"  \
+                                --fullchain-file $user_path/cert/"$domain.pem"
+                                if [ ! -s "$user_path/cert/$domain.key" ] && [ ! -s "$user_path/cert/$domain.pem" ]; then
+                                    rm $user_path/cert/$domain.key &>/dev/null
+                                    rm $user_path/cert/$domain.pem &>/dev/null
+                                    rm -rf $user_path/.acme.sh/${domain}_ecc &>/dev/null
                                 fi
-                                if [[ -f "~/cert/$domain.key" && -f "~/cert/$domain.pem" ]]; then
-                                    echo "证书已生成并保存到 ~/cert 目录下."
+                                if [[ -f "$user_path/cert/$domain.key" && -f "$user_path/cert/$domain.pem" ]]; then
+                                    echo "证书已生成并保存到 $user_path/cert 目录下."
                                     break
                                 fi
                                 echo "证书生成失败."
@@ -1133,10 +1139,10 @@ case $choice in
                 done
                 ;;
             2|22)
-                if [[ $(~/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
+                if [[ $($user_path/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
                     echo "未查询到证书."
                 else
-                    ~/.acme.sh/acme.sh --list
+                    $user_path/.acme.sh/acme.sh --list
                 fi
                 waitfor
                 ;;
@@ -1146,10 +1152,10 @@ case $choice in
                 echo -e "${GR}▼▼▼${NC}"
                 echo -e "${GR}ACME - 更新证书${NC}"
                 echo -e "${colored_text2}${NC}"
-                if [[ $(~/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
+                if [[ $($user_path/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
                     echo "未查询到证书."
                 else
-                    ~/.acme.sh/acme.sh --list
+                    $user_path/.acme.sh/acme.sh --list
                 fi
                 echo -e "${colored_text1}${NC}"
                 echo -e "1.  更新指定证书"
@@ -1167,7 +1173,7 @@ case $choice in
                     1|11)
                         read -p "请输请输入要更新的证书的域名: " domain
                         if [[ $domain != "" ]]; then
-                            ~/.acme.sh/acme.sh --renew -d $domain
+                            $user_path/.acme.sh/acme.sh --renew -d $domain
                             if [[ $? -eq 0 ]]; then
                                 echo "证书更新成功."
                             else
@@ -1178,21 +1184,21 @@ case $choice in
                         waitfor
                         ;;
                     2|22)
-                        if [[ $(~/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
+                        if [[ $($user_path/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
                             echo "未查询到证书."
                             waitfor
                         else
-                            ~/.acme.sh/acme.sh --renew-all
+                            $user_path/.acme.sh/acme.sh --renew-all
                             echo "更新证书完成."
                             waitfor
                         fi
                         ;;
                     3|33)
-                        if [[ $(~/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
+                        if [[ $($user_path/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
                             echo "未查询到证书."
                             waitfor
                         else
-                            ~/.acme.sh/acme.sh --cron --home /root/.acme.sh --force
+                            $user_path/.acme.sh/acme.sh --cron --home /root/.acme.sh --force
                         echo "强制更新证书完成."
                         waitfor
                         fi
@@ -1259,10 +1265,10 @@ case $choice in
                 echo -e "${GR}▼▼▼${NC}"
                 echo -e "${GR}ACME - 删除证书${NC}"
                 echo -e "${colored_text2}${NC}"
-                if [[ $(~/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
+                if [[ $($user_path/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
                     echo "未查询到证书."
                 else
-                    ~/.acme.sh/acme.sh --list
+                    $user_path/.acme.sh/acme.sh --list
                 fi
                 echo -e "${colored_text2}${NC}"
                 echo -e "1.  删除指定证书"
@@ -1277,7 +1283,7 @@ case $choice in
                     1|11)
                         read -p "请输请输入要删除的证书的域名: " domain
                         if [[ $domain != "" ]]; then
-                            ~/.acme.sh/acme.sh --remove -d $domain
+                            $user_path/.acme.sh/acme.sh --remove -d $domain
                             if [[ $? -eq 0 ]]; then
                                 echo "证书删除成功."
                             else
@@ -1290,11 +1296,11 @@ case $choice in
                         fi
                         ;;
                     2|22)
-                        list_output=$(~/.acme.sh/acme.sh --list)
+                        list_output=$($user_path/.acme.sh/acme.sh --list)
                         readarray -t domain_array <<< "$(echo "$list_output" | sed -n '2,$p' | awk '{print $1}')"
                         echo "${domain_array[@]}"
                         for domain in "${domain_array[@]}"; do
-                            ~/.acme.sh/acme.sh --remove -d "$domain"
+                            $user_path/.acme.sh/acme.sh --remove -d "$domain"
                             echo "已删除域名: $domain"
                         done
                         waitfor
@@ -1316,8 +1322,8 @@ case $choice in
                 curl https://get.acme.sh | sh
                 ;;
             d|D|dd|DD)
-                ~/.acme.sh/acme.sh --uninstall
-                rm -rf ~/.acme.sh
+                $user_path/.acme.sh/acme.sh --uninstall
+                rm -rf $user_path/.acme.sh
                 ;;
             r|R|rr|RR)
                 break
