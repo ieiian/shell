@@ -115,7 +115,7 @@ if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -
     echo -e "${GR}▼${NC}"
     echo -e "${colored_text2}${NC}"
     echo -e "CURL/WGET/NET-TOOLS/JQ"
-    read -p "检查到部分依赖工具没有安装, 是否要进行安装? (Y/其它跳过): " -n 3 -r choice
+    read -e -p "检查到部分依赖工具没有安装, 是否要进行安装? (Y/其它跳过): " -n 3 -r choice
     if [[ $choice == "Y" || $choice == "y" ]]; then
         $pm install -y curl wget net-tools jq
     fi
@@ -155,10 +155,11 @@ if [[ $onlyone == 1 ]]; then
 else
     remind3p
 fi
-read -p "请输入你的选择: " -n 2 -r choice && echoo
+read -e -p "请输入你的选择: " -n 2 -r choice && echoo
 case $choice in
     1|11)
-        # jsonfile=""
+        jsonfile="/usr/local/etc/xray/config.json"
+        xrayactive=($(systemctl is-active xray.service | tr -d '\n'))
         # jsonfiletag=""
         # jsonfilen=0
         # if [ -f /usr/local/x-ui/bin/config.json ]; then
@@ -174,13 +175,35 @@ case $choice in
         # if [ $jsonfilen -eq 2 ]; then
         #     while true; do
         #     echo "系统发现以下配置文件:"
-        #     echo "1. XUI面板配置文件   2. XRAY官方脚本配置文件"
-        #     read -p "请选择查询配置文件编号: " choice
+        #     echo "1. XRAY官方脚本配置文件  2. XUI面板配置文件"
+        #     read -e -p "请选择配置配置文件编号: " choice
         #     if [ $choice -eq 1 ]; then
+        #         jsonfile="/usr/local/etc/xray/config.json"
+        #         jsonfiletag="XRAY"
+        #         break
+        #     elif [ $choice -eq 2 ]; then
         #         jsonfile="/usr/local/x-ui/bin/config.json"
         #         jsonfiletag="X-UI"
         #         break
-        #     elif [ $choice -eq 2 ]; then
+        #     else
+        #         echo "请重新选择."
+        #     fi
+        #     done
+        # fi
+        # if [[ $jsonfilen -eq 0 ]]; then
+        #     while true; do
+        #     #echo -e "系统${MA}未发现${NC}配置文件:"
+        #     echo "1. XRAY官方脚本  2. X-UI面板"
+        #     read -e -p "请选择需要配置类型 (回车默认1.XRAY官方脚本): " choice
+        #     if [[ $choice == "1" ]]; then
+        #         jsonfile="/usr/local/etc/xray/config.json"
+        #         jsonfiletag="XRAY"
+        #         break
+        #     elif [[ $choice == "2" ]]; then
+        #         jsonfile="/usr/local/x-ui/bin/config.json"
+        #         jsonfiletag="X-UI"
+        #         break
+        #     elif [[ $choice == "" ]]; then
         #         jsonfile="/usr/local/etc/xray/config.json"
         #         jsonfiletag="XRAY"
         #         break
@@ -189,13 +212,9 @@ case $choice in
         #     fi
         #     done
         # fi
-        #############################################
-        jsonfile="$user_path/new.json" ### new.json for test
 
-        if [ ! -e "$jsonfile" ]; then
-            read -p "文件 $jsonfile 不存在。是否创建? (Y/其它跳过): " create
-            if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
-                jq -n '{
+        makejsonfile() {
+            jq -n '{
                 "log": {
                     "loglevel": "warning",
                     "access": "/var/log/xray/access.log",
@@ -204,97 +223,117 @@ case $choice in
                 "api": {
                     "tag": "api",
                     "services": [
-                    "HandlerService",
-                    "LoggerService",
-                    "StatsService"
+                        "HandlerService",
+                        "LoggerService",
+                        "StatsService"
                     ]
                 },
                 "dns": {
                     "tag": "dns_inbound",
                     "hosts": {},
                     "servers": [
-                    "8.8.8.8",
-                    "1.1.1.1"
+                        "8.8.8.8",
+                        "1.1.1.1"
                     ]
                 },
                 "routing": {
                     "domainStrategy": "IPIfNonMatch",
                     "rules": [
-                    {
-                        "type": "field",
-                        "outboundTag": "common",
-                        "network": "udp,tcp"
-                    },
-                    {
-                        "type": "field",
-                        "outboundTag": "blocked",
-                        "ip": [
-                        "geoip:cn",
-                        "geoip:private"
-                        ],
-                        "protocol": [
-                        "bittorrent"
-                        ]
-                    }
+                        {
+                            "type": "field",
+                            "outboundTag": "common",
+                            "network": "udp,tcp"
+                        },
+                        {
+                            "type": "field",
+                            "outboundTag": "blocked",
+                            "ip": [
+                                "geoip:cn",
+                                "geoip:private"
+                            ],
+                            "protocol": [
+                                "bittorrent"
+                            ]
+                        }
                     ]
                 },
                 "policy": {
                     "system": {
                         "statsInboundUplink": true,
-                        "statsInboundDownlink": true,
-                    }
+                        "statsInboundDownlink": true
+                    },
                     "levels": {
-                            "0": {
-                                "handshake": 5,
-                                "connIdle": 200,
-                                "uplinkOnly": 2,
-                                "downlinkOnly": 5,
-                                "bufferSize": 10240
-                            }
+                        "0": {
+                            "handshake": 5,
+                            "connIdle": 200,
+                            "uplinkOnly": 2,
+                            "downlinkOnly": 5,
+                            "bufferSize": 10240
                         }
+                    }
                 },
-                "inbounds": [
-                ],
+                "inbounds": [],
                 "outbounds": [
-                {
-                    "tag": "common",
-                    "protocol": "freedom"
-                },
-                {
-                    "tag": "blocked",
-                    "protocol": "blackhole",
-                    "settings": {}
-                }
+                    {
+                        "tag": "common",
+                        "protocol": "freedom"
+                    },
+                    {
+                        "tag": "blocked",
+                        "protocol": "blackhole",
+                        "settings": {}
+                    }
                 ],
                 "stats": null,
                 "reverse": null,
                 "transport": null,
                 "fakeDns": null
-                }' > $jsonfile
+            }' > $jsonfile
                 echo "文件 $jsonfile 创建成功."
+            }
+        #############################################
+        #jsonfile="/usr/local/etc/xray/config.json"
+        #jsonfile="$user_path/new.json" ### new.json for test
+
+        if [ ! -e "$jsonfile" ]; then
+            read -e -p "config.json配置文件不存在。是否创建? (Y/其它跳过): " create
+            if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
+                touch $jsonfile
+                makejsonfile
                 waitfor
             else
-                echo "没有指定配置文件, 脚本无法顺利执行."
+                #echo "没有指定config.json配置文件, 脚本无法顺利执行."
+                waitfor
+                continue
+            fi
+        fi
+        if [[ $(cat $jsonfile | wc -l) -eq 1 ]]; then
+            read -e -p "文件未初始化, 是否要初始化 JSON 文件? (Y/其它取消): " create
+            if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
+                makejsonfile
+                waitfor
+            else
+                echo "未初始化文件, 脚本无法顺利执行."
                 waitfor
                 continue
             fi
         fi
 
-        
         while true; do
         xtag=""
         if ! command -v jq &>/dev/null; then
             xtag="${YE}*${NC}"
         fi
         if command -v xray &>/dev/null; then
-            xrayver=$(xray version | head -n 1 | awk '{print $1, $2}')
+            #xrayver=$(xray version | head -n 1 | awk '{print $1, $2}')
+            xrayver=$(xray version | head -n 1 | awk '{print $2}')
         else
             xrayver="未安装"
             xtag="${MA}*${NC}"
         fi
         clear_screen
         echo -e "${GR}▼▼${NC}"
-        echo -e "${GR}XRAY${NC}          ${MA}$xrayver${NC}"
+        echo -e "${GR}XRAY${NC}         版本: ${MA}$xrayver${NC}"
         echo -e "${colored_text2}${NC}"
         echo -e "1.  创建节点"
         echo -e "2.  查询节点明细"
@@ -302,6 +341,12 @@ case $choice in
         echo -e "4.  删除节点"
         echo -e "${colored_text1}${NC}"
         echo -e "5.  手动编辑配置文件"
+        echo -e "${colored_text1}${NC}"
+        echo -e "8.  启动/重启 XRAY 服务"
+        echo -e "9.  停止 XRAY 服务"
+        echo -e "${colored_text1}${NC}"
+        echo -e "v.  查询 XRAY 状态   ${MA}$xrayactive${NC}"
+        echo -e "l.  查询 XRAY 运行日志"
         echo -e "${colored_text1}${NC}"
         echo -e "i.  安装/更新 XRAY 官方脚本 $xtag"
         echo -e "u.  更新 geodata 文件"
@@ -311,7 +356,7 @@ case $choice in
         echo -e "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
         remind3p
-        read -p "请输入你的选择: " -n 2 -r choice && echoo
+        read -e -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
                 uuid=$(xray uuid)
@@ -343,7 +388,7 @@ case $choice in
                 while true; do
                 remind1p
                 echo "节点类型: 1.Vmess  2.Vless  3.Trojan  4.Shadowsocks  5.dokodemo-door  6.socks  7.http"
-                read -p "请先择创建节点类型 (1/2/3/4/5/6/7/C取消): " -n 2 -r choice && echoo
+                read -e -p "请先择创建节点类型 (1/2/3/4/5/6/7/C取消): " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
                         en_protocol="vmess"
@@ -391,7 +436,7 @@ case $choice in
                     echo "$check_port"
                 done
                 echo "端口范围: 1-65535, 请自行规避其它程序占用的端口."
-                read -p "请输入端口号: " number
+                read -e -p "请输入端口号: " number
                 if [[ $number =~ ^[0-9]+$ && $number -ge 1 && $number -le 65535 ]]; then
                     for check_port in "${check_port_array[@]}"; do
                     if [[ $check_port -eq $number ]]; then
@@ -412,7 +457,7 @@ case $choice in
                         random=$((100000 + RANDOM % 900000))
                         echo -e "${colored_text1}${NC}"
                         remind1p
-                        read -p "请设置Trojan密码 (回车默认: 系统生成): " password
+                        read -e -p "请设置Trojan密码 (回车默认: 系统生成): " password
                             if [[ $password == "" ]]; then
                                 en_trojan_password="$random"
                                 break
@@ -427,7 +472,7 @@ case $choice in
                     while true; do
                     remind1p
                     echo "传输协议类型: 1.tcp  2.kcp  3.ws  4.http  5.quic  6.grpc"
-                    read -p "请先择 (1/2/3/4/5/6/C取消): " -n 2 -r choice && echoo
+                    read -e -p "请先择 (1/2/3/4/5/6/C取消): " -n 2 -r choice && echoo
                     case $choice in
                         1|11)
                             en_network="tcp"
@@ -466,7 +511,7 @@ case $choice in
                         while true; do
                         remind1p
                         echo "传输层安全类型: 1.tls  2.http  3.reality  0.不使用"
-                        read -p "请先择 (1/2/3/0/C取消): " -n 2 -r choice && echoo
+                        read -e -p "请先择 (1/2/3/0/C取消): " -n 2 -r choice && echoo
                         case $choice in
                             1|11)
                                 en_security="tls"
@@ -481,7 +526,7 @@ case $choice in
                                     en_security="reality"
                                     break
                                 else
-                                    echo "注意, 只有当协议为Vless或Trojan的时候才能使用Reality传输."
+                                    echo -e "注意, 只有当协议为${MA}Vless${NC}或${MA}Trojan${NC}的时候才能使用Reality传输."
                                     etag=1
                                 fi
                                 ;;
@@ -498,9 +543,46 @@ case $choice in
                         esac
                         done
                     fi
+                    if [[ $en_network == "kcp" ]]; then
+                        :
+                    fi
+                    if [[ $en_network == "ws" ]]; then
+                        read -e -p "请输入WS-PATH (格式: /path)(回车默认./): " path
+                        if [[ $path != "" ]]; then
+                            en_ws_path="$path"
+                        else
+                            en_ws_path="/"
+                        fi
+                        read -e -p "请输入WS-HOST (回车.无): " host
+                        if [[ $host != "" ]]; then
+                            en_ws_host="$host"
+                        else
+                            en_ws_host=""
+                        fi
+                    fi
+                    if [[ $en_network == "http" ]]; then
+                        read -e -p "请输入http-PATH (格式: /path)(回车默认./): " path
+                        if [[ $path != "" ]]; then
+                            en_http_path="$path"
+                        else
+                            en_http_path="/"
+                        fi
+                        read -e -p "请输入http-HOST (回车.无): " host
+                        if [[ $host != "" ]]; then
+                            en_http_host="$host"
+                        else
+                            en_http_host=""
+                        fi
+                    fi
+                    if [[ $en_network == "quic" ]]; then
+                        :
+                    fi
+                    if [[ $en_network == "grpc" ]]; then
+                        :
+                    fi
                     if [[ $en_protocol == "vless" && $en_network == "tcp" && $en_security == "tls" ]] || [[ $en_protocol == "vless" && $en_network == "tcp" && $en_security == "reality" ]]; then
                         echo -e "流控flow方式 :  1.xtls-rprx-vision  0/其它.无"
-                        read -p "请选择流控flow方式编号 : " choice
+                        read -e -p "请选择流控flow方式编号 : " choice
                         if [[ $choice == 1 ]]; then
                             en_tls_flow="xtls-rprx-vision"
                         else
@@ -510,38 +592,38 @@ case $choice in
                     if [[ $en_security == "tls" ]]; then
                         echo -e "${colored_text1}${NC}"
                         remind1p
-                        read -p "请输入tls域名: " url
+                        read -e -p "请输入tls域名: " url
                         en_tls_serverName="$url"
-                        read -p "请输入公钥文件路径: " url
+                        read -e -p "请输入公钥文件路径: " url
                         en_tls_certificateFile="$url"
-                        read -p "请输入密钥文件路径: " url
+                        read -e -p "请输入密钥文件路径: " url
                         en_tls_keyFile="$url"
                     fi
                     if [[ $en_security == "http" ]]; then
                         echo -e "${colored_text1}${NC}"
                         remind1p
-                        read -p "请输入请求路径: " url
+                        read -e -p "请输入请求路径: " url
                         en_http_path="$url"
-                        read -p "请输入请求头: " url
+                        read -e -p "请输入请求头: " url
                         en_http_head="$url"
                     fi
                     if [[ $en_security == "reality" ]]; then
                         echo -e "${colored_text1}${NC}"
                         remind1p
-                        read -p "请输入dest地址(带端口) (回车默认: www.yahoo.com:443): " url
+                        read -e -p "请输入dest地址(带端口) (回车默认: www.yahoo.com:443): " url
                         if [[ $url == "" ]]; then
                             en_reality_dest="www.yahoo.com:443"
                         else
                             en_reality_dest="$url"
                         fi
-                        read -p "请输入serverNames地址 (回车默认: www.yahoo.com): " url
+                        read -e -p "请输入serverNames地址 (回车默认: www.yahoo.com): " url
                         if [[ $url == "" ]]; then
                             en_reality_serverNames="www.yahoo.com"
                         else
                             en_reality_serverNames="$url"
                         fi
                         echo -e "请选择fingerprint: 1.chrome  2.firefox  3.safari  4.edge  5.ios  6.android"
-                        read -p "请输入fingerprint编号: (回车默认: chrome): " choice
+                        read -e -p "请输入fingerprint编号: (回车默认: chrome): " choice
                         case $choice in
                         1|11)
                             en_reality_fingerprint="chrome"
@@ -569,19 +651,19 @@ case $choice in
                             break
                             ;;
                         esac
-                        read -p "请输入privateKey (回车默认: 系统生成): " url
+                        read -e -p "请输入privateKey (回车默认: 系统生成): " url
                         if [[ $url == "" ]]; then
                             en_reality_privateKey=$(echo "$(xray x25519)" | sed -n 's/Private key: \(.*\)/\1/p')
                         else
                             en_reality_privateKey="$url"
                         fi
-                        read -p "请输入publicKey (回车默认: 系统生成): " url
+                        read -e -p "请输入publicKey (回车默认: 系统生成): " url
                         if [[ $url == "" ]]; then
                             en_reality_publicKey=$(echo "$(xray x25519)" | sed -n 's/Public key: \(.*\)/\1/p')
                         else
                             en_reality_publicKey="$url"
                         fi
-                        read -p "请输入shortIds (回车默认: 系统生成): " url
+                        read -e -p "请输入shortIds (回车默认: 系统生成): " url
                         if [[ $url == "" ]]; then
                             en_reality_shortIds=$short_id
                         else
@@ -620,7 +702,7 @@ case $choice in
                 fi
                 echo "..."
                 while true; do
-                read -p "请确认信息，是否决定创建? (Y/C取消): " choice
+                read -e -p "请确认信息，是否决定创建? (Y/C取消): " choice
                 
                 if [[ $choice == "Y" || $choice == "y" ]]; then
 
@@ -667,11 +749,10 @@ case $choice in
                         },
                         "realitySettings": {
                             "show": false,
-                            "fingerprint": "firefox",
-                            "dest": "www.yahoo.com:443",
+                            "fingerprint": null,
+                            "dest": null,
                             "xver": 0,
                             "serverNames": [
-                                "www.yahoo.com"
                             ],
                             "privateKey": null,
                             "publicKey": null,
@@ -792,193 +873,112 @@ case $choice in
                 done
                 ;;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
             2|22)
                 clear_screen
 
-                protocol=".protocol"
+                # 读取JSON文件中的变量值，并将变量名前缀改成rd_，将变量改为数组
+                mapfile -t rd_port < <(jq -r '.inbounds[].port' "$jsonfile")
+                mapfile -t rd_protocol < <(jq -r '.inbounds[].protocol' "$jsonfile")
+                mapfile -t rd_network < <(jq -r '.inbounds[].streamSettings.network' "$jsonfile")
+                mapfile -t rd_security < <(jq -r '.inbounds[].streamSettings.security' "$jsonfile")
+                mapfile -t rd_tls_serverName < <(jq -r '.inbounds[].streamSettings.tlsSettings.serverName' "$jsonfile")
+                mapfile -t rd_tls_certificateFile < <(jq -r '.inbounds[].streamSettings.tlsSettings.certificates[0].certificateFile' "$jsonfile")
+                mapfile -t rd_tls_keyFile < <(jq -r '.inbounds[].streamSettings.tlsSettings.certificates[0].keyFile' "$jsonfile")
+                mapfile -t rd_reality_dest < <(jq -r '.inbounds[].streamSettings.realitySettings.dest' "$jsonfile")
+                mapfile -t rd_reality_serverNames < <(jq -r '.inbounds[].streamSettings.realitySettings.serverNames[0]' "$jsonfile")
+                mapfile -t rd_reality_fingerprint < <(jq -r '.inbounds[].streamSettings.realitySettings.fingerprint' "$jsonfile")
+                mapfile -t rd_reality_privateKey < <(jq -r '.inbounds[].streamSettings.realitySettings.privateKey' "$jsonfile")
+                mapfile -t rd_reality_publicKey < <(jq -r '.inbounds[].streamSettings.realitySettings.publicKey' "$jsonfile")
+                mapfile -t rd_reality_shortIds < <(jq -r '.inbounds[].streamSettings.realitySettings.shortIds[0]' "$jsonfile")
+                mapfile -t rd_tag < <(jq -r '.inbounds[].tag' "$jsonfile")
+                mapfile -t rd_client_id < <(jq -r '.inbounds[].settings.clients[0].id' "$jsonfile")
+                mapfile -t rd_client_flow < <(jq -r '.inbounds[].settings.clients[0].flow' "$jsonfile")
 
-                vless_port=".port"
-                vless_id=".settings.clients[0].id"
-                vless_network=".streamSettings.network"
-                vless_security=".streamSettings.security"
-                vless_tls_flow=".settings.clients[0].flow"
-                vless_tls_serverName=".streamSettings.tlsSettings.serverName"
-                vless_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
-                vless_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
-                vless_reality_dest=".streamSettings.realitySettings.dest"
-                vless_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
-                vless_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
-                vless_reality_privateKey=".streamSettings.realitySettings.privateKey"
-                vless_reality_publicKey=".streamSettings.realitySettings.publicKey"
-                vless_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
-                vless_ws_path=".streamSettings.wsSettings.path"
-                vless_ws_host=".streamSettings.wsSettings.headers.Host"
-
-                vmess_port=".port"
-                vmess_id=".settings.clients[0].id"
-                vmess_network=".streamSettings.network"
-                vmess_security=".streamSettings.security"
-                vmess_tls_flow=".settings.clients[0].flow"
-                vmess_tls_serverName=".streamSettings.tlsSettings.serverName"
-                vmess_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
-                vmess_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
-                vmess_reality_dest=".streamSettings.realitySettings.dest"
-                vmess_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
-                vmess_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
-                vmess_reality_privateKey=".streamSettings.realitySettings.privateKey"
-                vmess_reality_publicKey=".streamSettings.realitySettings.publicKey"
-                vmess_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
-                vmess_ws_path=".streamSettings.wsSettings.path"
-                vmess_ws_host=".streamSettings.wsSettings.headers.Host"
-
-                protocol_array=()
-                port_array=()
-                id_array=()
-                network_array=()
-                security_array=()
-                tls_flow_array=()
-                tls_serverName_array=()
-                tls_certificateFile_array=()
-                tls_keyFile_array=()
-                reality_dest_array=()
-                reality_fingerprint_array=()
-                reality_serverNames_array=()
-                reality_privateKey_array=()
-                reality_publicKey_array=()
-                reality_shortIds_array=()
-                ws_path_array=()
-                ws_host_array=()
-
-                get_protocol_value() {
-                    local suffix="$1"
-                    local protocol="$2"
-                    local varname="${protocol}${suffix}"
-                    local config_value=$(echo "$node" | jq -r "${!varname}")
-                    echo "$config_value"
-                }
-
-                inbounds=$(jq '.inbounds' "$jsonfile")
-                if [ "$inbounds" == "null" ]; then
-                    echo "配置文件中没有inbounds数组。"
-                    waitfor
-                    exit 1
-                fi
-                for node in $(echo "$inbounds" | jq -c '.[]'); do
-                    protocol=$(echo "$node" | jq -r '.protocol')
-                    if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
-
-                        port=$(get_protocol_value "_port" "$protocol")
-                        id=$(get_protocol_value "_id" "$protocol")
-                        network=$(get_protocol_value "_network" "$protocol")
-                        security=$(get_protocol_value "_security" "$protocol")
-                        if [[ "$security" == "tls" ]]; then
-                            tls_flow=$(get_protocol_value "_tls_flow" "$protocol")
-                            tls_serverName=$(get_protocol_value "_tls_serverName" "$protocol")
-                            tls_certificateFile=$(get_protocol_value "_tls_certificateFile" "$protocol")
-                            tls_keyFile=$(get_protocol_value "_tls_keyFile" "$protocol")
-                        fi
-                        if [[ "$security" == "reality" ]]; then
-                            reality_dest=$(get_protocol_value "_reality_dest" "$protocol")
-                            reality_fingerprint=$(get_protocol_value "_reality_fingerprint" "$protocol")
-                            reality_serverNames=$(get_protocol_value "_reality_serverNames" "$protocol")
-                            reality_privateKey=$(get_protocol_value "_reality_privateKey" "$protocol")
-                            reality_publicKey=$(get_protocol_value "_reality_publicKey" "$protocol")
-                            reality_shortIds=$(get_protocol_value "_reality_shortIds" "$protocol")
-                        fi
-                        if [[ "$network" == "ws" ]]; then
-                            ws_path=$(get_protocol_value "_ws_path" "$protocol")
-                            ws_host=$(get_protocol_value "_ws_host" "$protocol")
-                        fi
-                        protocol_array+=("$protocol")
-                        port_array+=("$port")
-                        id_array+=("$id")
-                        network_array+=("$network")
-                        security_array+=("$security")
-                        tls_flow_array+=("$tls_flow")
-                        tls_serverName_array+=("$tls_serverName")
-                        tls_certificateFile_array+=("$tls_certificateFile")
-                        tls_keyFile_array+=("$tls_keyFile")
-                        reality_dest_array+=("$reality_dest")
-                        reality_fingerprint_array+=("$reality_fingerprint")
-                        reality_serverNames_array+=("$reality_serverNames")
-                        reality_privateKey_array+=("$reality_privateKey")
-                        reality_publicKey_array+=("$reality_publicKey")
-                        reality_shortIds_array+=("$reality_shortIds")
-                        ws_path_array+=("$ws_path")
-                        ws_host_array+=("$ws_host")
-                    fi
-                done
-                echo -e "${GR}▼▼${NC}"
-                for i in "${!protocol_array[@]}"; do
+                # 遍历数组，输出读取到的变量值，仅当变量不为空时才显示
+                echo -e "${GR}▼▼${NC}"                  
+                for ((i=0; i<${#rd_port[@]}; i++)); do
                     echo -e "${colored_text1}${NC}"
                     echo "节点 $((i+1))"
-                    if [[ ! "${protocol_array[$i]}" = "" && ! "${protocol_array[$i]}" = "null" ]]; then
-                        echo -e "协议 (protocol):      ${GR}${protocol_array[$i]}${NC}"
-                        protocol_array[$i]=""
+                    
+                    if [ -n "${rd_port[i]}" ] && [ "${rd_port[i]}" != "null" ]; then
+                        echo "端口号: ${rd_port[i]}"
                     fi
-                    if [[ ! "${port_array[$i]}" = "" && ! "${port_array[$i]}" = "null" ]]; then
-                        echo -e "端口 (port):          ${GR}${port_array[$i]}${NC}"
-                        port_array[$i]=""
+
+                    if [ -n "${rd_protocol[i]}" ] && [ "${rd_protocol[i]}" != "null" ]; then
+                        echo "协议类型: ${rd_protocol[i]}"
                     fi
-                    if [[ ! "${id_array[$i]}" = "" && ! "${id_array[$i]}" = "null" ]]; then
-                        echo -e "用户ID (id):          ${GR}${id_array[$i]}${NC}"
+
+                    if [ -n "${rd_client_id[i]}" ] && [ "${rd_client_id[i]}" != "null" ]; then
+                        echo "客户端ID: ${rd_client_id[i]}"
                     fi
-                    if [[ ! "${network_array[$i]}" = "" && ! "${network_array[$i]}" = "null" ]]; then
-                        echo -e "传输协议 (network):   ${GR}${network_array[$i]}${NC}"
+
+                    if [ -n "${rd_client_flow[i]}" ] && [ "${rd_client_flow[i]}" != "null" ]; then
+                        echo "客户端流量: ${rd_client_flow[i]}"
                     fi
-                    if [[ ! "${security_array[$i]}" = "" && ! "${security_array[$i]}" = "null" ]]; then
-                        echo -e "传输层安全 (TLS):     ${GR}${security_array[$i]}${NC}"
+
+                    if [ -n "${rd_network[i]}" ] && [ "${rd_network[i]}" != "null" ]; then
+                        echo "网络类型: ${rd_network[i]}"
                     fi
-                    if [[ ! "${tls_flow_array[$i]}" = "" && ! "${tls_flow_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
-                        echo -e "流控 flow:             ${GR}${tls_flow_array[$i]}${NC}"
+
+                    if [ -n "${rd_security[i]}" ] && [ "${rd_security[i]}" != "null" ]; then
+                        echo "安全性设置: ${rd_security[i]}"
                     fi
-                    if [[ ! "${tls_serverName_array[$i]}" = "" && ! "${tls_serverName_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
-                        echo -e "SNI (serverName):     ${GR}${tls_serverName_array[$i]}${NC}"
+
+                    if [ -n "${rd_tls_serverName[i]}" ] && [ "${rd_tls_serverName[i]}" != "null" ]; then
+                        echo "TLS服务器名: ${rd_tls_serverName[i]}"
                     fi
-                    if [[ ! "${tls_certificateFile_array[$i]}" = "" && ! "${tls_certificateFile_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
-                        echo -e "公钥文件路径 (CER):   ${GR}${tls_certificateFile_array[$i]}${NC}"
+
+                    if [ -n "${rd_tls_certificateFile[i]}" ] && [ "${rd_tls_certificateFile[i]}" != "null" ]; then
+                        echo "TLS证书文件路径: ${rd_tls_certificateFile[i]}"
                     fi
-                    if [[ ! "${tls_keyFile_array[$i]}" = "" && ! "${tls_keyFile_array[$i]}" = "null" && "${security_array[$i]}" = "tls" ]]; then
-                        echo -e "密钥文件路径 (KEY):   ${GR}${tls_keyFile_array[$i]}${NC}"
+
+                    if [ -n "${rd_tls_keyFile[i]}" ] && [ "${rd_tls_keyFile[i]}" != "null" ]; then
+                        echo "TLS私钥文件路径: ${rd_tls_keyFile[i]}"
                     fi
-                    if [[ "$protocol" == "vless" && ! "${reality_dest_array[$i]}" = "" && ! "${reality_dest_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
-                        echo -e "Reality_dest:         ${GR}${reality_dest_array[$i]}${NC}"
+
+                    if [ -n "${rd_reality_dest[i]}" ] && [ "${rd_reality_dest[i]}" != "null" ]; then
+                        echo "reality_dest: ${rd_reality_dest[i]}"
                     fi
-                    if [[ ! "${reality_fingerprint_array[$i]}" = "" && ! "${reality_fingerprint_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
-                        echo -e "Reality_fingerprint:  ${GR}${reality_fingerprint_array[$i]}${NC}"
+
+                    if [ -n "${rd_reality_serverNames[i]}" ] && [ "${rd_reality_serverNames[i]}" != "null" ]; then
+                        echo "reality_serverNames: ${rd_reality_serverNames[i]}"
                     fi
-                    if [[ "$protocol" == "vmess" && ! "${reality_serverNames_array[$i]}" = "" && ! "${reality_serverNames_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
-                        echo -e "Reality_serverNames:  ${GR}${reality_serverNames_array[$i]}${NC}"
+
+                    if [ -n "${rd_reality_fingerprint[i]}" ] && [ "${rd_reality_fingerprint[i]}" != "null" ]; then
+                        echo "reality_fingerprint: ${rd_reality_fingerprint[i]}"
                     fi
-                    if [[ ! "${reality_privateKey_array[$i]}" = "" && ! "${reality_privateKey_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
-                        echo -e "Reality_privateKey:   ${GR}${reality_privateKey_array[$i]}${NC}"
+
+                    if [ -n "${rd_reality_privateKey[i]}" ] && [ "${rd_reality_privateKey[i]}" != "null" ]; then
+                        echo "reality_privateKey: ${rd_reality_privateKey[i]}"
                     fi
-                    if [[ ! "${reality_publicKey_array[$i]}" = "" && ! "${reality_publicKey_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
-                        echo -e "Reality_publicKey:    ${GR}${reality_publicKey_array[$i]}${NC}"
+
+                    if [ -n "${rd_reality_publicKey[i]}" ] && [ "${rd_reality_publicKey[i]}" != "null" ]; then
+                        echo "reality_publicKey: ${rd_reality_publicKey[i]}"
                     fi
-                    if [[ ! "${reality_shortIds_array[$i]}" = "" && ! "${reality_shortIds_array[$i]}" = "null" && "${security_array[$i]}" = "reality" ]]; then
-                        echo -e "Reality_shortIds:     ${GR}${reality_shortIds_array[$i]}${NC}"
-                    fi
-                    if [[ ! "${ws_path_array[$i]}" = "" && ! "${ws_path_array[$i]}" = "null" && "${network_array[$i]}" = "ws" ]]; then
-                        echo -e "WS_path:              ${GR}${ws_path_array[$i]}${NC}"
-                    fi
-                    if [[ ! "${ws_host_array[$i]}" = "" && ! "${ws_host_array[$i]}" = "null" && "${network_array[$i]}" = "ws" ]]; then
-                        echo -e "WS_host:              ${GR}${ws_host_array[$i]}${NC}"
+
+                    if [ -n "${rd_reality_shortIds[i]}" ] && [ "${rd_reality_shortIds[i]}" != "null" ]; then
+                        echo "reality_shortIds: ${rd_reality_shortIds[i]}"
                     fi
                 done
+
+                i_protocol=".protocol"
+                i_port=".port"
+                i_id=".settings.clients[0].id"
+                i_network=".streamSettings.network"
+                i_security=".streamSettings.security"
+                i_tls_flow=".settings.clients[0].flow"
+                i_tls_serverName=".streamSettings.tlsSettings.serverName"
+                i_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
+                i_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
+                i_reality_dest=".streamSettings.realitySettings.dest"
+                i_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
+                i_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
+                i_reality_privateKey=".streamSettings.realitySettings.privateKey"
+                i_reality_publicKey=".streamSettings.realitySettings.publicKey"
+                i_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
+                i_ws_path=".streamSettings.wsSettings.path"
+                i_ws_host=".streamSettings.wsSettings.headers.Host"
+
                 echo -e "${colored_text2}${NC}"
                 waitfor
                 ;;
@@ -1003,7 +1003,7 @@ case $choice in
                     echo "▶ $((i+1))    ${protocols[i]}      ${ports[i]}"
                 done
                 echo -e "${colored_text1}${NC}"
-                read -p "请输入要删除的节点序号: " choice
+                read -e -p "请输入要删除的节点序号: " choice
                 if [[ $choice != "" ]]; then
                     length=$(jq '.inbounds | length' "$jsonfile")
                     jq "del(.inbounds[$choice-1])" "$jsonfile" > temp.json && mv temp.json "$jsonfile"
@@ -1023,10 +1023,35 @@ case $choice in
                 nano $jsonfile
                 waitfor
                 ;;
+            8|88)
+                systemctl restart xray.service
+                waitfor
+                ;;
+            9|99)
+                systemctl stop xray.service
+                waitfor
+                ;;
+            v|vv|V|VV)
+                systemctl status xray.service
+                waitfor
+                ;;
+            l|ll|L|LL)
+                journalctl -u xray
+                waitfor
+                ;;
             i|ii|I|II)
                 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-                sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/xray.service"
-                systemctl daemon-reload
+                # mkdir -p /usr/local/etc/xray
+                # mkdir -p /var/log/xray
+                # if [ ! -e "/var/log/xray/access.log" ]; then
+                #     touch /var/log/xray/access.log
+                # fi
+                # if [ ! -e "/var/log/xray/error.log" ]; then
+                #     touch /var/log/xray/error.log
+                # fi
+                # chown -R nobody /var/log/xray
+                # sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/xray.service"
+                # systemctl daemon-reload
                 if ! command -v jq &>/dev/null; then
                     $pm -y install jq
                 fi
@@ -1038,7 +1063,7 @@ case $choice in
                 ;;
             d|D|dd|DD)
                 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ remove
-                read -p "是否要删除所有残留(包括配置文件)? (Y/其它跳过): " choice
+                read -e -p "是否要删除所有残留(包括配置文件)? (Y/其它跳过): " choice
                 if [[ $choice == "Y" || $choice == "y" ]]; then
                     rm -rf /usr/local/etc/xray
                     rm -rf /var/log/xray
@@ -1085,7 +1110,7 @@ case $choice in
         echo -e "x.  退出脚本"
         echo -e "${colored_text1}${NC}"
         remind3p
-        read -p "请输入你的选择: " -n 2 -r choice && echoo
+        read -e -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
                 if [ ! -d $user_path/cert ]; then
@@ -1108,11 +1133,11 @@ case $choice in
                 echo -e "${MA}注${NC}: 证书申请成功后将自动保存至: ${GR}$user_path/cert${NC} 文件夹中"
                 echo -e "${colored_text1}${NC}"
                 remind3p
-                read -p "请输入你的选择: " -n 2 -r choice && echoo
+                read -e -p "请输入你的选择: " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
                         while true; do
-                            read -p "请输入申请证书的域名: " domain
+                            read -e -p "请输入申请证书的域名: " domain
                             if [[ $domain == *.* ]]; then
                                 pids=$(lsof -t -i :80)
                                 if [ -n "$pids" ]; then
@@ -1145,7 +1170,7 @@ case $choice in
                         ;;
                     2|22)
                         while true; do
-                            read -p "请输入申请证书的域名: " domain
+                            read -e -p "请输入申请证书的域名: " domain
                             if [[ $domain == *.* ]]; then
                                 pids=$(lsof -t -i :80)
                                 if [ -n "$pids" ]; then
@@ -1154,7 +1179,7 @@ case $choice in
                                     done
                                 fi
                                 if ! command -v nginx &>/dev/null; then
-                                    read -p "系统未检测到Nginx, 是否进行Nginx安装 (Y/其它跳过): " choice
+                                    read -e -p "系统未检测到Nginx, 是否进行Nginx安装 (Y/其它跳过): " choice
                                     if [[ ! $choice == "Y" && ! $choice == "y" ]]; then
                                         break
                                     fi
@@ -1217,7 +1242,7 @@ case $choice in
                         noloop=0
                         while true; do
                             echo -e "请输入申请证书的域名, 主体名和可选主体名, 以空格格开, (如: do1.com do2.com)"
-                            read -p "请输入域名: " domain1 domain2
+                            read -e -p "请输入域名: " domain1 domain2
                             if [[ -n "$domain1" && -z "${domain1##*.*}" ]]; then
                                 if [[ -z "$domain2" || (-n "$domain2" && -z "${domain2##*.*}") ]]; then
                                     break
@@ -1234,7 +1259,7 @@ case $choice in
                         done
                         if [[ $noloop != 1 ]]; then
                         while true; do
-                            read -p "请输入网站根路径 (如: /home/webroot): " webroot
+                            read -e -p "请输入网站根路径 (如: /home/webroot): " webroot
                             if [[ -d "$webroot" ]]; then
                                 break
                             else
@@ -1282,10 +1307,10 @@ case $choice in
                     4|44)
                         while true; do
                             echo -e "请输入申请证书的域名, 输入子域名, 自动添加泛域名"
-                            read -p "请输入域名: " domain
+                            read -e -p "请输入域名: " domain
                             if [[ $domain == *.* ]]; then
-                                read -p "请输入Cloudflare API Key: " cf_key
-                                read -p "请输入Cloudflare 邮箱: " cf_email
+                                read -e -p "请输入Cloudflare API Key: " cf_key
+                                read -e -p "请输入Cloudflare 邮箱: " cf_email
                                 if [ -z "$cf_key" ] || [ -z "$cf_email" ]; then
                                     echo "输入有误，请确保API Key和邮箱都已经输入"
                                     break
@@ -1359,10 +1384,10 @@ case $choice in
                 echo -e "x.  退出脚本"
                 echo -e "${colored_text1}${NC}"
                 remind3p
-                read -p "请输入你的选择: " -n 2 -r choice && echoo
+                read -e -p "请输入你的选择: " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
-                        read -p "请输请输入要更新的证书的域名: " domain
+                        read -e -p "请输请输入要更新的证书的域名: " domain
                         if [[ $domain != "" ]]; then
                             $user_path/.acme.sh/acme.sh --renew -d $domain
                             if [[ $? -eq 0 ]]; then
@@ -1405,10 +1430,10 @@ case $choice in
                         echo "3.  手动修改 ACME 定时任务"
                         echo -e "${colored_text1}${NC}"
                         remind3p
-                        read -p "请输入操作编号 (1/2/3/其它退出操作): " choice
+                        read -e -p "请输入操作编号 (1/2/3/其它退出操作): " choice
                         case "$choice" in
                             1|11)
-                                read -p "请输入新的定时任务时间表达式 (例如：* * * * * 表示每分钟执行一次): " schedule
+                                read -e -p "请输入新的定时任务时间表达式 (例如：* * * * * 表示每分钟执行一次): " schedule
                                 if [[ $schedule != "" ]]; then
                                     (crontab -l ; echo "$schedule $user_path/.acme.sh/acme.sh --cron --home $user_path/.acme.sh --force > /dev/null") | crontab -
                                     if [[ $? -eq 0 ]]; then
@@ -1469,10 +1494,10 @@ case $choice in
                 echo -e "x.  退出脚本"
                 echo -e "${colored_text1}${NC}"
                 remind3p
-                read -p "请输入你的选择: " -n 2 -r choice && echoo
+                read -e -p "请输入你的选择: " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
-                        read -p "请输请输入要删除的证书的域名: " domain
+                        read -e -p "请输请输入要删除的证书的域名: " domain
                         if [[ $domain != "" ]]; then
                             $user_path/.acme.sh/acme.sh --remove -d $domain
                             if [[ $? -eq 0 ]]; then
