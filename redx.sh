@@ -83,13 +83,12 @@ virt_check() {
         virtual="Dedicated"
     fi
 }
-# ipaddress=$(curl ifconfig.me)
 get_random_color() {
-    colors=($BL $RE $GR $YE $MA $CY $WH)  # Array of available colors
+    colors=($BL $RE $GR $YE $MA $CY $WH)
     random_index=$((RANDOM % ${#colors[@]}))
     echo "${colors[random_index]}"
 }
-text1="------------------------"
+text1="----------------------------"
 text2="============================"
 colored_text1=""
 colored_text2=""
@@ -140,7 +139,7 @@ echo -e "|  _ \| ____|  _ \ ${MA}\ \/ / ${NC}"
 echo -e "| |_) |  _| | | | | ${MA}\  /  ${NC}"
 echo -e "|  _ <| |___| |_| | ${MA}/  \  ${NC}"
 echo -e "|_| \_\_____|____ /${MA}/_/\_\ ${NC}"
-echo -e "${BK}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${BL}■ ${GR}■ ${BK}■"
+echo -e "${BK}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${BL}■ ${GR}■ ${RE}■ ${YE}■ ${BK}■"
 echo -e "${colored_text2}${NC}"
 echo -e "1.  XRAY  节点搭建相关操作 ▶"
 echo -e "2.  ACME  证书申请相关操作 ▶"
@@ -149,6 +148,8 @@ echo -e "4.  WARP  相关操作 ▶"
 echo -e "${colored_text1}${NC}"
 echo -e "o.  更新脚本"
 echo -e "x.  退出脚本"
+echo -e "${colored_text1}${NC}"
+echo -e "v.  >>>>> 声明 <<<<<<"
 echo -e "${colored_text1}${NC}"
 if [[ $onlyone == 1 ]]; then
     echo -e "${MA}支持双击操作...${NC}"
@@ -160,6 +161,9 @@ case $choice in
     1|11)
         jsonfile="/usr/local/etc/xray/config.json"
         xrayactive=($(systemctl is-active xray.service | tr -d '\n'))
+        # ====================================================
+        # 考虑接管X-UI设置
+        #
         # jsonfiletag=""
         # jsonfilen=0
         # if [ -f /usr/local/x-ui/bin/config.json ]; then
@@ -212,120 +216,13 @@ case $choice in
         #     fi
         #     done
         # fi
-
-        makejsonfile() {
-            jq -n '{
-                "log": {
-                    "loglevel": "warning",
-                    "access": "/var/log/xray/access.log",
-                    "error": "/var/log/xray/error.log"
-                },
-                "api": {
-                    "tag": "api",
-                    "services": [
-                        "HandlerService",
-                        "LoggerService",
-                        "StatsService"
-                    ]
-                },
-                "dns": {
-                    "tag": "dns_inbound",
-                    "hosts": {},
-                    "servers": [
-                        "8.8.8.8",
-                        "1.1.1.1"
-                    ]
-                },
-                "routing": {
-                    "domainStrategy": "IPIfNonMatch",
-                    "rules": [
-                        {
-                            "type": "field",
-                            "outboundTag": "common",
-                            "network": "udp,tcp"
-                        },
-                        {
-                            "type": "field",
-                            "outboundTag": "blocked",
-                            "ip": [
-                                "geoip:cn",
-                                "geoip:private"
-                            ],
-                            "protocol": [
-                                "bittorrent"
-                            ]
-                        }
-                    ]
-                },
-                "policy": {
-                    "system": {
-                        "statsInboundUplink": true,
-                        "statsInboundDownlink": true
-                    },
-                    "levels": {
-                        "0": {
-                            "handshake": 5,
-                            "connIdle": 200,
-                            "uplinkOnly": 2,
-                            "downlinkOnly": 5,
-                            "bufferSize": 10240
-                        }
-                    }
-                },
-                "inbounds": [],
-                "outbounds": [
-                    {
-                        "tag": "common",
-                        "protocol": "freedom"
-                    },
-                    {
-                        "tag": "blocked",
-                        "protocol": "blackhole",
-                        "settings": {}
-                    }
-                ],
-                "stats": null,
-                "reverse": null,
-                "transport": null,
-                "fakeDns": null
-            }' > $jsonfile
-                echo "文件 $jsonfile 创建成功."
-            }
-        #############################################
-        #jsonfile="/usr/local/etc/xray/config.json"
-        #jsonfile="$user_path/new.json" ### new.json for test
-
-        if [ ! -e "$jsonfile" ]; then
-            read -e -p "config.json配置文件不存在。是否创建? (Y/其它跳过): " create
-            if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
-                touch $jsonfile
-                makejsonfile
-                waitfor
-            else
-                #echo "没有指定config.json配置文件, 脚本无法顺利执行."
-                waitfor
-                continue
-            fi
-        fi
-        if [[ $(cat $jsonfile | wc -l) -eq 1 ]]; then
-            read -e -p "文件未初始化, 是否要初始化 JSON 文件? (Y/其它取消): " create
-            if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
-                makejsonfile
-                waitfor
-            else
-                echo "未初始化文件, 脚本无法顺利执行."
-                waitfor
-                continue
-            fi
-        fi
-
+        # ====================================================
         while true; do
         xtag=""
         if ! command -v jq &>/dev/null; then
             xtag="${YE}*${NC}"
         fi
         if command -v xray &>/dev/null; then
-            #xrayver=$(xray version | head -n 1 | awk '{print $1, $2}')
             xrayver=$(xray version | head -n 1 | awk '{print $2}')
         else
             xrayver="未安装"
@@ -359,6 +256,109 @@ case $choice in
         read -e -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
+                makejsonfile() {
+                    jq -n '{
+                        "log": {
+                            "loglevel": "warning",
+                            "access": "/var/log/xray/access.log",
+                            "error": "/var/log/xray/error.log"
+                        },
+                        "api": {
+                            "tag": "api",
+                            "services": [
+                                "HandlerService",
+                                "LoggerService",
+                                "StatsService"
+                            ]
+                        },
+                        "dns": {
+                            "tag": "dns_inbound",
+                            "hosts": {},
+                            "servers": [
+                                "8.8.8.8",
+                                "1.1.1.1"
+                            ]
+                        },
+                        "routing": {
+                            "domainStrategy": "IPIfNonMatch",
+                            "rules": [
+                                {
+                                    "type": "field",
+                                    "outboundTag": "common",
+                                    "network": "udp,tcp"
+                                },
+                                {
+                                    "type": "field",
+                                    "outboundTag": "blocked",
+                                    "ip": [
+                                        "geoip:cn",
+                                        "geoip:private"
+                                    ],
+                                    "protocol": [
+                                        "bittorrent"
+                                    ]
+                                }
+                            ]
+                        },
+                        "policy": {
+                            "system": {
+                                "statsInboundUplink": true,
+                                "statsInboundDownlink": true
+                            },
+                            "levels": {
+                                "0": {
+                                    "handshake": 5,
+                                    "connIdle": 200,
+                                    "uplinkOnly": 2,
+                                    "downlinkOnly": 5,
+                                    "bufferSize": 10240
+                                }
+                            }
+                        },
+                        "inbounds": [],
+                        "outbounds": [
+                            {
+                                "tag": "common",
+                                "protocol": "freedom"
+                            },
+                            {
+                                "tag": "blocked",
+                                "protocol": "blackhole",
+                                "settings": {}
+                            }
+                        ],
+                        "stats": null,
+                        "reverse": null,
+                        "transport": null,
+                        "fakeDns": null
+                    }' > $jsonfile
+                        echo "文件 $jsonfile 创建成功."
+                }
+                #############################################
+                if [ ! -e "$jsonfile" ]; then
+                    read -e -p "config.json配置文件不存在。是否创建? (Y/其它跳过): " create
+                    if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
+                        touch $jsonfile
+                        makejsonfile
+                        waitfor
+                    else
+                        # echo "没有指定config.json配置文件, 脚本无法顺利执行."
+                        waitfor
+                        continue
+                    fi
+                fi
+                if [[ $(cat $jsonfile | wc -l) -eq 1 ]]; then
+                    read -e -p "文件未初始化, 是否要初始化 JSON 文件? (Y/其它取消): " create
+                    if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
+                        makejsonfile
+                        waitfor
+                    else
+                        echo "未初始化文件, 脚本无法顺利执行."
+                        waitfor
+                        continue
+                    fi
+                fi
+
                 uuid=$(xray uuid)
                 short_chars="0123456789abcdef"
                 short_id_length=8
@@ -466,6 +466,9 @@ case $choice in
                                 break
                             fi
                     done
+                fi
+                if [[ $en_protocol == "shadowsocks" ]]; then
+                    read -e -p "请选择加密模式/密码/网络/传输 (后续开发): " aaaaaaaaaaaa ###################
                 fi
                 if [[ $en_protocol == "vmess" || $en_protocol == "vless" || $en_protocol == "trojan" || $en_protocol == "shadowsocks" ]]; then
                     echo -e "${colored_text1}${NC}"
@@ -575,10 +578,15 @@ case $choice in
                         fi
                     fi
                     if [[ $en_network == "quic" ]]; then
-                        :
+                        read -e -p "请选择加密模式/密码/伪装 (后续开发): " aaaaaaaaaaaa ###################
                     fi
                     if [[ $en_network == "grpc" ]]; then
-                        :
+                        read -e -p "请输入grpc-serviceName (回车.无): " name
+                        if [[ $name != "" ]]; then
+                            en_grpc_serviceName="$name"
+                        else
+                            en_grpc_serviceName=""
+                        fi
                     fi
                     if [[ $en_protocol == "vless" && $en_network == "tcp" && $en_security == "tls" ]] || [[ $en_protocol == "vless" && $en_network == "tcp" && $en_security == "reality" ]]; then
                         echo -e "流控flow方式 :  1.xtls-rprx-vision  0/其它.无"
@@ -671,7 +679,15 @@ case $choice in
                         fi
                     fi
                 fi
-
+                if [[ $en_protocol == "dokodemo-door" ]]; then
+                    read -e -p "请选择端口/目标地址/目标端口/网络 (后续开发): " aaaaaaaaaaaa ###################
+                fi
+                if [[ $en_protocol == "socks" ]]; then
+                    read -e -p "请选择端口/用户名/密码/UDP启用 (后续开发): " aaaaaaaaaaaa ###################
+                fi
+                if [[ $en_protocol == "http" ]]; then
+                    read -e -p "请选择端口/用户名/密码 (后续开发): " aaaaaaaaaaaa ###################
+                fi
                 echo -e "${colored_text1}${NC}"
                 echo -e "${GR}信息确认${NC}"
                 echo -e "${CY}节点类型:${NC}      $en_protocol"
@@ -707,6 +723,7 @@ case $choice in
                 if [[ $choice == "Y" || $choice == "y" ]]; then
 
                     echo "创建执行中..."
+                    # ipaddress=$(curl ifconfig.me)
                     # 新对象的内容
                     new_inbound='{
                     "listen": null,
@@ -779,11 +796,28 @@ case $choice in
                         ]
                     }
                     }'
-
-                    # 在.json文件中的.inbounds[]数组中添加新的对象
+                    #############################################
+                    # 定义暂未使用
+                    #
+                    # i_protocol=".protocol"
+                    # i_port=".port"
+                    # i_id=".settings.clients[0].id"
+                    # i_network=".streamSettings.network"
+                    # i_security=".streamSettings.security"
+                    # i_tls_flow=".settings.clients[0].flow"
+                    # i_tls_serverName=".streamSettings.tlsSettings.serverName"
+                    # i_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
+                    # i_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
+                    # i_reality_dest=".streamSettings.realitySettings.dest"
+                    # i_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
+                    # i_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
+                    # i_reality_privateKey=".streamSettings.realitySettings.privateKey"
+                    # i_reality_publicKey=".streamSettings.realitySettings.publicKey"
+                    # i_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
+                    # i_ws_path=".streamSettings.wsSettings.path"
+                    # i_ws_host=".streamSettings.wsSettings.headers.Host"
+                    #############################################
                     jq ".inbounds += [$new_inbound]" "$jsonfile" > temp.json && mv temp.json "$jsonfile"
-
-                    # 添加新对象到 .inbounds[] 数组
                     jq --argjson en_port "$en_port" \
                     --arg en_protocol "$en_protocol" \
                     --arg en_network "$en_network" \
@@ -831,10 +865,7 @@ case $choice in
                         .inbounds[-1].streamSettings.realitySettings.shortIds[0] = $en_reality_shortIds' \
                         "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
-
                     cat $jsonfile
-
-                    # 读取JSON文件中的变量值，并将变量名前缀改成rd_   (这里只读取一个值，后期需要全部读取出来（改成数组）)**********
                     rd_port=$(jq -r '.inbounds[-1].port' "$jsonfile")
                     rd_protocol=$(jq -r '.inbounds[-1].protocol' "$jsonfile")
                     rd_network=$(jq -r '.inbounds[-1].streamSettings.network' "$jsonfile")
@@ -848,21 +879,28 @@ case $choice in
                     rd_reality_privateKey=$(jq -r '.inbounds[-1].streamSettings.realitySettings.privateKey' "$jsonfile")
                     rd_reality_publicKey=$(jq -r '.inbounds[-1].streamSettings.realitySettings.publicKey' "$jsonfile")
                     rd_reality_shortIds=$(jq -r '.inbounds[-1].streamSettings.realitySettings.shortIds[0]' "$jsonfile")
-                    # 输出读取到的变量值（仅供参考，你可以根据需要使用这些变量）
-                    echo "端口号: $rd_port"
-                    echo "协议类型: $rd_protocol"
-                    echo "网络类型: $rd_network"
-                    echo "安全性设置: $rd_security"
-                    echo "TLS服务器名: $rd_tls_serverName"
-                    echo "TLS证书文件路径: $rd_tls_certificateFile"
-                    echo "TLS私钥文件路径: $rd_tls_keyFile"
-                    echo "reality_dest: $rd_reality_dest"
-                    echo "reality_serverNames: $rd_reality_serverNames"
-                    echo "reality_fingerprint: $rd_reality_fingerprint"
-                    echo "reality_privateKey: $rd_reality_privateKey"
-                    echo "reality_publicKey: $rd_reality_publicKey"
-                    echo "reality_shortIds: $rd_reality_shortIds"
-
+                    check_and_echo() {
+                        local label="$1"
+                        local value="$2"
+                        if [ -n "$value" ] && [ "$value" != "null" ]; then
+                            echo -e "$label $value"
+                        fi
+                    }
+                    check_and_echo "${GR}端口号${NC}:                  " "$rd_port"
+                    check_and_echo "${GR}协议类型${NC}:                " "$rd_protocol"
+                    check_and_echo "${GR}客户端ID${NC}:                " "$rd_client_id"
+                    check_and_echo "${GR}客户端流量${NC}:              " "$rd_client_flow"
+                    check_and_echo "${GR}网络类型${NC}:                " "$rd_network"
+                    check_and_echo "${GR}安全性设置${NC}:              " "$rd_security"
+                    check_and_echo "${GR}TLS服务器名${NC}:             " "$rd_tls_serverName"
+                    check_and_echo "${GR}TLS证书文件路径${NC}:         " "$rd_tls_certificateFile"
+                    check_and_echo "${GR}TLS私钥文件路径${NC}:         " "$rd_tls_keyFile"
+                    check_and_echo "${GR}Reality_dest${NC}:            " "$rd_reality_dest"
+                    check_and_echo "${GR}Reality_serverNames${NC}:     " "$rd_reality_serverNames"
+                    check_and_echo "${GR}Reality_fingerprint${NC}:     " "$rd_reality_fingerprint"
+                    check_and_echo "${GR}Reality_privateKey${NC}:      " "$rd_reality_privateKey"
+                    check_and_echo "${GR}Reality_publicKey${NC}:       " "$rd_reality_publicKey"
+                    check_and_echo "${GR}Reality_shortIds${NC}:        " "$rd_reality_shortIds"
                     waitfor
                     break
                 elif [[ $choice == "C" || $choice == "c" ]]; then
@@ -872,11 +910,8 @@ case $choice in
                 break
                 done
                 ;;
-
             2|22)
                 clear_screen
-
-                # 读取JSON文件中的变量值，并将变量名前缀改成rd_，将变量改为数组
                 mapfile -t rd_port < <(jq -r '.inbounds[].port' "$jsonfile")
                 mapfile -t rd_protocol < <(jq -r '.inbounds[].protocol' "$jsonfile")
                 mapfile -t rd_network < <(jq -r '.inbounds[].streamSettings.network' "$jsonfile")
@@ -893,17 +928,7 @@ case $choice in
                 mapfile -t rd_tag < <(jq -r '.inbounds[].tag' "$jsonfile")
                 mapfile -t rd_client_id < <(jq -r '.inbounds[].settings.clients[0].id' "$jsonfile")
                 mapfile -t rd_client_flow < <(jq -r '.inbounds[].settings.clients[0].flow' "$jsonfile")
-
-                # 遍历数组，输出读取到的变量值，仅当变量不为空时才显示
                 echo -e "${GR}▼▼${NC}"
-                check_and_echo() {
-                    local label="$1"
-                    local value="$2"
-
-                    if [ -n "$value" ] && [ "$value" != "null" ]; then
-                        echo -e "$label $value"
-                    fi
-                }
                 for ((i=0; i<${#rd_port[@]}; i++)); do
                     echo -e "${colored_text1}${NC}${colored_text1}${NC}${colored_text1}${NC}"
                     echo "节点 $((i+1))"
@@ -923,25 +948,6 @@ case $choice in
                     check_and_echo "${GR}Reality_publicKey${NC}:       " "${rd_reality_publicKey[i]}"
                     check_and_echo "${GR}Reality_shortIds${NC}:        " "${rd_reality_shortIds[i]}"
                 done
-
-                # i_protocol=".protocol"
-                # i_port=".port"
-                # i_id=".settings.clients[0].id"
-                # i_network=".streamSettings.network"
-                # i_security=".streamSettings.security"
-                # i_tls_flow=".settings.clients[0].flow"
-                # i_tls_serverName=".streamSettings.tlsSettings.serverName"
-                # i_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
-                # i_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
-                # i_reality_dest=".streamSettings.realitySettings.dest"
-                # i_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
-                # i_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
-                # i_reality_privateKey=".streamSettings.realitySettings.privateKey"
-                # i_reality_publicKey=".streamSettings.realitySettings.publicKey"
-                # i_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
-                # i_ws_path=".streamSettings.wsSettings.path"
-                # i_ws_host=".streamSettings.wsSettings.headers.Host"
-
                 echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
                 waitfor
                 ;;
@@ -1004,6 +1010,11 @@ case $choice in
                 ;;
             i|ii|I|II)
                 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+                # ====================================================
+                # V2RAY设置，XRAY似乎不需要
+                #
+                # sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/xray.service"
+                # systemctl daemon-reload
                 # mkdir -p /usr/local/etc/xray
                 # mkdir -p /var/log/xray
                 # if [ ! -e "/var/log/xray/access.log" ]; then
@@ -1013,8 +1024,7 @@ case $choice in
                 #     touch /var/log/xray/error.log
                 # fi
                 # chown -R nobody /var/log/xray
-                # sed -i "s/User=.*/User=$(whoami)/" "/etc/systemd/system/xray.service"
-                # systemctl daemon-reload
+                # ====================================================
                 if ! command -v jq &>/dev/null; then
                     $pm -y install jq
                 fi
@@ -1032,9 +1042,13 @@ case $choice in
                     rm -rf /var/log/xray
                     waitfor
                 fi
+                # ====================================================
+                # 洁癖患者
+                #
                 ### 以下两行为删除/tmp下所有带xray关健定的文件或文件夹 (额外添加, 可以去除)
                 # find /tmp -type f -name "*xray*" -exec rm -f {} +
                 # find /tmp -type d -name "*xray*" -exec rm -rf {} +
+                # ====================================================
                 ;;
             r|R|rr|RR)
                 break
@@ -1529,6 +1543,26 @@ case $choice in
         bash menu.sh [option] [lisence/url/token]
         rm -f menu.sh
         onlyone=0
+        ;;
+    v|vv)
+        clear_screen
+        echo -e "${GR}▼▼${NC}"
+        echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
+        echo -e "                                >>>>>   ${MA}声  明${NC}  <<<<<"
+        echo -e ""
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "-                                                                                   -"
+        echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
+        echo
+        waitfor
         ;;
     o|O|oo|OO)
         echo "调试阶段停用."
