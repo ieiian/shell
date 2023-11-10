@@ -109,14 +109,14 @@ else
     echo "不支持的Linux包管理器"
     exit 1
 fi
-if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -v ifconfig &>/dev/null || ! command -v jq &>/dev/null; then
+if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -v ifconfig &>/dev/null || ! command -v jq &>/dev/null || ! command -v jq &>/dev/null; then
     clear_screen
     echo -e "${GR}▼${NC}"
     echo -e "${colored_text2}${NC}"
-    echo -e "CURL/WGET/NET-TOOLS/JQ"
+    echo -e "CURL/WGET/NET-TOOLS/JQ/QRENCODE"
     read -e -p "检查到部分依赖工具没有安装, 是否要进行安装? (Y/其它跳过): " -n 3 -r choice
     if [[ $choice == "Y" || $choice == "y" ]]; then
-        $pm install -y curl wget net-tools jq
+        $pm install -y curl wget net-tools jq qrencode
     fi
 fi
 (EUID=$(id -u)) 2>/dev/null
@@ -161,6 +161,13 @@ case $choice in
     1|11)
         jsonfile="/usr/local/etc/xray/config.json"
         xrayactive=($(systemctl is-active xray.service | tr -d '\n'))
+        check_and_echo() {
+            local label="$1"
+            local value="$2"
+            if [ -n "$value" ] && [ "$value" != "null" ]; then
+                echo -e "$label $value"
+            fi
+        }
         # ====================================================
         # 考虑接管X-UI设置
         #
@@ -879,13 +886,9 @@ case $choice in
                     rd_reality_privateKey=$(jq -r '.inbounds[-1].streamSettings.realitySettings.privateKey' "$jsonfile")
                     rd_reality_publicKey=$(jq -r '.inbounds[-1].streamSettings.realitySettings.publicKey' "$jsonfile")
                     rd_reality_shortIds=$(jq -r '.inbounds[-1].streamSettings.realitySettings.shortIds[0]' "$jsonfile")
-                    check_and_echo() {
-                        local label="$1"
-                        local value="$2"
-                        if [ -n "$value" ] && [ "$value" != "null" ]; then
-                            echo -e "$label $value"
-                        fi
-                    }
+                    rd_client_id=$(jq -r '.inbounds[-1].settings.clients[0].id' "$jsonfile")
+                    rd_client_flow=$(jq -r '.inbounds[-1].settings.clients[0].flow' "$jsonfile")
+                    echo
                     check_and_echo "${GR}端口号${NC}:                  " "$rd_port"
                     check_and_echo "${GR}协议类型${NC}:                " "$rd_protocol"
                     check_and_echo "${GR}客户端ID${NC}:                " "$rd_client_id"
@@ -901,6 +904,10 @@ case $choice in
                     check_and_echo "${GR}Reality_privateKey${NC}:      " "$rd_reality_privateKey"
                     check_and_echo "${GR}Reality_publicKey${NC}:       " "$rd_reality_publicKey"
                     check_and_echo "${GR}Reality_shortIds${NC}:        " "$rd_reality_shortIds"
+                    URL="$rd_protocol://$rd_client_id:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#location_hostname-Vless"
+                    qrencode -t ANSIUTF8 "$URL"
+                    echo "$URL"
+                    echo
                     waitfor
                     break
                 elif [[ $choice == "C" || $choice == "c" ]]; then
@@ -931,7 +938,7 @@ case $choice in
                 echo -e "${GR}▼▼${NC}"
                 for ((i=0; i<${#rd_port[@]}; i++)); do
                     echo -e "${colored_text1}${NC}${colored_text1}${NC}${colored_text1}${NC}"
-                    echo "节点 $((i+1))"
+                    echo -e "${MA}节点${NC} $((i+1))"
                     check_and_echo "${GR}端口号${NC}:                  " "${rd_port[i]}"
                     check_and_echo "${GR}协议类型${NC}:                " "${rd_protocol[i]}"
                     check_and_echo "${GR}客户端ID${NC}:                " "${rd_client_id[i]}"
@@ -947,6 +954,9 @@ case $choice in
                     check_and_echo "${GR}Reality_privateKey${NC}:      " "${rd_reality_privateKey[i]}"
                     check_and_echo "${GR}Reality_publicKey${NC}:       " "${rd_reality_publicKey[i]}"
                     check_and_echo "${GR}Reality_shortIds${NC}:        " "${rd_reality_shortIds[i]}"
+                    URL="${rd_protocol[i]}://${rd_client_id[i]}:${rd_port[i]}?path=/path&security=${rd_security[i]}&encryption=none&type=${rd_network[i]}#location_hostname-Vless"
+                    qrencode -t ANSIUTF8 "$URL"
+                    echo "$URL"
                 done
                 echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
                 waitfor
