@@ -202,27 +202,23 @@ case $choice in
                     "error": "/var/log/xray/error.log"
                 },
                 "api": {
+                    "tag": "api",
                     "services": [
                     "HandlerService",
                     "LoggerService",
                     "StatsService"
-                    ],
-                    "tag": "api"
+                    ]
                 },
-                "inbounds": [
-                ],
-                "outbounds": [
-                    {
-                    "tag": "common",
-                    "protocol": "freedom"
-                    },
-                    {
-                    "protocol": "blackhole",
-                    "settings": {},
-                    "tag": "blocked"
-                    }
-                ],
+                "dns": {
+                    "tag": "dns_inbound",
+                    "hosts": {},
+                    "servers": [
+                    "8.8.8.8",
+                    "1.1.1.1"
+                    ]
+                },
                 "routing": {
+                    "domainStrategy": "IPIfNonMatch",
                     "rules": [
                     {
                         "type": "field",
@@ -235,20 +231,44 @@ case $choice in
                         "ip": [
                         "geoip:cn",
                         "geoip:private"
+                        ],
+                        "protocol": [
+                        "bittorrent"
                         ]
                     }
                     ]
                 },
                 "policy": {
-                    "statsInboundUplink": true,
-                    "statsInboundDownlink": true,
-                    "statsOutboundUplink": true,
-                    "statsOutboundDownlink": true
+                    "system": {
+                        "statsInboundUplink": true,
+                        "statsInboundDownlink": true,
+                    }
+                    "levels": {
+                            "0": {
+                                "handshake": 5,
+                                "connIdle": 200,
+                                "uplinkOnly": 2,
+                                "downlinkOnly": 5,
+                                "bufferSize": 10240
+                            }
+                        }
                 },
-                "dns": null,
-                "transport": null,
+                "inbounds": [
+                ],
+                "outbounds": [
+                {
+                    "tag": "common",
+                    "protocol": "freedom"
+                },
+                {
+                    "tag": "blocked",
+                    "protocol": "blackhole",
+                    "settings": {}
+                }
+                ],
                 "stats": null,
                 "reverse": null,
+                "transport": null,
                 "fakeDns": null
                 }' > $jsonfile
                 echo "文件 $jsonfile 创建成功."
@@ -295,7 +315,30 @@ case $choice in
         case $choice in
             1|11)
                 uuid=$(xray uuid)
+                short_chars="0123456789abcdef"
+                short_id_length=8
+                short_id=""
+                for (( i = 0; i < short_id_length; i++ )); do
+                    short_id+=${short_chars:$RANDOM%16:1}
+                done
                 while true; do
+                en_protocol=""
+                en_port=""
+                en_trojan_password=""
+                en_network=""
+                en_security=""
+                en_tls_flow=""
+                en_tls_serverName=""
+                en_tls_certificateFile=""
+                en_tls_keyFile=""
+                en_http_path=""
+                en_http_head=""
+                en_reality_dest=""
+                en_reality_serverNames=""
+                en_reality_fingerprint=""
+                en_reality_privateKey=""
+                en_reality_publicKey=""
+                en_reality_shortIds=""
                 echo -e "${colored_text1}${NC}"
                 while true; do
                 remind1p
@@ -531,7 +574,6 @@ case $choice in
                             en_reality_privateKey=$(echo "$(xray x25519)" | sed -n 's/Private key: \(.*\)/\1/p')
                         else
                             en_reality_privateKey="$url"
-
                         fi
                         read -p "请输入publicKey (回车默认: 系统生成): " url
                         if [[ $url == "" ]]; then
@@ -541,7 +583,7 @@ case $choice in
                         fi
                         read -p "请输入shortIds (回车默认: 系统生成): " url
                         if [[ $url == "" ]]; then
-                            en_reality_shortIds=123456
+                            en_reality_shortIds=$short_id
                         else
                             en_reality_shortIds="$url"
                         fi
@@ -577,26 +619,175 @@ case $choice in
                     echo -e "${CY}shortIds:${NC}      $en_reality_shortIds"
                 fi
                 echo "..."
-
-                read -p "请确认信息，是否决定创建? (Y/其它跳过): " choice
+                while true; do
+                read -p "请确认信息，是否决定创建? (Y/C取消): " choice
+                
                 if [[ $choice == "Y" || $choice == "y" ]]; then
-                    echo "创建执行中..."
-                    # 添加新对象到 .inbounds[] 数组
-                    jq --argjson en_port "$en_port" --arg en_protocol "$en_protocol" '.inbounds += [{"port": $en_port, "protocol": $en_protocol}]' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
-                    jq --arg en_network "$en_network" '.inbounds[-1] |= . + { "settings": {}, "streamSettings": { "network": $en_network } }' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
-                    if [[ $en_security != "" ]]; then
-                        jq --arg en_security "$en_security" '.inbounds[-1].streamSettings += { "security": $en_security }' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
 
-                        if [[ $en_security == "tls" ]]; then
-                            jq --arg en_tls_serverName "$en_tls_serverName" --arg en_tls_certificateFile "$en_tls_certificateFile" --arg en_tls_keyFile "$en_tls_keyFile" \
-                            '.inbounds[-1].streamSettings.tlsSettings = { "serverName": $en_tls_serverName, "certificates": [{ "certificateFile": $en_tls_certificateFile, "keyFile": $en_tls_keyFile }] }' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
-                        fi
+                    echo "创建执行中..."
+                    # 新对象的内容
+                    new_inbound='{
+                    "listen": null,
+                    "port": null,
+                    "protocol": null,
+                    "settings": {
+                        "clients": [
+                            {
+                                "id": null,
+                                "flow": null
+                            }
+                        ],
+                        "decryption": "none",
+                        "fallbacks": []
+                    },
+                    "streamSettings": {
+                        "network": null,
+                        "security": null,
+                        "tlsSettings": {
+                            "serverName": null,
+                            "minVersion": "1.2",
+                            "maxVersion": "1.3",
+                            "cipherSuites": "",
+                            "certificates": [
+                                {
+                                "ocspStapling": 3600
+                                }
+                            ],
+                            "alpn": [
+                                "http/1.1",
+                                "h2"
+                            ],
+                            "settings": [
+                                {
+                                "allowInsecure": false,
+                                "fingerprint": "",
+                                "serverName": ""
+                                }
+                            ]
+                        },
+                        "realitySettings": {
+                            "show": false,
+                            "fingerprint": "firefox",
+                            "dest": "www.yahoo.com:443",
+                            "xver": 0,
+                            "serverNames": [
+                                "www.yahoo.com"
+                            ],
+                            "privateKey": null,
+                            "publicKey": null,
+                            "minClientVer": "",
+                            "maxClientVer": "",
+                            "maxTimeDiff": 0,
+                            "shortIds": [
+                            ]
+                        },
+                        "tcpSettings": {
+                            "acceptProxyProtocol": false,
+                            "header": {
+                                "type": "none"
+                            }
+                        }
+                    },
+                    "tag": null,
+                    "sniffing": {
+                        "enabled": true,
+                        "destOverride": [
+                        "http",
+                        "tls",
+                        "quic"
+                        ]
+                    }
+                    }'
+
+                    # 在.json文件中的.inbounds[]数组中添加新的对象
+                    jq ".inbounds += [$new_inbound]" "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+
+                    # 添加新对象到 .inbounds[] 数组
+                    jq --argjson en_port "$en_port" \
+                    --arg en_protocol "$en_protocol" \
+                    --arg en_network "$en_network" \
+                    '.inbounds[-1].port = $en_port |
+                    .inbounds[-1].protocol = $en_protocol |
+                    .inbounds[-1].tag = "inbound-\($en_port)" |
+                    .inbounds[-1].streamSettings.network = $en_network' \
+                    "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    jq --arg uuid "$uuid" \
+                    '.inbounds[-1].settings.clients[0].id = $uuid' \
+                    "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    if [[ $en_tls_flow != "" ]]; then
+                        jq --arg en_tls_flow "$en_tls_flow" \
+                        '.inbounds[-1].settings.clients[0].flow = $en_tls_flow' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    fi
+                    if [[ $en_security != "" ]]; then
+                        jq --arg en_security "$en_security" \
+                        '.inbounds[-1].streamSettings.security = $en_security' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    fi
+                    if [[ $en_security == "tls" ]]; then
+                        jq --arg en_tls_serverName "$en_tls_serverName" \
+                        --arg en_tls_certificateFile "$en_tls_certificateFile" \
+                        --arg en_tls_keyFile "$en_tls_keyFile" \
+                        'del(.inbounds[-1].streamSettings.realitySettings) |
+                        .inbounds[-1].streamSettings.tlsSettings.serverName = $en_tls_serverName |
+                        .inbounds[-1].streamSettings.tlsSettings.certificates[0].certificateFile = $en_tls_certificateFile |
+                        .inbounds[-1].streamSettings.tlsSettings.certificates[0].keyFile = $en_tls_keyFile' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    fi
+                    if [[ $en_security == "reality" ]]; then
+                        jq --arg en_reality_dest "$en_reality_dest" \
+                        --arg en_reality_serverNames "$en_reality_serverNames" \
+                        --arg en_reality_fingerprint "$en_reality_fingerprint" \
+                        --arg en_reality_privateKey "$en_reality_privateKey" \
+                        --arg en_reality_publicKey "$en_reality_publicKey" \
+                        --arg en_reality_shortIds "$en_reality_shortIds" \
+                        'del(.inbounds[-1].streamSettings.tlsSettings) |
+                        .inbounds[-1].streamSettings.realitySettings.dest = $en_reality_dest |
+                        .inbounds[-1].streamSettings.realitySettings.serverNames[0] = $en_reality_serverNames |
+                        .inbounds[-1].streamSettings.realitySettings.fingerprint = $en_reality_fingerprint |
+                        .inbounds[-1].streamSettings.realitySettings.privateKey = $en_reality_privateKey |
+                        .inbounds[-1].streamSettings.realitySettings.publicKey = $en_reality_publicKey |
+                        .inbounds[-1].streamSettings.realitySettings.shortIds[0] = $en_reality_shortIds' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
 
                     cat $jsonfile
+
+                    # 读取JSON文件中的变量值，并将变量名前缀改成rd_   (这里只读取一个值，后期需要全部读取出来（改成数组）)**********
+                    rd_port=$(jq -r '.inbounds[-1].port' "$jsonfile")
+                    rd_protocol=$(jq -r '.inbounds[-1].protocol' "$jsonfile")
+                    rd_network=$(jq -r '.inbounds[-1].streamSettings.network' "$jsonfile")
+                    rd_security=$(jq -r '.inbounds[-1].streamSettings.security' "$jsonfile")
+                    rd_tls_serverName=$(jq -r '.inbounds[-1].streamSettings.tlsSettings.serverName' "$jsonfile")
+                    rd_tls_certificateFile=$(jq -r '.inbounds[-1].streamSettings.tlsSettings.certificates[0].certificateFile' "$jsonfile")
+                    rd_tls_keyFile=$(jq -r '.inbounds[-1].streamSettings.tlsSettings.certificates[0].keyFile' "$jsonfile")
+                    rd_reality_dest=$(jq -r '.inbounds[-1].streamSettings.realitySettings.dest' "$jsonfile")
+                    rd_reality_serverNames=$(jq -r '.inbounds[-1].streamSettings.realitySettings.serverNames[0]' "$jsonfile")
+                    rd_reality_fingerprint=$(jq -r '.inbounds[-1].streamSettings.realitySettings.fingerprint' "$jsonfile")
+                    rd_reality_privateKey=$(jq -r '.inbounds[-1].streamSettings.realitySettings.privateKey' "$jsonfile")
+                    rd_reality_publicKey=$(jq -r '.inbounds[-1].streamSettings.realitySettings.publicKey' "$jsonfile")
+                    rd_reality_shortIds=$(jq -r '.inbounds[-1].streamSettings.realitySettings.shortIds[0]' "$jsonfile")
+                    # 输出读取到的变量值（仅供参考，你可以根据需要使用这些变量）
+                    echo "端口号: $rd_port"
+                    echo "协议类型: $rd_protocol"
+                    echo "网络类型: $rd_network"
+                    echo "安全性设置: $rd_security"
+                    echo "TLS服务器名: $rd_tls_serverName"
+                    echo "TLS证书文件路径: $rd_tls_certificateFile"
+                    echo "TLS私钥文件路径: $rd_tls_keyFile"
+                    echo "reality_dest: $rd_reality_dest"
+                    echo "reality_serverNames: $rd_reality_serverNames"
+                    echo "reality_fingerprint: $rd_reality_fingerprint"
+                    echo "reality_privateKey: $rd_reality_privateKey"
+                    echo "reality_publicKey: $rd_reality_publicKey"
+                    echo "reality_shortIds: $rd_reality_shortIds"
+
                     waitfor
                     break
+                elif [[ $choice == "C" || $choice == "c" ]]; then
+                    break
                 fi
+                done
                 break
                 done
                 ;;
@@ -1219,7 +1410,7 @@ case $choice in
                             1|11)
                                 read -p "请输入新的定时任务时间表达式 (例如：* * * * * 表示每分钟执行一次): " schedule
                                 if [[ $schedule != "" ]]; then
-                                    (crontab -l ; echo "$schedule /root/.acme.sh/acme.sh --cron --home /root/.acme.sh --force > /dev/null") | crontab -
+                                    (crontab -l ; echo "$schedule $user_path/.acme.sh/acme.sh --cron --home $user_path/.acme.sh --force > /dev/null") | crontab -
                                     if [[ $? -eq 0 ]]; then
                                         echo "新的 ACME 定时任务已添加."
                                         crontab -l | grep 'acme.sh'
