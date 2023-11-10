@@ -895,91 +895,54 @@ case $choice in
                 mapfile -t rd_client_flow < <(jq -r '.inbounds[].settings.clients[0].flow' "$jsonfile")
 
                 # 遍历数组，输出读取到的变量值，仅当变量不为空时才显示
-                echo -e "${GR}▼▼${NC}"                  
+                echo -e "${GR}▼▼${NC}"
+                check_and_echo() {
+                    local label="$1"
+                    local value="$2"
+
+                    if [ -n "$value" ] && [ "$value" != "null" ]; then
+                        echo -e "$label $value"
+                    fi
+                }
                 for ((i=0; i<${#rd_port[@]}; i++)); do
-                    echo -e "${colored_text1}${NC}"
+                    echo -e "${colored_text1}${NC}${colored_text1}${NC}${colored_text1}${NC}"
                     echo "节点 $((i+1))"
-                    
-                    if [ -n "${rd_port[i]}" ] && [ "${rd_port[i]}" != "null" ]; then
-                        echo "端口号: ${rd_port[i]}"
-                    fi
-
-                    if [ -n "${rd_protocol[i]}" ] && [ "${rd_protocol[i]}" != "null" ]; then
-                        echo "协议类型: ${rd_protocol[i]}"
-                    fi
-
-                    if [ -n "${rd_client_id[i]}" ] && [ "${rd_client_id[i]}" != "null" ]; then
-                        echo "客户端ID: ${rd_client_id[i]}"
-                    fi
-
-                    if [ -n "${rd_client_flow[i]}" ] && [ "${rd_client_flow[i]}" != "null" ]; then
-                        echo "客户端流量: ${rd_client_flow[i]}"
-                    fi
-
-                    if [ -n "${rd_network[i]}" ] && [ "${rd_network[i]}" != "null" ]; then
-                        echo "网络类型: ${rd_network[i]}"
-                    fi
-
-                    if [ -n "${rd_security[i]}" ] && [ "${rd_security[i]}" != "null" ]; then
-                        echo "安全性设置: ${rd_security[i]}"
-                    fi
-
-                    if [ -n "${rd_tls_serverName[i]}" ] && [ "${rd_tls_serverName[i]}" != "null" ]; then
-                        echo "TLS服务器名: ${rd_tls_serverName[i]}"
-                    fi
-
-                    if [ -n "${rd_tls_certificateFile[i]}" ] && [ "${rd_tls_certificateFile[i]}" != "null" ]; then
-                        echo "TLS证书文件路径: ${rd_tls_certificateFile[i]}"
-                    fi
-
-                    if [ -n "${rd_tls_keyFile[i]}" ] && [ "${rd_tls_keyFile[i]}" != "null" ]; then
-                        echo "TLS私钥文件路径: ${rd_tls_keyFile[i]}"
-                    fi
-
-                    if [ -n "${rd_reality_dest[i]}" ] && [ "${rd_reality_dest[i]}" != "null" ]; then
-                        echo "reality_dest: ${rd_reality_dest[i]}"
-                    fi
-
-                    if [ -n "${rd_reality_serverNames[i]}" ] && [ "${rd_reality_serverNames[i]}" != "null" ]; then
-                        echo "reality_serverNames: ${rd_reality_serverNames[i]}"
-                    fi
-
-                    if [ -n "${rd_reality_fingerprint[i]}" ] && [ "${rd_reality_fingerprint[i]}" != "null" ]; then
-                        echo "reality_fingerprint: ${rd_reality_fingerprint[i]}"
-                    fi
-
-                    if [ -n "${rd_reality_privateKey[i]}" ] && [ "${rd_reality_privateKey[i]}" != "null" ]; then
-                        echo "reality_privateKey: ${rd_reality_privateKey[i]}"
-                    fi
-
-                    if [ -n "${rd_reality_publicKey[i]}" ] && [ "${rd_reality_publicKey[i]}" != "null" ]; then
-                        echo "reality_publicKey: ${rd_reality_publicKey[i]}"
-                    fi
-
-                    if [ -n "${rd_reality_shortIds[i]}" ] && [ "${rd_reality_shortIds[i]}" != "null" ]; then
-                        echo "reality_shortIds: ${rd_reality_shortIds[i]}"
-                    fi
+                    check_and_echo "${GR}端口号${NC}:                  " "${rd_port[i]}"
+                    check_and_echo "${GR}协议类型${NC}:                " "${rd_protocol[i]}"
+                    check_and_echo "${GR}客户端ID${NC}:                " "${rd_client_id[i]}"
+                    check_and_echo "${GR}客户端流量${NC}:              " "${rd_client_flow[i]}"
+                    check_and_echo "${GR}网络类型${NC}:                " "${rd_network[i]}"
+                    check_and_echo "${GR}安全性设置${NC}:              " "${rd_security[i]}"
+                    check_and_echo "${GR}TLS服务器名${NC}:             " "${rd_tls_serverName[i]}"
+                    check_and_echo "${GR}TLS证书文件路径${NC}:         " "${rd_tls_certificateFile[i]}"
+                    check_and_echo "${GR}TLS私钥文件路径${NC}:         " "${rd_tls_keyFile[i]}"
+                    check_and_echo "${GR}Reality_dest${NC}:            " "${rd_reality_dest[i]}"
+                    check_and_echo "${GR}Reality_serverNames${NC}:     " "${rd_reality_serverNames[i]}"
+                    check_and_echo "${GR}Reality_fingerprint${NC}:     " "${rd_reality_fingerprint[i]}"
+                    check_and_echo "${GR}Reality_privateKey${NC}:      " "${rd_reality_privateKey[i]}"
+                    check_and_echo "${GR}Reality_publicKey${NC}:       " "${rd_reality_publicKey[i]}"
+                    check_and_echo "${GR}Reality_shortIds${NC}:        " "${rd_reality_shortIds[i]}"
                 done
 
-                i_protocol=".protocol"
-                i_port=".port"
-                i_id=".settings.clients[0].id"
-                i_network=".streamSettings.network"
-                i_security=".streamSettings.security"
-                i_tls_flow=".settings.clients[0].flow"
-                i_tls_serverName=".streamSettings.tlsSettings.serverName"
-                i_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
-                i_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
-                i_reality_dest=".streamSettings.realitySettings.dest"
-                i_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
-                i_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
-                i_reality_privateKey=".streamSettings.realitySettings.privateKey"
-                i_reality_publicKey=".streamSettings.realitySettings.publicKey"
-                i_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
-                i_ws_path=".streamSettings.wsSettings.path"
-                i_ws_host=".streamSettings.wsSettings.headers.Host"
+                # i_protocol=".protocol"
+                # i_port=".port"
+                # i_id=".settings.clients[0].id"
+                # i_network=".streamSettings.network"
+                # i_security=".streamSettings.security"
+                # i_tls_flow=".settings.clients[0].flow"
+                # i_tls_serverName=".streamSettings.tlsSettings.serverName"
+                # i_tls_certificateFile=".streamSettings.tlsSettings.certificates[0].certificateFile"
+                # i_tls_keyFile=".streamSettings.tlsSettings.certificates[0].keyFile"
+                # i_reality_dest=".streamSettings.realitySettings.dest"
+                # i_reality_fingerprint=".streamSettings.realitySettings.fingerprint"
+                # i_reality_serverNames=".streamSettings.realitySettings.serverNames[0]"
+                # i_reality_privateKey=".streamSettings.realitySettings.privateKey"
+                # i_reality_publicKey=".streamSettings.realitySettings.publicKey"
+                # i_reality_shortIds=".streamSettings.realitySettings.shortIds[0]"
+                # i_ws_path=".streamSettings.wsSettings.path"
+                # i_ws_host=".streamSettings.wsSettings.headers.Host"
 
-                echo -e "${colored_text2}${NC}"
+                echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
                 waitfor
                 ;;
             3|33)
