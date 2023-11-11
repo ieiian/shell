@@ -163,7 +163,6 @@ read -e -p "请输入你的选择: " -n 2 -r choice && echoo
 case $choice in
     1|11)
         jsonfile="/usr/local/etc/xray/config.json"
-        xrayactive=($(systemctl is-active xray.service | tr -d '\n'))
         check_and_echo() {
             local label="$1"
             local value="$2"
@@ -238,6 +237,7 @@ case $choice in
             xrayver="未安装"
             xtag="${MA}*${NC}"
         fi
+        xrayactive=($(systemctl is-active xray.service | tr -d '\n'))
         clear_screen
         echo -e "${GR}▼▼${NC}"
         echo -e "${GR}XRAY${NC} ${MA}$xrayver${NC}   运行状态: ${MA}$xrayactive${NC}"
@@ -718,7 +718,7 @@ case $choice in
                 while true; do
                 read -e -p "请确认信息，是否决定创建? (Y/C取消): " choice
                 if [[ $choice == "Y" || $choice == "y" ]]; then
-                    echo "创建执行中..."
+                    echo "节点正在创建..."
                     # ipaddress=$(curl ifconfig.me)
                     # 新对象的内容
                     new_inbound='{
@@ -861,7 +861,6 @@ case $choice in
                         .inbounds[-1].streamSettings.realitySettings.shortIds[0] = $en_reality_shortIds' \
                         "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
-                    cat $jsonfile
                     rd_port=$(jq -r '.inbounds[-1].port' "$jsonfile")
                     rd_protocol=$(jq -r '.inbounds[-1].protocol' "$jsonfile")
                     rd_network=$(jq -r '.inbounds[-1].streamSettings.network' "$jsonfile")
@@ -877,7 +876,10 @@ case $choice in
                     rd_reality_shortIds=$(jq -r '.inbounds[-1].streamSettings.realitySettings.shortIds[0]' "$jsonfile")
                     rd_client_id=$(jq -r '.inbounds[-1].settings.clients[0].id' "$jsonfile")
                     rd_client_flow=$(jq -r '.inbounds[-1].settings.clients[0].flow' "$jsonfile")
-                    echo
+                    # cat $jsonfile # waritfor ########## 方便调试时使用
+                    IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
+                    clear_screen
+                    echo -e "${GR}▼▼${NC}"
                     check_and_echo "${GR}协议类型${NC}:                " "$rd_protocol"
                     check_and_echo "${GR}端口号${NC}:                  " "$rd_port"
                     check_and_echo "${GR}客户端ID${NC}:                " "$rd_client_id"
@@ -893,7 +895,6 @@ case $choice in
                     check_and_echo "${GR}Reality_privateKey${NC}:      " "$rd_reality_privateKey"
                     check_and_echo "${GR}Reality_publicKey${NC}:       " "$rd_reality_publicKey"
                     check_and_echo "${GR}Reality_shortIds${NC}:        " "$rd_reality_shortIds"
-                    IP_address=$(curl ipinfo.io/ip)
                     URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#$rd_protocol"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
@@ -908,7 +909,17 @@ case $choice in
                 done
                 ;;
             2|22)
-                clear_screen
+                if [ ! -e "$jsonfile" ]; then
+                    echo -e "未发现config.json配置文件."
+                    waitfor
+                    continue
+                fi
+                if [[ $(cat $jsonfile | wc -l) -eq 1 ]]; then
+                    echo -e "未初始化config.json配置文件."
+                    waitfor
+                    continue
+                fi
+                echo "系统查询中..."
                 mapfile -t rd_port < <(jq -r '.inbounds[].port' "$jsonfile")
                 mapfile -t rd_protocol < <(jq -r '.inbounds[].protocol' "$jsonfile")
                 mapfile -t rd_network < <(jq -r '.inbounds[].streamSettings.network' "$jsonfile")
@@ -926,6 +937,7 @@ case $choice in
                 mapfile -t rd_client_id < <(jq -r '.inbounds[].settings.clients[0].id' "$jsonfile")
                 mapfile -t rd_client_flow < <(jq -r '.inbounds[].settings.clients[0].flow' "$jsonfile")
                 IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
+                clear_screen
                 echo -e "${GR}▼▼${NC}"
                 for ((i=0; i<${#rd_port[@]}; i++)); do
                     echo -e "${colored_text1}${NC}${colored_text1}${NC}"
@@ -953,6 +965,16 @@ case $choice in
                 waitfor
                 ;;
             3|33)
+                if [ ! -e "$jsonfile" ]; then
+                    echo -e "未发现config.json配置文件."
+                    waitfor
+                    continue
+                fi
+                if [[ $(cat $jsonfile | wc -l) -eq 1 ]]; then
+                    echo -e "未初始化config.json配置文件."
+                    waitfor
+                    continue
+                fi
                 echo -e "${colored_text1}${NC}"
                 echo -e "${CY}节点${NC}   ${CY}协议${NC}       ${CY}端口${NC}"
                 protocols=( $(jq -r '.inbounds[].protocol' "$jsonfile") )
@@ -965,6 +987,16 @@ case $choice in
                 waitfor
                 ;;
             4|44)
+                if [ ! -e "$jsonfile" ]; then
+                    echo -e "未发现config.json配置文件."
+                    waitfor
+                    continue
+                fi
+                if [[ $(cat $jsonfile | wc -l) -eq 1 ]]; then
+                    echo -e "未初始化config.json配置文件."
+                    waitfor
+                    continue
+                fi
                 echo -e "${colored_text1}${NC}"
                 echo -e "${CY}节点${NC}   ${CY}协议${NC}       ${CY}端口${NC}"
                 protocols=( $(jq -r '.inbounds[].protocol' "$jsonfile") )
