@@ -1,4 +1,5 @@
 #!/bin/bash
+
 export LANG="en_US.UTF-8"
 BK='\033[0;30m'
 RE='\033[0;31m'
@@ -88,18 +89,20 @@ get_random_color() {
     random_index=$((RANDOM % ${#colors[@]}))
     echo "${colors[random_index]}"
 }
-text1="----------------------------"
-text2="============================"
+text1="-------------------------------"
+text2="==============================="
 colored_text1=""
 colored_text2=""
+color1=$(get_random_color)
+color2=$(get_random_color)
 for ((i=0; i<${#text1}; i++)); do
-    color=$(get_random_color)
-    colored_text1="${colored_text1}${color}${text1:$i:1}"
-done
-
-for ((i=0; i<${#text2}; i++)); do
-    color=$(get_random_color)
-    colored_text2="${colored_text2}${color}${text2:$i:1}"
+    if ((i % 2 == 0)); then
+        colored_text1="${colored_text1}${color1}${text1:$i:1}"
+        colored_text2="${colored_text2}${color1}${text2:$i:1}"
+    else
+        colored_text1="${colored_text1}${color2}${text1:$i:1}"
+        colored_text2="${colored_text2}${color2}${text2:$i:1}"
+    fi
 done
 if command -v apt &>/dev/null; then
     pm="apt"
@@ -141,15 +144,15 @@ echo -e "|  _ <| |___| |_| | ${MA}/  \  ${NC}"
 echo -e "|_| \_\_____|____ /${MA}/_/\_\ ${NC}"
 echo -e "${BK}■ ${RE}■ ${GR}■ ${YE}■ ${BL}■ ${MA}■ ${CY}■ ${WH}■ ${BL}■ ${GR}■ ${RE}■ ${YE}■ ${BK}■"
 echo -e "${colored_text2}${NC}"
-echo -e "1.  XRAY  节点搭建相关操作 ▶"
-echo -e "2.  ACME  证书申请相关操作 ▶"
+echo -e "1.  XRAY  节点相关操作 ▶"
+echo -e "2.  ACME  证书相关操作 ▶"
 echo -e "3.  BBR   相关操作 ▶"
 echo -e "4.  WARP  相关操作 ▶"
 echo -e "${colored_text1}${NC}"
 echo -e "o.  更新脚本"
 echo -e "x.  退出脚本"
 echo -e "${colored_text1}${NC}"
-echo -e "v.  >>>>> 声明 <<<<<<"
+echo -e "v.  >>>>>> 声 明 <<<<<<"
 echo -e "${colored_text1}${NC}"
 if [[ $onlyone == 1 ]]; then
     echo -e "${MA}支持双击操作...${NC}"
@@ -237,7 +240,7 @@ case $choice in
         fi
         clear_screen
         echo -e "${GR}▼▼${NC}"
-        echo -e "${GR}XRAY${NC}         版本: ${MA}$xrayver${NC}"
+        echo -e "${GR}XRAY${NC} ${MA}$xrayver${NC}   运行状态: ${MA}$xrayactive${NC}"
         echo -e "${colored_text2}${NC}"
         echo -e "1.  创建节点"
         echo -e "2.  查询节点明细"
@@ -249,7 +252,7 @@ case $choice in
         echo -e "8.  启动/重启 XRAY 服务"
         echo -e "9.  停止 XRAY 服务"
         echo -e "${colored_text1}${NC}"
-        echo -e "v.  查询 XRAY 状态   ${MA}$xrayactive${NC}"
+        echo -e "v.  查询 XRAY 运行状态"
         echo -e "l.  查询 XRAY 运行日志"
         echo -e "${colored_text1}${NC}"
         echo -e "i.  安装/更新 XRAY 官方脚本 $xtag"
@@ -365,7 +368,6 @@ case $choice in
                         continue
                     fi
                 fi
-
                 uuid=$(xray uuid)
                 short_chars="0123456789abcdef"
                 short_id_length=8
@@ -697,38 +699,25 @@ case $choice in
                 fi
                 echo -e "${colored_text1}${NC}"
                 echo -e "${GR}信息确认${NC}"
-                echo -e "${CY}节点类型:${NC}      $en_protocol"
-                echo -e "${CY}占用端口:${NC}      $en_port"
-                if [[ $en_protocol == "trojan" ]]; then
-                    echo -e "${CY}密码:${NC}          $en_trojan_password"
-                fi
-                if [[ $en_protocol == "vmess" || $en_protocol == "vless" ]]; then
-                    echo -e "${CY}UUID:${NC}          $uuid"
-                fi
-                echo -e "${CY}传输协议:${NC}      $en_network"
-                if [[ $en_tls_flow != "" ]]; then
-                    echo -e "${CY}流控FLOW:${NC}      $en_tls_flow"
-                fi
-                echo -e "${CY}安全加密:${NC}      $en_security"
-                if [[ $en_security == "tls" ]]; then
-                    echo -e "${CY}TLS域名:${NC}       $en_tls_serverName"
-                    echo -e "${CY}公钥文件路径:${NC}  $en_tls_certificateFile"
-                    echo -e "${CY}密钥文件路径:${NC}  $en_tls_keyFile"
-                fi
-                if [[ $en_security == "reality" ]]; then
-                    echo -e "${CY}dest:${NC}          $en_reality_dest"
-                    echo -e "${CY}serverNames:${NC}   $en_reality_serverNames"
-                    echo -e "${CY}fingerprint:${NC}   $en_reality_fingerprint"
-                    echo -e "${CY}privateKey:${NC}    $en_reality_privateKey"
-                    echo -e "${CY}publicKey:${NC}     $en_reality_publicKey"
-                    echo -e "${CY}shortIds:${NC}      $en_reality_shortIds"
-                fi
-                echo "..."
+                check_and_echo "${GR}协议类型${NC}:                " "$en_protocol"
+                check_and_echo "${GR}端口号${NC}:                  " "$en_port"
+                check_and_echo "${GR}客户端ID${NC}:                " "$en_client_id"
+                check_and_echo "${GR}客户端流量${NC}:              " "$en_client_flow"
+                check_and_echo "${GR}网络类型${NC}:                " "$en_network"
+                check_and_echo "${GR}安全性设置${NC}:              " "$en_security"
+                check_and_echo "${GR}TLS服务器名${NC}:             " "$en_tls_serverName"
+                check_and_echo "${GR}TLS证书文件路径${NC}:         " "$en_tls_certificateFile"
+                check_and_echo "${GR}TLS私钥文件路径${NC}:         " "$en_tls_keyFile"
+                check_and_echo "${GR}Reality_dest${NC}:            " "$en_reality_dest"
+                check_and_echo "${GR}Reality_serverNames${NC}:     " "$en_reality_serverNames"
+                check_and_echo "${GR}Reality_fingerprint${NC}:     " "$en_reality_fingerprint"
+                check_and_echo "${GR}Reality_privateKey${NC}:      " "$en_reality_privateKey"
+                check_and_echo "${GR}Reality_publicKey${NC}:       " "$en_reality_publicKey"
+                check_and_echo "${GR}Reality_shortIds${NC}:        " "$en_reality_shortIds"
+                remind1p
                 while true; do
                 read -e -p "请确认信息，是否决定创建? (Y/C取消): " choice
-                
                 if [[ $choice == "Y" || $choice == "y" ]]; then
-
                     echo "创建执行中..."
                     # ipaddress=$(curl ifconfig.me)
                     # 新对象的内容
@@ -804,7 +793,7 @@ case $choice in
                     }
                     }'
                     #############################################
-                    # 定义暂未使用
+                    # 定义方式暂未使用
                     #
                     # i_protocol=".protocol"
                     # i_port=".port"
@@ -889,8 +878,8 @@ case $choice in
                     rd_client_id=$(jq -r '.inbounds[-1].settings.clients[0].id' "$jsonfile")
                     rd_client_flow=$(jq -r '.inbounds[-1].settings.clients[0].flow' "$jsonfile")
                     echo
-                    check_and_echo "${GR}端口号${NC}:                  " "$rd_port"
                     check_and_echo "${GR}协议类型${NC}:                " "$rd_protocol"
+                    check_and_echo "${GR}端口号${NC}:                  " "$rd_port"
                     check_and_echo "${GR}客户端ID${NC}:                " "$rd_client_id"
                     check_and_echo "${GR}客户端流量${NC}:              " "$rd_client_flow"
                     check_and_echo "${GR}网络类型${NC}:                " "$rd_network"
@@ -904,7 +893,8 @@ case $choice in
                     check_and_echo "${GR}Reality_privateKey${NC}:      " "$rd_reality_privateKey"
                     check_and_echo "${GR}Reality_publicKey${NC}:       " "$rd_reality_publicKey"
                     check_and_echo "${GR}Reality_shortIds${NC}:        " "$rd_reality_shortIds"
-                    URL="$rd_protocol://$rd_client_id:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#location_hostname-Vless"
+                    IP_address=$(curl ipinfo.io/ip)
+                    URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#$rd_protocol"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
                     echo
@@ -935,12 +925,13 @@ case $choice in
                 mapfile -t rd_tag < <(jq -r '.inbounds[].tag' "$jsonfile")
                 mapfile -t rd_client_id < <(jq -r '.inbounds[].settings.clients[0].id' "$jsonfile")
                 mapfile -t rd_client_flow < <(jq -r '.inbounds[].settings.clients[0].flow' "$jsonfile")
+                IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
                 echo -e "${GR}▼▼${NC}"
                 for ((i=0; i<${#rd_port[@]}; i++)); do
-                    echo -e "${colored_text1}${NC}${colored_text1}${NC}${colored_text1}${NC}"
+                    echo -e "${colored_text1}${NC}${colored_text1}${NC}"
                     echo -e "${MA}节点${NC} $((i+1))"
-                    check_and_echo "${GR}端口号${NC}:                  " "${rd_port[i]}"
                     check_and_echo "${GR}协议类型${NC}:                " "${rd_protocol[i]}"
+                    check_and_echo "${GR}端口号${NC}:                  " "${rd_port[i]}"
                     check_and_echo "${GR}客户端ID${NC}:                " "${rd_client_id[i]}"
                     check_and_echo "${GR}客户端流量${NC}:              " "${rd_client_flow[i]}"
                     check_and_echo "${GR}网络类型${NC}:                " "${rd_network[i]}"
@@ -954,11 +945,11 @@ case $choice in
                     check_and_echo "${GR}Reality_privateKey${NC}:      " "${rd_reality_privateKey[i]}"
                     check_and_echo "${GR}Reality_publicKey${NC}:       " "${rd_reality_publicKey[i]}"
                     check_and_echo "${GR}Reality_shortIds${NC}:        " "${rd_reality_shortIds[i]}"
-                    URL="${rd_protocol[i]}://${rd_client_id[i]}:${rd_port[i]}?path=/path&security=${rd_security[i]}&encryption=none&type=${rd_network[i]}#location_hostname-Vless"
+                    URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#$rd_protocol"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
                 done
-                echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
+                echo -e "${colored_text2}${NC}${colored_text2}${NC}"
                 waitfor
                 ;;
             3|33)
@@ -1557,20 +1548,22 @@ case $choice in
     v|vv)
         clear_screen
         echo -e "${GR}▼▼${NC}"
-        echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
-        echo -e "                                >>>>>   ${MA}声  明${NC}  <<<<<"
-        echo -e ""
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "-                                                                                   -"
-        echo -e "${colored_text2}${NC}${colored_text2}${NC}${colored_text2}${NC}"
+        echo -e "${colored_text2}${NC}${colored_text2}${NC}"
+        echo -e "                    >>>>>   ${MA}声  明${NC}  <<<<<"
+        echo
+        echo -e "- 1. ${GR}本脚本开源.${NC}"
+        echo -e "- 2. ${GR}本脚本引用XRAY脚本地址:${NC}"
+        echo -e "--- ${GR}URL: https://github.com/XTLS/Xray-install${NC}"
+        echo -e "- 3. ${GR}本脚本引用的ACME脚本地址:${NC}"
+        echo -e "--- ${GR}URL: https://github.com/acmesh-official/acme.sh${NC}"
+        echo -e "- 4. ${GR}本脚本所使用依赖工具如下:${NC}"
+        echo -e "--- a. ${GR}CURL下载工具.${NC}"
+        echo -e "--- b. ${GR}WGET下载工具.${NC}"
+        echo -e "--- c. ${GR}JQ工具, 用以对JSON配置文件的读写处理.${NC}"
+        echo -e "--- d. ${GR}QRENCODE工具, 用以生成二维码.${NC}"
+        echo
+        echo -e "${MA}end.${NC}"
+        echo -e "${colored_text2}${NC}${colored_text2}${NC}"
         echo
         waitfor
         ;;
