@@ -354,6 +354,7 @@ case $choice in
                 if [ ! -e "$jsonfile" ]; then
                     read -e -p "config.json配置文件不存在。是否创建? (Y/其它跳过): " create
                     if [ "$create" = "y" ] || [ "$create" = "Y" ]; then
+                        mkdir -p /usr/local/etc/xray
                         touch $jsonfile
                         makejsonfile
                         waitfor
