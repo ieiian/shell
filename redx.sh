@@ -250,7 +250,7 @@ case $choice in
         echo -e "${colored_text2}${NC}"
         echo -e "1.  创建节点"
         echo -e "2.  查询节点明细"
-        echo -e "3.  修改节点"
+        echo -e "3.  修改节点   ${BL}未开发暂使用5功能${NC}"
         echo -e "4.  删除节点"
         echo -e "${colored_text1}${NC}"
         echo -e "5.  手动编辑配置文件"
@@ -1326,9 +1326,11 @@ case $choice in
                     check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "$rd_socks_udp_ip"
                     check_and_echo "${GR}HTTP用户名${NC}:" "$rd_http_user"
                     check_and_echo "${GR}HTTP密码${NC}:" "$rd_http_password"
-                    URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#$rd_protocol"
+                    if [[ $en_protocol == "vmess" || $en_protocol == "vless" || $en_protocol == "trojan" || $en_protocol == "shadowsocks" ]]; then
+                    URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?security=$rd_security&encryption=none&type=$rd_network&path=/$rd_ws_path#$rd_protocol"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
+                    fi
                     echo
                     waitfor
                     break
@@ -1419,9 +1421,11 @@ case $choice in
                     check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "${rd_socks_udp_ip[i]}"
                     check_and_echo "${GR}HTTP用户名${NC}:" "${rd_http_user[i]}"
                     check_and_echo "${GR}HTTP密码${NC}:" "${rd_http_password[i]}"
+                    if [[ ${rd_protocol[i]} == "vmess" || ${rd_protocol[i]} == "vless" || ${rd_protocol[i]} == "trojan" || ${rd_protocol[i]} == "shadowsocks" ]]; then
                     URL="${rd_protocol[i]}://${rd_client_id[i]}@$IP_address:${rd_port[i]}?path=/path&security=${rd_security[i]}&encryption=none&type=${rd_network[i]}#${rd_protocol[i]}"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
+                    fi
                 done
                 echo -e "${colored_text2}${NC}${colored_text2}${NC}"
                 waitfor
