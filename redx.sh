@@ -389,8 +389,8 @@ case $choice in
                 en_security=""
                 en_ws_path=""
                 en_ws_host=""
-                en_http_path=""
-                en_http_host=""
+                en_http_user=""
+                en_http_password=""
                 en_quic_method=""
                 en_quic_password=""
                 en_quic_fake=""
@@ -408,13 +408,12 @@ case $choice in
                 en_dokodemo_door_url=""
                 en_dokodemo_door_port=""
                 en_dokodemo_door_network=""
-                en_socks_path=""
-                en_socks_head=""
+                en_socks_user=""
+                en_socks_password=""
+                en_socks_udp=""
                 en_socks_udp_ip=""
-                en_http_path=""
-                en_http_head=""
                 en_security_http_path=""
-                en_security_http_head=""
+                en_security_http_host=""
                 echo -e "${colored_text1}${NC}"
                 while true; do
                 remind1p
@@ -826,9 +825,9 @@ case $choice in
                         echo -e "${colored_text1}${NC}"
                         remind1p
                         read -e -p "请输入请求路径: " url
-                        en_http_path="$url"
+                        en_security_http_path="$url"
                         read -e -p "请输入请求头: " url
-                        en_http_head="$url"
+                        en_security_http_host="$url"
                     fi
                     if [[ $en_security == "reality" ]]; then
                         echo -e "${colored_text1}${NC}"
@@ -915,15 +914,15 @@ case $choice in
                     read -e -p "请选择网络模式: " choice
                     case $choice in
                         1|11)
-                            en_dokodemo_door_network="TCP+UDP"
+                            en_dokodemo_door_network="tcp,udp"
                             break
                             ;;
                         2|22)
-                            en_dokodemo_door_network="TCP"
+                            en_dokodemo_door_network="tcp"
                             break
                             ;;
                         3|33)
-                            en_dokodemo_door_network="UDP"
+                            en_dokodemo_door_network="udp"
                             break
                             ;;
                         c|cc|C|CC)
@@ -942,26 +941,29 @@ case $choice in
                     read -e -p "是否启用密码认证? (Y/N): " choice
                     if [[ $choice == "Y" || $choice == "y" ]]; then
                         read -e -p "请输入SOCKS用户名: " name
-                        en_socks_path="$name"
+                        en_socks_user="$name"
                         read -e -p "请输入密码: " password
-                        en_socks_head="$password"
+                        en_socks_password="$password"
                     fi
                     read -e -p "是否启用UDP? (Y/N): " choice
                     if [[ $choice == "Y" || $choice == "y" ]]; then
+                        en_socks_udp="true"
                         read -e -p "请输入IP (回车默认: 127.0.0.1): " ip
                         if [[ $ip == "" ]]; then
                             en_socks_udp_ip="127.0.0.1"
                         fi
                         en_socks_udp_ip="$ip"
+                    else
+                        en_socks_udp="false"
                     fi
                 fi
                 if [[ $en_protocol == "http" ]]; then
                     echo -e "${colored_text1}${NC}"
                     remind1p
                     read -e -p "请输入HTTP用户名: " name
-                    en_http_path="$name"
+                    en_http_user="$name"
                     read -e -p "请输入密码: " password
-                    en_http_head="$password"
+                    en_http_password="$password"
                 fi
                 echo -e "${colored_text1}${NC}"
                 echo -e "${CY}信息确认${NC}"
@@ -977,7 +979,7 @@ case $choice in
                 check_and_echo "${GR}WS路径${NC}:" "$en_ws_path"
                 check_and_echo "${GR}WS主机${NC}:" "$en_ws_host"
                 check_and_echo "${GR}HTTP路径${NC}:" "$en_security_http_path"
-                check_and_echo "${GR}HTTP主机${NC}:" "$en_security_http_head"
+                check_and_echo "${GR}HTTP主机${NC}:" "$en_security_http_host"
                 check_and_echo "${GR}QUIC加密方式${NC}:" "$en_quic_method"
                 check_and_echo "${GR}QUIC密码${NC}:" "$en_quic_password"
                 check_and_echo "${GR}QUIC伪装类型${NC}:" "$en_quic_fake"
@@ -994,11 +996,11 @@ case $choice in
                 check_and_echo "${GR}Dokodemo-Door目标地址${NC}:" "$en_dokodemo_door_url"
                 check_and_echo "${GR}Dokodemo-Door目标端口${NC}:" "$en_dokodemo_door_port"
                 check_and_echo "${GR}Dokodemo-Door网络模式${NC}:" "$en_dokodemo_door_network"
-                check_and_echo "${GR}SOCKS用户名${NC}:" "$en_socks_path"
-                check_and_echo "${GR}SOCKS密码${NC}:" "$en_socks_head"
+                check_and_echo "${GR}SOCKS用户名${NC}:" "$en_socks_user"
+                check_and_echo "${GR}SOCKS密码${NC}:" "$en_socks_password"
                 check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "$en_socks_udp_ip"
-                check_and_echo "${GR}HTTP用户名${NC}:" "$en_http_path"
-                check_and_echo "${GR}HTTP密码${NC}:" "$en_http_head"
+                check_and_echo "${GR}HTTP用户名${NC}:" "$en_http_user"
+                check_and_echo "${GR}HTTP密码${NC}:" "$en_http_password"
                 remind1p
                 while true; do
                 read -e -p "请确认信息，是否决定创建? (Y/C取消): " choice
@@ -1013,7 +1015,8 @@ case $choice in
                     "settings": {
                         "clients": [],
                         "decryption": "none",
-                        "fallbacks": []
+                        "fallbacks": [],
+                        "accounts": []
                     },
                     "streamSettings": {
                         "network": null,
@@ -1094,6 +1097,7 @@ case $choice in
                     # i_ws_host=".streamSettings.wsSettings.headers.Host"
                     #############################################
                     jq ".inbounds += [$new_inbound]" "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+
                     write_json_if() {
                         address="$1"
                         label="$2"
@@ -1101,6 +1105,7 @@ case $choice in
                             jq --arg label "$label" '$address = $label' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                         fi
                     }
+
                     jq --argjson en_port "$en_port" \
                     --arg en_protocol "$en_protocol" \
                     --arg en_network "$en_network" \
@@ -1109,6 +1114,7 @@ case $choice in
                     .inbounds[-1].tag = "inbound-\($en_port)" |
                     .inbounds[-1].streamSettings.network = $en_network' \
                     "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+
                     if [[ $en_protocol == "vmess" ]] || [[ $en_protocol == "vless" ]]; then
                         uuid=$(xray uuid)
                         jq --arg uuid "$uuid" \
@@ -1118,28 +1124,63 @@ case $choice in
                     if [[ $en_protocol == "vmess" ]]; then
                         jq '.inbounds[-1].settings.disableInsecureEncryption = false' \
                         "$jsonfile" > temp.json && mv temp.json "$jsonfile"
-                        jq '.inbounds[-1].settings.disableInsecureEncryption = false' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
                     if [[ $en_protocol == "trojan" ]]; then
-                        jq --arg en_protocol "$en_protocol" \
-                        --arg en_trojan_password "$en_trojan_password" \
+                        jq --arg en_trojan_password "$en_trojan_password" \
                         '.inbounds[-1].settings.clients[0].password = $en_trojan_password' \
                         "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
 
                     if [[ $en_protocol == "shadowsocks" ]]; then
-                        :
+                        jq --arg en_shadowsocks_method "$en_shadowsocks_method" \
+                        --arg en_shadowsocks_password "$en_shadowsocks_password" \
+                        '.inbounds[-1].settings.method = $en_shadowsocks_method |
+                        .inbounds[-1].settings.password = $en_shadowsocks_password' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
                     if [[ $en_protocol == "dokodemo-door" ]]; then
-                        :
+                        jq --arg en_dokodemo_door_url "$en_dokodemo_door_url" \
+                        --arg en_dokodemo_door_port "$en_dokodemo_door_port" \
+                        --arg en_dokodemo_door_network "$en_dokodemo_door_network" \
+                        'del(.inbounds[-1].streamSettings.tlsSettings) |
+                        del(.inbounds[-1].streamSettings.realitySettings) |
+                        .inbounds[-1].settings.address = $en_dokodemo_door_url |
+                        .inbounds[-1].settings.port = $en_dokodemo_door_port |
+                        .inbounds[-1].settings.network = $en_dokodemo_door_network' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
                     if [[ $en_protocol == "socks" ]]; then
-                        :
+                        jq --arg en_socks_user "$en_socks_user" \
+                        --arg en_socks_password "$en_socks_password" \
+                        'del(.inbounds[-1].streamSettings.tlsSettings) |
+                        del(.inbounds[-1].streamSettings.realitySettings) |
+                        .inbounds[-1].settings.auth = "password" |
+                        .inbounds[-1].settings.accounts[0].user = $en_socks_user |
+                        .inbounds[-1].settings.accounts[0].pass = $en_socks_password' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                        if [[ "$en_socks_udp" == "true" ]]; then
+                            jq --argjson en_socks_udp true \
+                            --arg en_socks_udp_ip "$en_socks_udp_ip" \
+                            '.inbounds[-1].settings.udp = $en_socks_udp |
+                            .inbounds[-1].settings.ip = $en_socks_udp_ip' \
+                            "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                        fi
                     fi
                     if [[ $en_protocol == "http" ]]; then
-                        :
+                        jq --arg en_http_user "$en_http_user" \
+                        --arg en_http_password "$en_http_password" \
+                        'del(.inbounds[-1].streamSettings.tlsSettings) |
+                        del(.inbounds[-1].streamSettings.realitySettings) |
+                        .inbounds[-1].settings.accounts[0].user = $en_http_user |
+                        .inbounds[-1].settings.accounts[0].pass = $en_http_password' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
-                    
+                    ##############默认文件已经添加，这里留着备用
+                    # if [[ $en_network == "tcp" ]]; then
+                    #     jq '.inbounds[-1].streamSettings.tlsSettings.acceptProxyProtocol = false' \
+                    #     "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    # fi
+                    ##########################
                     if [[ $en_flow != "" ]]; then
                         jq --arg en_flow "$en_flow" \
                         '.inbounds[-1].settings.clients[0].flow = $en_flow' \
@@ -1176,7 +1217,41 @@ case $choice in
                         .inbounds[-1].streamSettings.realitySettings.shortIds[0] = $en_reality_shortIds' \
                         "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
+                    if [[ $en_security == "http" ]]; then
+                        http_header='{
+                            "header": {
+                                "type": "http",
+                                "request": {
+                                    "method": "GET",
+                                    "path": [
+                                        "/pathxxx"
+                                    ],
+                                    "headers": {
+                                        "Host": [
+                                            "hostxxx.com"
+                                        ]
+                                    }
+                                },
+                                "response": {
+                                    "version": "1.1",
+                                    "status": "200",
+                                    "reason": "OK",
+                                    "headers": {}
+                                }
+                            }
+                        }'
+                        jq ".inbounds[-1].streamSettings.tcpSettings += {$http_header}" "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                        jq --arg en_security_http_path "$en_security_http_path" \
+                        --arg en_security_http_host "$en_security_http_host" \
+                        'del(.inbounds[-1].streamSettings.realitySettings) |
+                        del(.inbounds[-1].streamSettings.tlsSettings) |
+                        .inbounds[-1].streamSettings.tlsSettings.header.request.path[0] = $en_security_http_path |
+                        .inbounds[-1].streamSettings.tlsSettings.header.request.headers.Host[0] = $en_security_http_host' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    fi
 
+                    # cat $jsonfile 
+                    # waitfor ########## 方便调试时使用
 
                     rd_port=$(jq -r '.inbounds[-1].port' "$jsonfile")
                     rd_protocol=$(jq -r '.inbounds[-1].protocol' "$jsonfile")
@@ -1193,12 +1268,28 @@ case $choice in
                     rd_reality_shortIds=$(jq -r '.inbounds[-1].streamSettings.realitySettings.shortIds[0]' "$jsonfile")
                     rd_client_id=$(jq -r '.inbounds[-1].settings.clients[0].id' "$jsonfile")
                     rd_client_flow=$(jq -r '.inbounds[-1].settings.clients[0].flow' "$jsonfile")
-
-                    # cat $jsonfile 
-                    # waritfor ########## 方便调试时使用
+                    rd_protocol=$(jq -r '.inbounds[-1].protocol' "$jsonfile")
+                    rd_trojan_password=$(jq -r '.inbounds[-1].settings.clients[0].password' "$jsonfile")
+                    rd_shadowsocks_method=$(jq -r '.inbounds[-1].settings.method' "$jsonfile")
+                    rd_shadowsocks_password=$(jq -r '.inbounds[-1].settings.password' "$jsonfile")
+                    rd_dokodemo_door_url=$(jq -r '.inbounds[-1].settings.address' "$jsonfile")
+                    rd_dokodemo_door_port=$(jq -r '.inbounds[-1].settings.port' "$jsonfile")
+                    rd_dokodemo_door_network=$(jq -r '.inbounds[-1].settings.network' "$jsonfile")
+                    rd_socks_user=$(jq -r '.inbounds[-1].settings.accounts[0].user' "$jsonfile")
+                    rd_socks_password=$(jq -r '.inbounds[-1].settings.accounts[0].pass' "$jsonfile")
+                    rd_socks_udp=$(jq -r '.inbounds[-1].settings.udp' "$jsonfile")
+                    rd_socks_udp_ip=$(jq -r '.inbounds[-1].settings.ip' "$jsonfile")
+                    rd_http_user=$(jq -r '.inbounds[-1].settings.accounts[0].user' "$jsonfile")
+                    rd_http_password=$(jq -r '.inbounds[-1].settings.accounts[0].pass' "$jsonfile")
+                    rd_security_http_path=$(jq -r '.inbounds[-1].streamSettings.tlsSettings.header.request.path[0]' "$jsonfile")
+                    rd_security_http_host=$(jq -r '.inbounds[-1].streamSettings.tlsSettings.header.request.headers.Host[0]' "$jsonfile")
 
                     IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
-                    clear_screen
+
+                    cat $jsonfile | jq '.inbounds as $in | .outbounds | select(. != null) as $out | $in, $out'
+                    # cat $jsonfile 
+                    # clear_screen ########## 方便调试时关闭
+
                     echo -e "${GR}▼▼${NC}"
                     check_and_echo "${GR}协议类型${NC}:" "$rd_protocol"
                     check_and_echo "${GR}端口号${NC}:" "$rd_port"
@@ -1211,8 +1302,8 @@ case $choice in
                     check_and_echo "${GR}安全性设置${NC}:" "$rd_security"
                     check_and_echo "${GR}WS路径${NC}:" "$rd_ws_path"
                     check_and_echo "${GR}WS主机${NC}:" "$rd_ws_host"
-                    check_and_echo "${GR}HTTP路径${NC}:" "$rd_http_path"
-                    check_and_echo "${GR}HTTP主机${NC}:" "$rd_http_host"
+                    check_and_echo "${GR}HTTP路径${NC}:" "$rd_security_http_path"
+                    check_and_echo "${GR}HTTP主机${NC}:" "$rd_security_http_host"
                     check_and_echo "${GR}QUIC加密方式${NC}:" "$rd_quic_method"
                     check_and_echo "${GR}QUIC密码${NC}:" "$rd_quic_password"
                     check_and_echo "${GR}QUIC伪装类型${NC}:" "$rd_quic_fake"
@@ -1229,11 +1320,11 @@ case $choice in
                     check_and_echo "${GR}Dokodemo-Door目标地址${NC}:" "$rd_dokodemo_door_url"
                     check_and_echo "${GR}Dokodemo-Door目标端口${NC}:" "$rd_dokodemo_door_port"
                     check_and_echo "${GR}Dokodemo-Door网络模式${NC}:" "$rd_dokodemo_door_network"
-                    check_and_echo "${GR}SOCKS用户名${NC}:" "$rd_socks_path"
-                    check_and_echo "${GR}SOCKS密码${NC}:" "$rd_socks_head"
+                    check_and_echo "${GR}SOCKS用户名${NC}:" "$rd_socks_user"
+                    check_and_echo "${GR}SOCKS密码${NC}:" "$rd_socks_password"
                     check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "$rd_socks_udp_ip"
-                    check_and_echo "${GR}HTTP用户名${NC}:" "$rd_http_path"
-                    check_and_echo "${GR}HTTP密码${NC}:" "$rd_http_head"
+                    check_and_echo "${GR}HTTP用户名${NC}:" "$rd_http_user"
+                    check_and_echo "${GR}HTTP密码${NC}:" "$rd_http_password"
                     URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#$rd_protocol"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
@@ -1266,6 +1357,19 @@ case $choice in
                 mapfile -t rd_tls_serverName < <(jq -r '.inbounds[].streamSettings.tlsSettings.serverName' "$jsonfile")
                 mapfile -t rd_tls_certificateFile < <(jq -r '.inbounds[].streamSettings.tlsSettings.certificates[0].certificateFile' "$jsonfile")
                 mapfile -t rd_tls_keyFile < <(jq -r '.inbounds[].streamSettings.tlsSettings.certificates[0].keyFile' "$jsonfile")
+
+                mapfile -t rd_dokodemo_door_url < <(jq -r '.inbounds[].settings.address' "$jsonfile")
+                mapfile -t rd_dokodemo_door_port < <(jq -r '.inbounds[].settings.port' "$jsonfile")
+                mapfile -t rd_dokodemo_door_network < <(jq -r '.inbounds[].settings.network' "$jsonfile")
+                mapfile -t rd_socks_user < <(jq -r '.inbounds[].settings.accounts[0].user' "$jsonfile")
+                mapfile -t rd_socks_password < <(jq -r '.inbounds[].settings.accounts[0].pass' "$jsonfile")
+                mapfile -t rd_socks_udp < <(jq -r '.inbounds[].settings.udp' "$jsonfile")
+                mapfile -t rd_socks_udp_ip < <(jq -r '.inbounds[].settings.ip' "$jsonfile")
+                mapfile -t rd_http_user < <(jq -r '.inbounds[].settings.accounts[0].user' "$jsonfile")
+                mapfile -t rd_http_password < <(jq -r '.inbounds[].settings.accounts[0].pass' "$jsonfile")
+
+                mapfile -t rd_security_http_path < <(jq -r '.inbounds[].streamSettings.tlsSettings.header.request.path[0]' "$jsonfile")
+                mapfile -t rd_security_http_host < <(jq -r '.inbounds[].streamSettings.tlsSettings.header.request.headers.Host[0]' "$jsonfile")
                 mapfile -t rd_reality_dest < <(jq -r '.inbounds[].streamSettings.realitySettings.dest' "$jsonfile")
                 mapfile -t rd_reality_serverNames < <(jq -r '.inbounds[].streamSettings.realitySettings.serverNames[0]' "$jsonfile")
                 mapfile -t rd_reality_fingerprint < <(jq -r '.inbounds[].streamSettings.realitySettings.fingerprint' "$jsonfile")
@@ -1290,8 +1394,8 @@ case $choice in
                     check_and_echo "${GR}安全性设置${NC}:" "${rd_security[i]}"
                     check_and_echo "${GR}WS路径${NC}:" "${rd_ws_path[i]}"
                     check_and_echo "${GR}WS主机${NC}:" "${rd_ws_host[i]}"
-                    check_and_echo "${GR}HTTP路径${NC}:" "${rd_http_path[i]}"
-                    check_and_echo "${GR}HTTP主机${NC}:" "${rd_http_host[i]}"
+                    check_and_echo "${GR}HTTP路径${NC}:" "${rd_security_http_path[i]}"
+                    check_and_echo "${GR}HTTP主机${NC}:" "${rd_security_http_host[i]}"
                     check_and_echo "${GR}QUIC加密方式${NC}:" "${rd_quic_method[i]}"
                     check_and_echo "${GR}QUIC密码${NC}:" "${rd_quic_password[i]}"
                     check_and_echo "${GR}QUIC伪装类型${NC}:" "${rd_quic_fake[i]}"
@@ -1309,11 +1413,11 @@ case $choice in
                     check_and_echo "${GR}Dokodemo-Door目标地址${NC}:" "${rd_dokodemo_door_url[i]}"
                     check_and_echo "${GR}Dokodemo-Door目标端口${NC}:" "${rd_dokodemo_door_port[i]}"
                     check_and_echo "${GR}Dokodemo-Door网络模式${NC}:" "${rd_dokodemo_door_network[i]}"
-                    check_and_echo "${GR}SOCKS用户名${NC}:" "${rd_socks_path[i]}"
-                    check_and_echo "${GR}SOCKS密码${NC}:" "${rd_socks_head[i]}"
+                    check_and_echo "${GR}SOCKS用户名${NC}:" "${rd_socks_user[i]}"
+                    check_and_echo "${GR}SOCKS密码${NC}:" "${rd_socks_password[i]}"
                     check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "${rd_socks_udp_ip[i]}"
-                    check_and_echo "${GR}HTTP用户名${NC}:" "${rd_http_path[i]}"
-                    check_and_echo "${GR}HTTP密码${NC}:" "${rd_http_head[i]}"
+                    check_and_echo "${GR}HTTP用户名${NC}:" "${rd_http_user[i]}"
+                    check_and_echo "${GR}HTTP密码${NC}:" "${rd_http_password[i]}"
                     URL="${rd_protocol[i]}://${rd_client_id[i]}@$IP_address:${rd_port[i]}?path=/path&security=${rd_security[i]}&encryption=none&type=${rd_network[i]}#${rd_protocol[i]}"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
