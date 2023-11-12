@@ -10,7 +10,7 @@ MA='\033[0;35m'
 CY='\033[0;36m'
 WH='\033[0;37m'
 NC='\033[0m'
-# echo -e "BL=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
+# echo -e "BK=BLACK RE=RED GR=GREEN YE=YELLOW BL=BLUE MA=MAGENTA CY=CYAN WH=WHITE NC=RESET"
 clear_screen() {
     if command -v apt &>/dev/null; then
         clear
@@ -152,7 +152,7 @@ echo -e "${colored_text1}${NC}"
 echo -e "o.  更新脚本"
 echo -e "x.  退出脚本"
 echo -e "${colored_text1}${NC}"
-echo -e "v.  >>>>>> 声 明 <<<<<<"
+echo -e "v.  >>>>>>> 声 明 <<<<<<<"
 echo -e "${colored_text1}${NC}"
 if [[ $onlyone == 1 ]]; then
     echo -e "${MA}支持双击操作...${NC}"
@@ -167,7 +167,13 @@ case $choice in
             local label="$1"
             local value="$2"
             if [ -n "$value" ] && [ "$value" != "null" ]; then
-                echo -e "$label $value"
+                local label_length_add2=$(echo -e "$label" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | wc -c)
+                local label_a=$(echo "$label" | tr -cd '[:alnum:]:-' | wc -c)
+                label_b=$((label_a - 13))
+                label_c=$((label_length_add2 - label_b - 2))
+                label_d=$((label_c / 3))
+                local spaces=$((30 - label_length_add2 + label_d))
+                printf "%b%*s%s\n" "$label" "$spaces" "" "$value"
             fi
         }
         # ====================================================
@@ -367,7 +373,6 @@ case $choice in
                         continue
                     fi
                 fi
-                uuid=$(xray uuid)
                 short_chars="0123456789abcdef"
                 short_id_length=8
                 short_id=""
@@ -408,6 +413,8 @@ case $choice in
                 en_socks_udp_ip=""
                 en_http_path=""
                 en_http_head=""
+                en_security_http_path=""
+                en_security_http_head=""
                 echo -e "${colored_text1}${NC}"
                 while true; do
                 remind1p
@@ -795,6 +802,8 @@ case $choice in
                     if [[ $en_protocol == "vless" && $en_network == "tcp" && $en_security == "tls" ]] ||
                     [[ $en_protocol == "vless" && $en_network == "tcp" && $en_security == "reality" ]] ||
                     [[ $en_protocol == "vless" && $en_network == "grpc" && $en_security == "reality" ]]; then
+                        echo -e "${colored_text1}${NC}"
+                        remind1p
                         echo -e "流控Flow方式 :  1.xtls-rprx-vision  0/其它.无"
                         read -e -p "请选择流控flow方式编号 : " choice
                         if [[ $choice == 1 ]]; then
@@ -830,12 +839,14 @@ case $choice in
                         else
                             en_reality_dest="$url"
                         fi
+                        remind1p
                         read -e -p "请输入serverNames地址 (回车默认: www.yahoo.com): " url
                         if [[ $url == "" ]]; then
                             en_reality_serverNames="www.yahoo.com"
                         else
                             en_reality_serverNames="$url"
                         fi
+                        remind1p
                         echo -e "请选择fingerprint: 1.chrome  2.firefox  3.safari  4.edge  5.ios  6.android"
                         read -e -p "请输入fingerprint编号: (回车默认: chrome): " choice
                         case $choice in
@@ -865,24 +876,30 @@ case $choice in
                             break
                             ;;
                         esac
-                        read -e -p "请输入privateKey (回车默认: 系统生成): " url
-                        if [[ $url == "" ]]; then
-                            en_reality_privateKey=$(echo "$(xray x25519)" | sed -n 's/Private key: \(.*\)/\1/p')
-                        else
-                            en_reality_privateKey="$url"
-                        fi
-                        read -e -p "请输入publicKey (回车默认: 系统生成): " url
-                        if [[ $url == "" ]]; then
-                            en_reality_publicKey=$(echo "$(xray x25519)" | sed -n 's/Public key: \(.*\)/\1/p')
-                        else
-                            en_reality_publicKey="$url"
-                        fi
-                        read -e -p "请输入shortIds (回车默认: 系统生成): " url
-                        if [[ $url == "" ]]; then
-                            en_reality_shortIds=$short_id
-                        else
-                            en_reality_shortIds="$url"
-                        fi
+                        en_reality_privateKey=$(echo "$(xray x25519)" | sed -n 's/Private key: \(.*\)/\1/p')
+                        en_reality_publicKey=$(echo "$(xray x25519)" | sed -n 's/Public key: \(.*\)/\1/p')
+                        en_reality_shortIds=$short_id
+
+                        ############## 自行输入设置
+                        # read -e -p "请输入privateKey (回车默认: 系统生成): " url
+                        # if [[ $url == "" ]]; then
+                        #     en_reality_privateKey=$(echo "$(xray x25519)" | sed -n 's/Private key: \(.*\)/\1/p')
+                        # else
+                        #     en_reality_privateKey="$url"
+                        # fi
+                        # read -e -p "请输入publicKey (回车默认: 系统生成): " url
+                        # if [[ $url == "" ]]; then
+                        #     en_reality_publicKey=$(echo "$(xray x25519)" | sed -n 's/Public key: \(.*\)/\1/p')
+                        # else
+                        #     en_reality_publicKey="$url"
+                        # fi
+                        # read -e -p "请输入shortIds (回车默认: 系统生成): " url
+                        # if [[ $url == "" ]]; then
+                        #     en_reality_shortIds=$short_id
+                        # else
+                        #     en_reality_shortIds="$url"
+                        # fi
+                        #########################################
                     fi
                 fi
                 if [[ $en_protocol == "dokodemo-door" ]]; then
@@ -947,40 +964,41 @@ case $choice in
                     en_http_head="$password"
                 fi
                 echo -e "${colored_text1}${NC}"
-                echo -e "${GR}信息确认${NC}"
-                check_and_echo "${GR}协议类型${NC}:                " "$en_protocol"
-                check_and_echo "${GR}端口号${NC}:                  " "$en_port"
-                check_and_echo "${GR}Trojan密码${NC}:               " "$en_trojan_password"
-                check_and_echo "${GR}Shadowsocks加密方式${NC}:     " "$en_shadowsocks_method"
-                check_and_echo "${GR}Shadowsocks密码${NC}:         " "$en_shadowsocks_password"
-                check_and_echo "${GR}网络类型${NC}:                " "$en_network"
-                check_and_echo "${GR}安全性设置${NC}:              " "$en_security"
-                check_and_echo "${GR}WS路径${NC}:                 " "$en_ws_path"
-                check_and_echo "${GR}WS主机${NC}:                 " "$en_ws_host"
-                check_and_echo "${GR}HTTP路径${NC}:               " "$en_http_path"
-                check_and_echo "${GR}HTTP主机${NC}:               " "$en_http_host"
-                check_and_echo "${GR}QUIC加密方式${NC}:           " "$en_quic_method"
-                check_and_echo "${GR}QUIC密码${NC}:               " "$en_quic_password"
-                check_and_echo "${GR}QUIC伪装类型${NC}:           " "$en_quic_fake"
-                check_and_echo "${GR}gRPC服务名${NC}:             " "$en_grpc_serviceName"
-                check_and_echo "${GR}流控Flow方式${NC}:           " "$en_flow"
-                check_and_echo "${GR}TLS服务器名${NC}:             " "$en_tls_serverName"
-                check_and_echo "${GR}TLS证书文件路径${NC}:         " "$en_tls_certificateFile"
-                check_and_echo "${GR}TLS私钥文件路径${NC}:         " "$en_tls_keyFile"
-                check_and_echo "${GR}Reality目标地址${NC}:         " "$en_reality_dest"
-                check_and_echo "${GR}Reality服务器名${NC}:         " "$en_reality_serverNames"
-                check_and_echo "${GR}Reality指纹${NC}:             " "$en_reality_fingerprint"
-                check_and_echo "${GR}Reality私钥${NC}:             " "$en_reality_privateKey"
-                check_and_echo "${GR}Reality公钥${NC}:             " "$en_reality_publicKey"
-                check_and_echo "${GR}Reality ShortIds${NC}:        " "$en_reality_shortIds"
-                check_and_echo "${GR}Dokodemo-Door目标地址${NC}:  " "$en_dokodemo_door_url"
-                check_and_echo "${GR}Dokodemo-Door目标端口${NC}:  " "$en_dokodemo_door_port"
-                check_and_echo "${GR}Dokodemo-Door网络模式${NC}:  " "$en_dokodemo_door_network"
-                check_and_echo "${GR}SOCKS用户名${NC}:             " "$en_socks_path"
-                check_and_echo "${GR}SOCKS密码${NC}:               " "$en_socks_head"
-                check_and_echo "${GR}SOCKS UDP IP${NC}:             " "$en_socks_udp_ip"
-                check_and_echo "${GR}HTTP用户名${NC}:               " "$en_http_path"
-                check_and_echo "${GR}HTTP密码${NC}:                 " "$en_http_head"
+                echo -e "${CY}信息确认${NC}"
+                check_and_echo "${GR}协议类型${NC}:" "$en_protocol"
+                check_and_echo "${GR}端口号${NC}:" "$en_port"
+                check_and_echo "${GR}UUID${NC}:" "$uuid"
+                check_and_echo "${GR}流控Flow方式${NC}:" "$en_flow"
+                check_and_echo "${GR}Trojan密码${NC}:" "$en_trojan_password"
+                check_and_echo "${GR}Shadowsocks加密方式${NC}:" "$en_shadowsocks_method"
+                check_and_echo "${GR}Shadowsocks密码${NC}:" "$en_shadowsocks_password"
+                check_and_echo "${GR}网络类型${NC}:" "$en_network"
+                check_and_echo "${GR}安全性设置${NC}:" "$en_security"
+                check_and_echo "${GR}WS路径${NC}:" "$en_ws_path"
+                check_and_echo "${GR}WS主机${NC}:" "$en_ws_host"
+                check_and_echo "${GR}HTTP路径${NC}:" "$en_security_http_path"
+                check_and_echo "${GR}HTTP主机${NC}:" "$en_security_http_head"
+                check_and_echo "${GR}QUIC加密方式${NC}:" "$en_quic_method"
+                check_and_echo "${GR}QUIC密码${NC}:" "$en_quic_password"
+                check_and_echo "${GR}QUIC伪装类型${NC}:" "$en_quic_fake"
+                check_and_echo "${GR}gRPC服务名${NC}:" "$en_grpc_serviceName"
+                check_and_echo "${GR}TLS服务器名${NC}:" "$en_tls_serverName"
+                check_and_echo "${GR}TLS证书文件路径${NC}:" "$en_tls_certificateFile"
+                check_and_echo "${GR}TLS私钥文件路径${NC}:" "$en_tls_keyFile"
+                check_and_echo "${GR}Reality目标地址${NC}:" "$en_reality_dest"
+                check_and_echo "${GR}Reality服务器名${NC}:" "$en_reality_serverNames"
+                check_and_echo "${GR}Reality指纹${NC}:" "$en_reality_fingerprint"
+                check_and_echo "${GR}Reality私钥${NC}:" "$en_reality_privateKey"
+                check_and_echo "${GR}Reality公钥${NC}:" "$en_reality_publicKey"
+                check_and_echo "${GR}Reality-ShortIds${NC}:" "$en_reality_shortIds"
+                check_and_echo "${GR}Dokodemo-Door目标地址${NC}:" "$en_dokodemo_door_url"
+                check_and_echo "${GR}Dokodemo-Door目标端口${NC}:" "$en_dokodemo_door_port"
+                check_and_echo "${GR}Dokodemo-Door网络模式${NC}:" "$en_dokodemo_door_network"
+                check_and_echo "${GR}SOCKS用户名${NC}:" "$en_socks_path"
+                check_and_echo "${GR}SOCKS密码${NC}:" "$en_socks_head"
+                check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "$en_socks_udp_ip"
+                check_and_echo "${GR}HTTP用户名${NC}:" "$en_http_path"
+                check_and_echo "${GR}HTTP密码${NC}:" "$en_http_head"
                 remind1p
                 while true; do
                 read -e -p "请确认信息，是否决定创建? (Y/C取消): " choice
@@ -993,12 +1011,7 @@ case $choice in
                     "port": null,
                     "protocol": null,
                     "settings": {
-                        "clients": [
-                            {
-                                "id": null,
-                                "flow": null
-                            }
-                        ],
+                        "clients": [],
                         "decryption": "none",
                         "fallbacks": []
                     },
@@ -1081,6 +1094,13 @@ case $choice in
                     # i_ws_host=".streamSettings.wsSettings.headers.Host"
                     #############################################
                     jq ".inbounds += [$new_inbound]" "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    write_json_if() {
+                        address="$1"
+                        label="$2"
+                        if [[ $label != "" ]]; then
+                            jq --arg label "$label" '$address = $label' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                        fi
+                    }
                     jq --argjson en_port "$en_port" \
                     --arg en_protocol "$en_protocol" \
                     --arg en_network "$en_network" \
@@ -1089,9 +1109,37 @@ case $choice in
                     .inbounds[-1].tag = "inbound-\($en_port)" |
                     .inbounds[-1].streamSettings.network = $en_network' \
                     "$jsonfile" > temp.json && mv temp.json "$jsonfile"
-                    jq --arg uuid "$uuid" \
-                    '.inbounds[-1].settings.clients[0].id = $uuid' \
-                    "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    if [[ $en_protocol == "vmess" ]] || [[ $en_protocol == "vless" ]]; then
+                        uuid=$(xray uuid)
+                        jq --arg uuid "$uuid" \
+                        '.inbounds[-1].settings.clients[0].id = $uuid' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    fi
+                    if [[ $en_protocol == "vmess" ]]; then
+                        jq '.inbounds[-1].settings.disableInsecureEncryption = false' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                        jq '.inbounds[-1].settings.disableInsecureEncryption = false' "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    fi
+                    if [[ $en_protocol == "trojan" ]]; then
+                        jq --arg en_protocol "$en_protocol" \
+                        --arg en_trojan_password "$en_trojan_password" \
+                        '.inbounds[-1].settings.clients[0].password = $en_trojan_password' \
+                        "$jsonfile" > temp.json && mv temp.json "$jsonfile"
+                    fi
+
+                    if [[ $en_protocol == "shadowsocks" ]]; then
+                        :
+                    fi
+                    if [[ $en_protocol == "dokodemo-door" ]]; then
+                        :
+                    fi
+                    if [[ $en_protocol == "socks" ]]; then
+                        :
+                    fi
+                    if [[ $en_protocol == "http" ]]; then
+                        :
+                    fi
+                    
                     if [[ $en_flow != "" ]]; then
                         jq --arg en_flow "$en_flow" \
                         '.inbounds[-1].settings.clients[0].flow = $en_flow' \
@@ -1128,6 +1176,8 @@ case $choice in
                         .inbounds[-1].streamSettings.realitySettings.shortIds[0] = $en_reality_shortIds' \
                         "$jsonfile" > temp.json && mv temp.json "$jsonfile"
                     fi
+
+
                     rd_port=$(jq -r '.inbounds[-1].port' "$jsonfile")
                     rd_protocol=$(jq -r '.inbounds[-1].protocol' "$jsonfile")
                     rd_network=$(jq -r '.inbounds[-1].streamSettings.network' "$jsonfile")
@@ -1143,43 +1193,47 @@ case $choice in
                     rd_reality_shortIds=$(jq -r '.inbounds[-1].streamSettings.realitySettings.shortIds[0]' "$jsonfile")
                     rd_client_id=$(jq -r '.inbounds[-1].settings.clients[0].id' "$jsonfile")
                     rd_client_flow=$(jq -r '.inbounds[-1].settings.clients[0].flow' "$jsonfile")
-                    # cat $jsonfile # waritfor ########## 方便调试时使用
+
+                    # cat $jsonfile 
+                    # waritfor ########## 方便调试时使用
+
                     IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
                     clear_screen
                     echo -e "${GR}▼▼${NC}"
-                    check_and_echo "${GR}协议类型${NC}:                " "$rd_protocol"
-                    check_and_echo "${GR}端口号${NC}:                  " "$rd_port"
-                    check_and_echo "${GR}Trojan密码${NC}:               " "$rd_trojan_password"
-                    check_and_echo "${GR}Shadowsocks加密方式${NC}:     " "$rd_shadowsocks_method"
-                    check_and_echo "${GR}Shadowsocks密码${NC}:         " "$rd_shadowsocks_password"
-                    check_and_echo "${GR}网络类型${NC}:                " "$rd_network"
-                    check_and_echo "${GR}安全性设置${NC}:              " "$rd_security"
-                    check_and_echo "${GR}WS路径${NC}:                 " "$rd_ws_path"
-                    check_and_echo "${GR}WS主机${NC}:                 " "$rd_ws_host"
-                    check_and_echo "${GR}HTTP路径${NC}:               " "$rd_http_path"
-                    check_and_echo "${GR}HTTP主机${NC}:               " "$rd_http_host"
-                    check_and_echo "${GR}QUIC加密方式${NC}:           " "$rd_quic_method"
-                    check_and_echo "${GR}QUIC密码${NC}:               " "$rd_quic_password"
-                    check_and_echo "${GR}QUIC伪装类型${NC}:           " "$rd_quic_fake"
-                    check_and_echo "${GR}gRPC服务名${NC}:             " "$rd_grpc_serviceName"
-                    check_and_echo "${GR}流控Flow方式${NC}:           " "$rd_tls_flow"
-                    check_and_echo "${GR}TLS服务器名${NC}:             " "$rd_tls_serverName"
-                    check_and_echo "${GR}TLS证书文件路径${NC}:         " "$rd_tls_certificateFile"
-                    check_and_echo "${GR}TLS私钥文件路径${NC}:         " "$rd_tls_keyFile"
-                    check_and_echo "${GR}Reality目标地址${NC}:         " "$rd_reality_dest"
-                    check_and_echo "${GR}Reality服务器名${NC}:         " "$rd_reality_serverNames"
-                    check_and_echo "${GR}Reality指纹${NC}:             " "$rd_reality_fingerprint"
-                    check_and_echo "${GR}Reality私钥${NC}:             " "$rd_reality_privateKey"
-                    check_and_echo "${GR}Reality公钥${NC}:             " "$rd_reality_publicKey"
-                    check_and_echo "${GR}Reality ShortIds${NC}:        " "$rd_reality_shortIds"
-                    check_and_echo "${GR}Dokodemo-Door目标地址${NC}:  " "$rd_dokodemo_door_url"
-                    check_and_echo "${GR}Dokodemo-Door目标端口${NC}:  " "$rd_dokodemo_door_port"
-                    check_and_echo "${GR}Dokodemo-Door网络模式${NC}:  " "$rd_dokodemo_door_network"
-                    check_and_echo "${GR}SOCKS用户名${NC}:             " "$rd_socks_path"
-                    check_and_echo "${GR}SOCKS密码${NC}:               " "$rd_socks_head"
-                    check_and_echo "${GR}SOCKS UDP IP${NC}:             " "$rd_socks_udp_ip"
-                    check_and_echo "${GR}HTTP用户名${NC}:               " "$rd_http_path"
-                    check_and_echo "${GR}HTTP密码${NC}:                 " "$rd_http_head"
+                    check_and_echo "${GR}协议类型${NC}:" "$rd_protocol"
+                    check_and_echo "${GR}端口号${NC}:" "$rd_port"
+                    check_and_echo "${GR}UUID${NC}:" "$rd_client_id"
+                    check_and_echo "${GR}流控Flow方式${NC}:" "$rd_tls_flow"
+                    check_and_echo "${GR}Trojan密码${NC}:" "$rd_trojan_password"
+                    check_and_echo "${GR}Shadowsocks加密方式${NC}:" "$rd_shadowsocks_method"
+                    check_and_echo "${GR}Shadowsocks密码${NC}:" "$rd_shadowsocks_password"
+                    check_and_echo "${GR}网络类型${NC}:" "$rd_network"
+                    check_and_echo "${GR}安全性设置${NC}:" "$rd_security"
+                    check_and_echo "${GR}WS路径${NC}:" "$rd_ws_path"
+                    check_and_echo "${GR}WS主机${NC}:" "$rd_ws_host"
+                    check_and_echo "${GR}HTTP路径${NC}:" "$rd_http_path"
+                    check_and_echo "${GR}HTTP主机${NC}:" "$rd_http_host"
+                    check_and_echo "${GR}QUIC加密方式${NC}:" "$rd_quic_method"
+                    check_and_echo "${GR}QUIC密码${NC}:" "$rd_quic_password"
+                    check_and_echo "${GR}QUIC伪装类型${NC}:" "$rd_quic_fake"
+                    check_and_echo "${GR}gRPC服务名${NC}:" "$rd_grpc_serviceName"
+                    check_and_echo "${GR}TLS服务器名${NC}:" "$rd_tls_serverName"
+                    check_and_echo "${GR}TLS证书文件路径${NC}:" "$rd_tls_certificateFile"
+                    check_and_echo "${GR}TLS私钥文件路径${NC}:" "$rd_tls_keyFile"
+                    check_and_echo "${GR}Reality目标地址${NC}:" "$rd_reality_dest"
+                    check_and_echo "${GR}Reality服务器名${NC}:" "$rd_reality_serverNames"
+                    check_and_echo "${GR}Reality指纹${NC}:" "$rd_reality_fingerprint"
+                    check_and_echo "${GR}Reality私钥${NC}:" "$rd_reality_privateKey"
+                    check_and_echo "${GR}Reality公钥${NC}:" "$rd_reality_publicKey"
+                    check_and_echo "${GR}Reality-ShortIds${NC}:" "$rd_reality_shortIds"
+                    check_and_echo "${GR}Dokodemo-Door目标地址${NC}:" "$rd_dokodemo_door_url"
+                    check_and_echo "${GR}Dokodemo-Door目标端口${NC}:" "$rd_dokodemo_door_port"
+                    check_and_echo "${GR}Dokodemo-Door网络模式${NC}:" "$rd_dokodemo_door_network"
+                    check_and_echo "${GR}SOCKS用户名${NC}:" "$rd_socks_path"
+                    check_and_echo "${GR}SOCKS密码${NC}:" "$rd_socks_head"
+                    check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "$rd_socks_udp_ip"
+                    check_and_echo "${GR}HTTP用户名${NC}:" "$rd_http_path"
+                    check_and_echo "${GR}HTTP密码${NC}:" "$rd_http_head"
                     URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#$rd_protocol"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
@@ -1227,40 +1281,40 @@ case $choice in
                 for ((i=0; i<${#rd_port[@]}; i++)); do
                     echo -e "${colored_text1}${NC}${colored_text1}${NC}"
                     echo -e "${MA}节点${NC} $((i+1))"
-                    check_and_echo "${GR}协议类型${NC}:                " "${rd_protocol[i]}"
-                    check_and_echo "${GR}端口号${NC}:                  " "${rd_port[i]}"
-                    check_and_echo "${GR}Trojan密码${NC}:               " "${rd_trojan_password[i]}"
-                    check_and_echo "${GR}Shadowsocks加密方式${NC}:     " "${rd_shadowsocks_method[i]}"
-                    check_and_echo "${GR}Shadowsocks密码${NC}:         " "${rd_shadowsocks_password[i]}"
-                    check_and_echo "${GR}网络类型${NC}:                " "${rd_network[i]}"
-                    check_and_echo "${GR}安全性设置${NC}:              " "${rd_security[i]}"
-                    check_and_echo "${GR}WS路径${NC}:                 " "${rd_ws_path[i]}"
-                    check_and_echo "${GR}WS主机${NC}:                 " "${rd_ws_host[i]}"
-                    check_and_echo "${GR}HTTP路径${NC}:               " "${rd_http_path[i]}"
-                    check_and_echo "${GR}HTTP主机${NC}:               " "${rd_http_host[i]}"
-                    check_and_echo "${GR}QUIC加密方式${NC}:           " "${rd_quic_method[i]}"
-                    check_and_echo "${GR}QUIC密码${NC}:               " "${rd_quic_password[i]}"
-                    check_and_echo "${GR}QUIC伪装类型${NC}:           " "${rd_quic_fake[i]}"
-                    check_and_echo "${GR}gRPC服务名${NC}:             " "${rd_grpc_serviceName[i]}"
-                    check_and_echo "${GR}流控Flow方式${NC}:           " "${rd_tls_flow[i]}"
-                    check_and_echo "${GR}TLS服务器名${NC}:             " "${rd_tls_serverName[i]}"
-                    check_and_echo "${GR}TLS证书文件路径${NC}:         " "${rd_tls_certificateFile[i]}"
-                    check_and_echo "${GR}TLS私钥文件路径${NC}:         " "${rd_tls_keyFile[i]}"
-                    check_and_echo "${GR}Reality目标地址${NC}:         " "${rd_reality_dest[i]}"
-                    check_and_echo "${GR}Reality服务器名${NC}:         " "${rd_reality_serverNames[i]}"
-                    check_and_echo "${GR}Reality指纹${NC}:             " "${rd_reality_fingerprint[i]}"
-                    check_and_echo "${GR}Reality私钥${NC}:             " "${rd_reality_privateKey[i]}"
-                    check_and_echo "${GR}Reality公钥${NC}:             " "${rd_reality_publicKey[i]}"
-                    check_and_echo "${GR}Reality ShortIds${NC}:        " "${rd_reality_shortIds[i]}"
-                    check_and_echo "${GR}Dokodemo-Door目标地址${NC}:  " "${rd_dokodemo_door_url[i]}"
-                    check_and_echo "${GR}Dokodemo-Door目标端口${NC}:  " "${rd_dokodemo_door_port[i]}"
-                    check_and_echo "${GR}Dokodemo-Door网络模式${NC}:  " "${rd_dokodemo_door_network[i]}"
-                    check_and_echo "${GR}SOCKS用户名${NC}:             " "${rd_socks_path[i]}"
-                    check_and_echo "${GR}SOCKS密码${NC}:               " "${rd_socks_head[i]}"
-                    check_and_echo "${GR}SOCKS UDP IP${NC}:             " "${rd_socks_udp_ip[i]}"
-                    check_and_echo "${GR}HTTP用户名${NC}:               " "${rd_http_path[i]}"
-                    check_and_echo "${GR}HTTP密码${NC}:                 " "${rd_http_head[i]}"
-                    URL="$rd_protocol://$rd_client_id@$IP_address:$rd_port?path=/path&security=$rd_security&encryption=none&type=$rd_network#$rd_protocol"
+                    check_and_echo "${GR}协议类型${NC}:" "${rd_protocol[i]}"
+                    check_and_echo "${GR}端口号${NC}:" "${rd_port[i]}"
+                    check_and_echo "${GR}Trojan密码${NC}:" "${rd_trojan_password[i]}"
+                    check_and_echo "${GR}Shadowsocks加密方式${NC}:" "${rd_shadowsocks_method[i]}"
+                    check_and_echo "${GR}Shadowsocks密码${NC}:" "${rd_shadowsocks_password[i]}"
+                    check_and_echo "${GR}网络类型${NC}:" "${rd_network[i]}"
+                    check_and_echo "${GR}安全性设置${NC}:" "${rd_security[i]}"
+                    check_and_echo "${GR}WS路径${NC}:" "${rd_ws_path[i]}"
+                    check_and_echo "${GR}WS主机${NC}:" "${rd_ws_host[i]}"
+                    check_and_echo "${GR}HTTP路径${NC}:" "${rd_http_path[i]}"
+                    check_and_echo "${GR}HTTP主机${NC}:" "${rd_http_host[i]}"
+                    check_and_echo "${GR}QUIC加密方式${NC}:" "${rd_quic_method[i]}"
+                    check_and_echo "${GR}QUIC密码${NC}:" "${rd_quic_password[i]}"
+                    check_and_echo "${GR}QUIC伪装类型${NC}:" "${rd_quic_fake[i]}"
+                    check_and_echo "${GR}gRPC服务名${NC}:" "${rd_grpc_serviceName[i]}"
+                    check_and_echo "${GR}流控Flow方式${NC}:" "${rd_tls_flow[i]}"
+                    check_and_echo "${GR}TLS服务器名${NC}:" "${rd_tls_serverName[i]}"
+                    check_and_echo "${GR}TLS证书文件路径${NC}:" "${rd_tls_certificateFile[i]}"
+                    check_and_echo "${GR}TLS私钥文件路径${NC}:" "${rd_tls_keyFile[i]}"
+                    check_and_echo "${GR}Reality目标地址${NC}:" "${rd_reality_dest[i]}"
+                    check_and_echo "${GR}Reality服务器名${NC}:" "${rd_reality_serverNames[i]}"
+                    check_and_echo "${GR}Reality指纹${NC}:" "${rd_reality_fingerprint[i]}"
+                    check_and_echo "${GR}Reality私钥${NC}:" "${rd_reality_privateKey[i]}"
+                    check_and_echo "${GR}Reality公钥${NC}:" "${rd_reality_publicKey[i]}"
+                    check_and_echo "${GR}Reality-ShortIds${NC}:" "${rd_reality_shortIds[i]}"
+                    check_and_echo "${GR}Dokodemo-Door目标地址${NC}:" "${rd_dokodemo_door_url[i]}"
+                    check_and_echo "${GR}Dokodemo-Door目标端口${NC}:" "${rd_dokodemo_door_port[i]}"
+                    check_and_echo "${GR}Dokodemo-Door网络模式${NC}:" "${rd_dokodemo_door_network[i]}"
+                    check_and_echo "${GR}SOCKS用户名${NC}:" "${rd_socks_path[i]}"
+                    check_and_echo "${GR}SOCKS密码${NC}:" "${rd_socks_head[i]}"
+                    check_and_echo "${GR}SOCKS-UDP-IP${NC}:" "${rd_socks_udp_ip[i]}"
+                    check_and_echo "${GR}HTTP用户名${NC}:" "${rd_http_path[i]}"
+                    check_and_echo "${GR}HTTP密码${NC}:" "${rd_http_head[i]}"
+                    URL="${rd_protocol[i]}://${rd_client_id[i]}@$IP_address:${rd_port[i]}?path=/path&security=${rd_security[i]}&encryption=none&type=${rd_network[i]}#${rd_protocol[i]}"
                     qrencode -t ANSIUTF8 "$URL"
                     echo "$URL"
                 done
@@ -1279,11 +1333,11 @@ case $choice in
                     continue
                 fi
                 echo -e "${colored_text1}${NC}"
-                echo -e "${CY}节点${NC}   ${CY}协议${NC}       ${CY}端口${NC}"
+                echo -e "${CY}节点${NC}    ${CY}协议${NC}            ${CY}端口${NC}"
                 protocols=( $(jq -r '.inbounds[].protocol' "$jsonfile") )
                 ports=( $(jq -r '.inbounds[].port' "$jsonfile") )
                 for ((i=0; i<${#protocols[@]}; i++)); do
-                    echo "▶ $((i+1))    ${protocols[i]}      ${ports[i]}"
+                    printf "▶ %s\t%s\t\t%s\n" "$((i+1))" "${protocols[i]}" "${ports[i]}"
                 done
                 echo -e "${colored_text1}${NC}"
                 echo "制作中..."
@@ -1301,11 +1355,11 @@ case $choice in
                     continue
                 fi
                 echo -e "${colored_text1}${NC}"
-                echo -e "${CY}节点${NC}   ${CY}协议${NC}       ${CY}端口${NC}"
+                echo -e "${CY}节点${NC}    ${CY}协议${NC}            ${CY}端口${NC}"
                 protocols=( $(jq -r '.inbounds[].protocol' "$jsonfile") )
                 ports=( $(jq -r '.inbounds[].port' "$jsonfile") )
                 for ((i=0; i<${#protocols[@]}; i++)); do
-                    echo "▶ $((i+1))    ${protocols[i]}      ${ports[i]}"
+                    printf "▶ %s\t%s\t\t%s\n" "$((i+1))" "${protocols[i]}" "${ports[i]}"
                 done
                 echo -e "${colored_text1}${NC}"
                 read -e -p "请输入要删除的节点序号: " choice
@@ -1906,7 +1960,6 @@ case $choice in
         echo -e "${CY}2023.11.11${NC}"
         echo -e "${MA}end.${NC}"
         echo -e "${colored_text2}${NC}${colored_text2}${NC}"
-        echo
         waitfor
         ;;
     o|O|oo|OO)
