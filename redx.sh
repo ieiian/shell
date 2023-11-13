@@ -2056,10 +2056,26 @@ case $choice in
         ;;
     5|55)
         while true; do
+        config_file="/etc/wireguard/wg0.conf"
+        export wgserver_ip=""
+        extract_allowed_ips() {
+            local config_file="$1"
+            local allowed_ips_array=()
+            while IFS= read -r line; do
+                if [[ "$line" =~ ^AllowedIPs[[:space:]]*=[[:space:]]*(.+) ]]; then
+                    ip_only=$(echo "${BASH_REMATCH[1]}" | cut -d'/' -f1)
+                    allowed_ips_array+=("$ip_only")
+                fi
+            done < "$config_file"
+            echo "${allowed_ips_array[@]}"
+        }
+        allowed_ips_array=($(extract_allowed_ips "$config_file"))
+        # allowed_ips_array=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); print $2}' $config_file)) 第二种方法读取数组(上面是系统内置法，下面是采用外部工具)
+        # echo "AllowedIPs values: ${allowed_ips_array[@]}" ####用于验证数组
         if command -v wg &>/dev/null; then
             wgver=$(wg -v | head -n 1 | awk '{print $2}')
         else
-            xrayver="未安装"
+            wgver="未安装"
             wgtag="${MA}*${NC}"
         fi
         wgactive=($(systemctl is-active wg-quick@wg0.service | tr -d '\n'))
@@ -2070,7 +2086,6 @@ case $choice in
         echo -e "1.  配置 WIREGUARD 服务"
         echo -e "2.  查询 WIREGUARD 服务信息"
         echo -e "3.  增加 WIREGUARD 节点"
-        echo -e "4.  删除 WIREGUARD 节点"
         echo -e "${colored_text1}${NC}"
         echo -e "5.  手动修改 WIREGUARD 配置"
         echo -e "${colored_text1}${NC}"
@@ -2084,52 +2099,61 @@ case $choice in
         read -e -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
+                if [ -e "$config_file" ]; then
+                    read -e -p "配置文件 $config_file 已经存在, 是否要重新配置文件? (Y/其它)" choice
+                    if [[ ! ($choice = "y" || $choice = "Y") ]]; then
+                    continue
+                fi
+                fi
+                loop=0
                 while true; do
-                echo -e "${colored_text1}${NC}"
-                remind1p
-                read -p "请输入 Wireguard 服务IP地址 (回车默认: 10.0.8.1): " server_address
-                wgserver_ip="10.0.8.1"
-                if [ -n "$server_address" ]; then
-                    wgserver_ip="$server_address"
+                if [[ $loop -eq 0 ]]; then
+                    echo -e "${colored_text1}${NC}"
+                    remind1p
+                    read -e -p "请输入 Wireguard 服务IP地址 (回车默认: 10.0.8.1): " server_address
+                    wgserver_ip="10.0.8.1"
+                    if [ -n "$server_address" ]; then
+                        wgserver_ip="$server_address"
+                    fi
+                    wgserver_ip_prefix=$(echo "$wgserver_ip" | awk -F'.' '{print $1"."$2"."$3"."}')
+                    mapfile -t network_interface_array < <(ifconfig | grep -v '^$' | grep -v '^\s' | awk '{print $1}' | sed 's/:$//')
+                    echo "检查到网卡如下:"
+                    for ((i=0; i<${#network_interface_array[@]}; i++)); do
+                        echo "$((i+1)). ${network_interface_array[i]}"
+                    done
+                    default_choice=1
+                    if [[ " ${network_interface_array[@]} " =~ " eth0 " ]]; then
+                        read -e -p "请选择服务器网卡 (回车默认为: eth0): " choice
+                    else
+                        read -e -p "请选择服务器网卡: " choice
+                    fi
+                    if [[ -z "$choice" ]]; then
+                        choice=$default_choice
+                    fi
+                    if [[ $choice -ge 1 && $choice -le ${#network_interface_array[@]} ]]; then
+                        wgnetwork_interface="${network_interface_array[$((choice-1))]}"
+                    else
+                        wgnetwork_interface="请重新选择"
+                        echo "错误：选择的数字无效。"
+                    fi
+                    read -e -p "请输入服务监听端口 (回车默认为 50888): " listen_port
+                    wglisten_port="50888"
+                    if [ -n "$listen_port" ]; then
+                        wglisten_port="$listen_port"
+                    fi
+                    read -e -p "请输入服务DNS地址 (回车默认为 8.8.8.8): " dns_address
+                    wgdns_address="8.8.8.8"
+                    if [ -n "$dns_address" ]; then
+                        wgdns_address="$dns_address"
+                    fi
+                    echo -e "${colored_text1}${NC}"
+                    echo -e "${GR}服务器网卡${NC}:        $wgnetwork_interface"
+                    echo -e "${GR}服务 IP 地址${NC}:      $wgserver_ip"
+                    echo -e "${GR}服务监听端口${NC}:      $wglisten_port"
+                    echo -e "${GR}服务 DNS 地址${NC}:     $wgdns_address"
+                    remind1p
                 fi
-                declare -g wgserver_ip_prefix=$(echo "$wgserver_ip" | awk -F'.' '{print $1"."$2"."$3"."}')
-                mapfile -t network_interface_array < <(ifconfig | grep -v '^$' | grep -v '^\s' | awk '{print $1}' | sed 's/:$//')
-                echo "检查到网卡如下:"
-                for ((i=0; i<${#network_interface_array[@]}; i++)); do
-                    echo "$((i+1)). ${network_interface_array[i]}"
-                done
-                default_choice=1
-                if [[ " ${network_interface_array[@]} " =~ " eth0 " ]]; then
-                    read -p "请选择服务器网卡 (回车默认为: eth0): " choice
-                else
-                    read -p "请选择服务器网卡: " choice
-                fi
-                if [[ -z "$choice" ]]; then
-                    choice=$default_choice
-                fi
-                if [[ $choice -ge 1 && $choice -le ${#network_interface_array[@]} ]]; then
-                    wgnetwork_interface="${network_interface_array[$((choice-1))]}"
-                else
-                    wgnetwork_interface="请重新选择"
-                    echo "错误：选择的数字无效。"
-                fi
-                read -p "请输入服务监听端口 (回车默认为 50888): " listen_port
-                wglisten_port="50888"
-                if [ -n "$listen_port" ]; then
-                    wglisten_port="$listen_port"
-                fi
-                read -p "请输入服务DNS地址 (回车默认为 8.8.8.8): " dns_address
-                wgdns_address="8.8.8.8"
-                if [ -n "$dns_address" ]; then
-                    wgdns_address="$dns_address"
-                fi
-                echo -e "${colored_text1}${NC}"
-                echo -e "${GR}服务器网卡${NC}:        $wgnetwork_interface"
-                echo -e "${GR}服务 IP 地址${NC}:      $wgserver_ip"
-                echo -e "${GR}服务监听端口${NC}:      $wglisten_port"
-                echo -e "${GR}服务 DNS 地址${NC}:     $wgdns_address"
-                remind1p
-                read -e -p "请确认以上信息, 是否继续操作? (Y.确定  C.取消  R.重填)" choice
+                read -e -p "请确认以上信息, 是否继续操作? (Y.确定  C.取消)" choice
                     case $choice in
                         y|Y|yy|YY)
                             if grep -q "^net.ipv4.ip_forward\s*=\s*1" /etc/sysctl.conf; then
@@ -2145,14 +2169,14 @@ case $choice in
                             cd /etc/wireguard/
                             wg genkey > server.key
                             wg pubkey < server.key > server.key.pub
-                            wg genkey > client1.key
-                            wg pubkey < client1.key > client1.key.pub
+                            wg genkey > client11.key
+                            wg pubkey < client11.key > client11.key.pub
                             echo -e "${colored_text1}${NC}"
                             echo -e "${CY}已生成的密钥对${NC}:"
                             echo -e "${GR}服务器私钥${NC}: $(cat server.key)"
                             echo -e "${GR}服务器公钥${NC}: $(cat server.key.pub)"
-                            echo -e "${GR}节点1私钥${NC}: $(cat client1.key)"
-                            echo -e "${GR}节点1公钥${NC}: $(cat client1.key.pub)"
+                            echo -e "${GR}节点1私钥${NC}: $(cat client11.key)"
+                            echo -e "${GR}节点1公钥${NC}: $(cat client11.key.pub)"
                             echo "
                             [Interface]
                             PrivateKey = $(cat server.key)
@@ -2166,60 +2190,112 @@ case $choice in
                             MTU = 1420
 
                             [Peer]
-                            PublicKey =  $(cat client1.key.pub)
+                            PublicKey =  $(cat client11.key.pub)
                             AllowedIPs = ${wgserver_ip_prefix}11/32
                             " > wg0.conf
                             sed -i 's/^[ \t]*//;s/[ \t]*$//' wg0.conf
 
                             cat wg0.conf
-                            systemctl enable wg-quick@wg0.service
-                            wg-quick up wg0
+                            systemctl enable wg-quick@wg0.service &>/dev/null
+                            wg-quick up wg0 &>/dev/null
                             echo -e "${MA}WIREGUARD 服务已启动...${NC}:"
-
-                            waitfor
-                            break 1
+                            read -e -p "重启后生效, 是否重启服务器? (Y/其它)" choice
+                                if [[ $choice == "Y" || $choice == "y" ]]; then
+                                    reboot
+                                fi
+                            break
                             ;;
                         c|C|cc|CC)
-                            break 2
-                            ;;
-                        r|R|rr|RR)
-                            continue 1
+                            break
                             ;;
                         *)
                             etag=1
                             ;;
                     esac
-                    echo "break"
+                    loop=1
                 done
                 echo "break 1"
                 ;;
 
             2|22)
+                allowed_ips_array2=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); sub(/\/[0-9]+$/, "", $2); print $2}' $config_file))
+                echo -e "${colored_text1}${NC}"
+                for i in "${!allowed_ips_array[@]}"; do
+                    echo "$((i+1))      ${allowed_ips_array[i]}"
+                done
+                # 提示用户选择节点
+                read -e -p "查询客户端具体配置, 请输入序号: " choice
+                IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
+                if [[ $choice =~ ^[0-9]+$ ]]; then
+                    if ((choice >= 1 && choice <= ${#allowed_ips_array[@]})); then
+                        selected_ip="${allowed_ips_array[$((choice-1))]}"
+                        
+                        # 提取选定节点的详细信息
+                        private_key=$(cat /etc/wireguard/client$((choice+10)).key)
+                        address=$(awk '/^Address/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
+                        address0=$(awk '/^Address/{gsub(/[ \t]+/, "", $3); sub(/[0-9]+$/, "0", $3); print $3}' $config_file)
+                        #address=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
+                        mtu=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
+                        server_public_key=$(cat /etc/wireguard/server.key.pub)  # 替换为实际路径
+                        allowed_ips=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
+                        server_port=$(awk -F= '/ListenPort/ {gsub(/[ \t]+/, "", $2); print $2}' /etc/wireguard/wg0.conf)  # 替换为实际路径
+
+                        # 显示选定节点的详细信息
+                        echo "配置文件信息:"
+                        echo -e "${colored_text1}${NC}"
+                        echo "[Interface]"
+                        echo -e "PrivateKey = $private_key ${GR}# 此处为client的私钥${NC}"
+                        echo -e "Address = ${allowed_ips_array[i]}/32  ${GR}# 此处为peer规定的客户端IP${NC}"
+                        echo "MTU = 1500"
+                        echo
+                        echo "[Peer]"
+                        echo -e "PublicKey = $server_public_key ${GR}# 此处为server的公钥${NC}"
+                        echo -e "AllowedIPs = $address0/24 ${GR}# 此处为允许的服务器IP${NC}"
+                        echo "Endpoint = $IP_address:$server_port"
+                        echo -e "${colored_text1}${NC}"
+                    else
+                        echo "无效的序号."
+                    fi
+                else
+                    echo "请输入有效的数字."
+                fi
+                waitfor
                 ;;
             3|33)
+                read -e -p "是否确定增加一个节点? (Y/其它)" choice
+                if [[ ! ($choice = "y" || $choice = "Y") ]]; then
+                    continue
+                fi
+                wgserver_ip_add="${allowed_ips_array[-1]}"
+                while [[ " ${allowed_ips_array[@]} " =~ " ${wgserver_ip_add} " ]]; do
+                  IFS='.' read -r -a ip_parts <<< "$wgserver_ip_add"
+                  ((ip_parts[3]++))
+                  wgserver_ip_add="${ip_parts[0]}.${ip_parts[1]}.${ip_parts[2]}.${ip_parts[3]}"
+                done
+                last_octet=$(echo "$wgserver_ip_add" | awk -F'.' '{print $NF}')
+                # echo "$last_octet"
+                # echo "AllowedIPs values: ${allowed_ips_array[@]}" ####用于验证数组
                 mkdir -p /etc/wireguard
                 cd /etc/wireguard/
-                wg genkey > client2.key
-                wg pubkey < client2.key > client2.key.pub
-                echo "
-                [Peer]
-                PublicKey =  $(cat client2.key.pub)
-                AllowedIPs = ${wgserver_ip_prefix}12/32
+                wg genkey > client${last_octet}.key
+                wg pubkey < client${last_octet}.key > client${last_octet}.key.pub
+                echo "[Peer]
+                PublicKey =  $(cat client${last_octet}.key.pub)
+                AllowedIPs = ${wgserver_ip_add}/32
                 " >> wg0.conf
                 sed -i 's/^[ \t]*//;s/[ \t]*$//' wg0.conf
                 cat wg0.conf
-                wg-quick down wg0
-                wg-quick up wg0
+                wg-quick down wg0 &>/dev/null
+                wg-quick up wg0 &>/dev/null
                 echo -e "${MA}WIREGUARD 服务已重启...${NC}:"
                 waitfor
                 ;;
-            4|44)
-                ;;
+            # 4|44)
+            #     waitfor
+            #     ;;
             5|55)
                 nano /etc/wireguard/wg0.conf
                 ;;
-
-
             i|I|ii|II)
                 if command -v apt &>/dev/null; then
                     apt install -y wireguard resolvconf
@@ -2230,7 +2306,7 @@ case $choice in
                 waitfor
                 ;;
             d|D|dd|DD)
-                read -p "请问是否确定要卸载 WIREGUARD 并删除所有相关文件: (Y/其它)" choice
+                read -e -p "是否确定要卸载 WIREGUARD 并删除所有相关文件: (Y/其它)" choice
                 if [[ ! ($choice = "y" || $choice = "Y") ]]; then
                     continue
                 fi
