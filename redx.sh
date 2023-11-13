@@ -2075,7 +2075,7 @@ case $choice in
         echo -e "5.  手动修改 WIREGUARD 配置"
         echo -e "${colored_text1}${NC}"
         echo -e "i.  安装/更新 WIREGUARD 官方脚本 ${MA}$wgtag${NC}"
-        echo -e "d.  删除 WIREGUARD 官方脚本"
+        echo -e "d.  删除 WIREGUARD 官方脚本 (暂时不要使用)"
         echo -e "${colored_text1}${NC}"
         echo -e "r.  返回上层菜单"
         echo -e "x.  退出脚本"
