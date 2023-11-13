@@ -148,6 +148,7 @@ echo -e "1.  XRAY  节点相关操作 ▶"
 echo -e "2.  ACME  证书相关操作 ▶"
 echo -e "3.  BBR   相关操作 ▶"
 echo -e "4.  WARP  相关操作 ▶"
+echo -e "5.  WIREGUARD  相关操作 ▶"
 echo -e "${colored_text1}${NC}"
 echo -e "o.  更新脚本"
 echo -e "x.  退出脚本"
@@ -418,8 +419,8 @@ case $choice in
                 echo -e "${colored_text1}${NC}"
                 while true; do
                 remind1p
-                echo "节点类型: 1.Vmess  2.Vless  3.Trojan  4.Shadowsocks  5.dokodemo-door  6.socks  7.http"
-                read -e -p "请先择创建节点类型 (1/2/3/4/5/6/7/C取消): " -n 2 -r choice && echoo
+                echo "节点类型: 1.Vmess  2.Vless  3.Trojan  4.Shadowsocks  5.dokodemo-door  6.socks  7.http  8.Wireguard(出口)"
+                read -e -p "请先择创建节点类型 (1/2/3/4/5/6/7/8/C取消): " -n 2 -r choice && echoo
                 case $choice in
                     1|11)
                         en_protocol="vmess"
@@ -447,6 +448,10 @@ case $choice in
                         ;;
                     7|77)
                         en_protocol="http"
+                        break
+                        ;;
+                    8|88)
+                        en_protocol="wireguard"
                         break
                         ;;
                     c|cc|C|CC)
@@ -965,6 +970,12 @@ case $choice in
                     en_http_user="$name"
                     read -e -p "请输入密码: " password
                     en_http_password="$password"
+                fi
+                if [[ $en_protocol == "wireguard" ]]; then
+                    echo -e "${colored_text1}${NC}"
+                    remind1p
+                    read -e -p "暂未开发..." , choice
+                    waitfor
                 fi
                 echo -e "${colored_text1}${NC}"
                 echo -e "${CY}信息确认${NC}"
@@ -2041,6 +2052,214 @@ case $choice in
         wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh
         bash menu.sh [option] [lisence/url/token]
         rm -f menu.sh
+        onlyone=0
+        ;;
+    5|55)
+        while true; do
+        if command -v wg &>/dev/null; then
+            wgver=$(wg -v | head -n 1 | awk '{print $2}')
+        else
+            xrayver="未安装"
+            wgtag="${MA}*${NC}"
+        fi
+        wgactive=($(systemctl is-active wg-quick@wg0.service | tr -d '\n'))
+        clear_screen
+        echo -e "${GR}▼▼${NC}"
+        echo -e "${GR}WIREGUARD${NC} ${MA}$wgver${NC}   运行状态: ${MA}$wgactive${NC}"
+        echo -e "${colored_text2}${NC}"
+        echo -e "1.  配置 WIREGUARD 服务"
+        echo -e "2.  查询 WIREGUARD 服务信息"
+        echo -e "3.  增加 WIREGUARD 节点"
+        echo -e "4.  删除 WIREGUARD 节点"
+        echo -e "${colored_text1}${NC}"
+        echo -e "5.  手动修改 WIREGUARD 配置"
+        echo -e "${colored_text1}${NC}"
+        echo -e "i.  安装/更新 WIREGUARD 官方脚本 ${MA}$wgtag${NC}"
+        echo -e "d.  删除 WIREGUARD 官方脚本"
+        echo -e "${colored_text1}${NC}"
+        echo -e "r.  返回上层菜单"
+        echo -e "x.  退出脚本"
+        echo -e "${colored_text1}${NC}"
+        remind3p
+        read -e -p "请输入你的选择: " -n 2 -r choice && echoo
+        case $choice in
+            1|11)
+                while true; do
+                echo -e "${colored_text1}${NC}"
+                remind1p
+                read -p "请输入 Wireguard 服务IP地址 (回车默认: 10.0.8.1): " server_address
+                wgserver_ip="10.0.8.1"
+                if [ -n "$server_address" ]; then
+                    wgserver_ip="$server_address"
+                fi
+                declare -g wgserver_ip_prefix=$(echo "$wgserver_ip" | awk -F'.' '{print $1"."$2"."$3"."}')
+                mapfile -t network_interface_array < <(ifconfig | grep -v '^$' | grep -v '^\s' | awk '{print $1}' | sed 's/:$//')
+                echo "检查到网卡如下:"
+                for ((i=0; i<${#network_interface_array[@]}; i++)); do
+                    echo "$((i+1)). ${network_interface_array[i]}"
+                done
+                default_choice=1
+                if [[ " ${network_interface_array[@]} " =~ " eth0 " ]]; then
+                    read -p "请选择服务器网卡 (回车默认为: eth0): " choice
+                else
+                    read -p "请选择服务器网卡: " choice
+                fi
+                if [[ -z "$choice" ]]; then
+                    choice=$default_choice
+                fi
+                if [[ $choice -ge 1 && $choice -le ${#network_interface_array[@]} ]]; then
+                    wgnetwork_interface="${network_interface_array[$((choice-1))]}"
+                else
+                    wgnetwork_interface="请重新选择"
+                    echo "错误：选择的数字无效。"
+                fi
+                read -p "请输入服务监听端口 (回车默认为 50888): " listen_port
+                wglisten_port="50888"
+                if [ -n "$listen_port" ]; then
+                    wglisten_port="$listen_port"
+                fi
+                read -p "请输入服务DNS地址 (回车默认为 8.8.8.8): " dns_address
+                wgdns_address="8.8.8.8"
+                if [ -n "$dns_address" ]; then
+                    wgdns_address="$dns_address"
+                fi
+                echo -e "${colored_text1}${NC}"
+                echo -e "${GR}服务器网卡${NC}:        $wgnetwork_interface"
+                echo -e "${GR}服务 IP 地址${NC}:      $wgserver_ip"
+                echo -e "${GR}服务监听端口${NC}:      $wglisten_port"
+                echo -e "${GR}服务 DNS 地址${NC}:     $wgdns_address"
+                remind1p
+                read -e -p "请确认以上信息, 是否继续操作? (Y.确定  C.取消  R.重填)" choice
+                    case $choice in
+                        y|Y|yy|YY)
+                            if grep -q "^net.ipv4.ip_forward\s*=\s*1" /etc/sysctl.conf; then
+                                echo "已经存在 net.ipv4.ip_forward = 1"
+                            else
+                                echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+                                echo "已添加 net.ipv4.ip_forward = 1 到 /etc/sysctl.conf"
+                                sysctl -p
+                            fi
+                            mkdir -p /etc/wireguard
+                            chmod 0777 /etc/wireguard
+                            umask 077   #调整目录默认权限
+                            cd /etc/wireguard/
+                            wg genkey > server.key
+                            wg pubkey < server.key > server.key.pub
+                            wg genkey > client1.key
+                            wg pubkey < client1.key > client1.key.pub
+                            echo -e "${colored_text1}${NC}"
+                            echo -e "${CY}已生成的密钥对${NC}:"
+                            echo -e "${GR}服务器私钥${NC}: $(cat server.key)"
+                            echo -e "${GR}服务器公钥${NC}: $(cat server.key.pub)"
+                            echo -e "${GR}节点1私钥${NC}: $(cat client1.key)"
+                            echo -e "${GR}节点1公钥${NC}: $(cat client1.key.pub)"
+                            echo "
+                            [Interface]
+                            PrivateKey = $(cat server.key)
+                            Address = $wgserver_ip
+
+                            PostUp   = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o $wgnetwork_interface -j MASQUERADE
+                            PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o $wgnetwork_interface -j MASQUERADE
+
+                            ListenPort = $wglisten_port
+                            DNS = $wgdns_address
+                            MTU = 1420
+
+                            [Peer]
+                            PublicKey =  $(cat client1.key.pub)
+                            AllowedIPs = ${wgserver_ip_prefix}11/32
+                            " > wg0.conf
+                            sed -i 's/^[ \t]*//;s/[ \t]*$//' wg0.conf
+
+                            cat wg0.conf
+                            systemctl enable wg-quick@wg0.service
+                            wg-quick up wg0
+                            echo -e "${MA}WIREGUARD 服务已启动...${NC}:"
+
+                            waitfor
+                            break 1
+                            ;;
+                        c|C|cc|CC)
+                            break 2
+                            ;;
+                        r|R|rr|RR)
+                            continue 1
+                            ;;
+                        *)
+                            etag=1
+                            ;;
+                    esac
+                    echo "break"
+                done
+                echo "break 1"
+                ;;
+
+            2|22)
+                ;;
+            3|33)
+                mkdir -p /etc/wireguard
+                cd /etc/wireguard/
+                wg genkey > client2.key
+                wg pubkey < client2.key > client2.key.pub
+                echo "
+                [Peer]
+                PublicKey =  $(cat client2.key.pub)
+                AllowedIPs = ${wgserver_ip_prefix}12/32
+                " >> wg0.conf
+                sed -i 's/^[ \t]*//;s/[ \t]*$//' wg0.conf
+                cat wg0.conf
+                wg-quick down wg0
+                wg-quick up wg0
+                echo -e "${MA}WIREGUARD 服务已重启...${NC}:"
+                waitfor
+                ;;
+            4|44)
+                ;;
+            5|55)
+                nano /etc/wireguard/wg0.conf
+                ;;
+
+
+            i|I|ii|II)
+                if command -v apt &>/dev/null; then
+                    apt install -y wireguard resolvconf
+                fi
+                if command -v yum &>/dev/null; then
+                    :
+                fi
+                waitfor
+                ;;
+            d|D|dd|DD)
+                read -p "请问是否确定要卸载 WIREGUARD 并删除所有相关文件: (Y/其它)" choice
+                if [[ ! ($choice = "y" || $choice = "Y") ]]; then
+                    continue
+                fi
+                systemctl disable wg-quick@wg0
+                systemctl stop wg-quick@wg0
+                # modprobe -r wireguard
+                # rm -f /etc/wireguard/wg0.conf
+                # rm -f /etc/wireguard/*.key
+                # rm -f /etc/wireguard/*.pub
+                # rm -f /etc/systemd/system/wg-quick@wg0.service
+                # rm -f /usr/bin/wg
+                # rm -f /usr/bin/wg-quick
+                if command -v wg &>/dev/null; then
+                    echo -e "${MA}WIREGUARD 卸载失败${NC}！"
+                fi
+                echo -e "${GR}WIREGUARD 卸载成功${NC}！"
+                waitfor
+                ;;
+            r|R|rr|RR)
+                break
+                ;;
+            x|X|xx|XX)
+                exit 0
+                ;;
+            *)
+                etag=1
+                ;;
+        esac
+        done
         onlyone=0
         ;;
     v|vv)
