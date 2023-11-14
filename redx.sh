@@ -2138,7 +2138,7 @@ case $choice in
         echo -e "2.  查询 WIREGUARD 信息(配置文件)"
         echo -e "3.  增加 WIREGUARD PEER 节点"
         echo -e "${colored_text1}${NC}"
-        echo -e "5.  手动修改 WIREGUARD 配置"
+        echo -e "4.  手动修改 WIREGUARD 配置"
         echo -e "${colored_text1}${NC}"
         echo -e "i.  安装/更新 WIREGUARD 官方脚本 ${MA}$wgtag${NC}"
         echo -e "d.  删除 WIREGUARD 官方脚本 (暂时不要使用)"
@@ -2379,15 +2379,7 @@ case $choice in
                 echo -e "${MA}WIREGUARD 服务已重启...${NC}:"
                 waitfor
                 ;;
-            # 4|44)
-                # if [[ $wgtag == *"*"* ]]; then
-                #     echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
-                #     waitfor
-                #     continue
-                # fi
-            #     waitfor
-            #     ;;
-            5|55)
+            4|44)
                 if [[ $wgtag == *"*"* ]]; then
                     echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
                     waitfor
