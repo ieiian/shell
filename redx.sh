@@ -2084,44 +2084,6 @@ case $choice in
     5|55)
         while true; do
         config_file="/etc/wireguard/wg0.conf"
-        export wgserver_ip=""
-        extract_allowed_ips() {
-            local config_file="$1"
-            local allowed_ips_array=()
-            while IFS= read -r line; do
-                if [[ "$line" =~ ^AllowedIPs[[:space:]]*=[[:space:]]*(.+) ]]; then
-                    ip_only=$(echo "${BASH_REMATCH[1]}" | cut -d'/' -f1)
-                    allowed_ips_array+=("$ip_only")
-                fi
-            done < "$config_file"
-            echo "${allowed_ips_array[@]}"
-        }
-        allowed_ips_array=($(extract_allowed_ips "$config_file"))
-        # allowed_ips_array=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); print $2}' $config_file)) 第二种方法读取数组(上面是系统内置法，此条是采用外部工具)
-        extract_public_keys() {
-            local config_file="$1"
-            local public_keys_array=()
-            while IFS= read -r line; do
-                if [[ "$line" =~ ^PublicKey[[:space:]]*=[[:space:]]*(.+) ]]; then
-                    public_key=$(echo "${BASH_REMATCH[1]}")
-                    public_keys_array+=("$public_key")
-                fi
-            done < "$config_file"
-            echo "${public_keys_array[@]}"
-        }
-        public_keys_array=($(extract_public_keys "$config_file"))
-        ############## 用说验证
-        # allowed_ips_array=($(extract_allowed_ips "$config_file"))
-        # public_keys_array=($(extract_public_keys "$config_file"))
-        # echo "Allowed IPs:"
-        # for ip in "${allowed_ips_array[@]}"; do
-        #     echo "  $ip"
-        # done
-        # echo "Public Keys:"
-        # for key in "${public_keys_array[@]}"; do
-        #     echo "  $key"
-        # done
-        #######################################
         wgtag=""
         if command -v wg &>/dev/null; then
             wgver=$(wg -v | head -n 1 | awk '{print $2}')
@@ -2281,13 +2243,49 @@ case $choice in
                 done
                 echo "break 1"
                 ;;
-
             2|22)
                 if [[ $wgtag == *"*"* ]]; then
                     echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
                     waitfor
                     continue
                 fi
+                extract_allowed_ips() {
+                    local config_file="$1"
+                    local allowed_ips_array=()
+                    while IFS= read -r line; do
+                        if [[ "$line" =~ ^AllowedIPs[[:space:]]*=[[:space:]]*(.+) ]]; then
+                            ip_only=$(echo "${BASH_REMATCH[1]}" | cut -d'/' -f1)
+                            allowed_ips_array+=("$ip_only")
+                        fi
+                    done < "$config_file"
+                    echo "${allowed_ips_array[@]}"
+                }
+                allowed_ips_array=($(extract_allowed_ips "$config_file"))
+                # allowed_ips_array=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); print $2}' $config_file)) 第二种方法读取数组(上面是系统内置法，此条是采用外部工具)
+                extract_public_keys() {
+                    local config_file="$1"
+                    local public_keys_array=()
+                    while IFS= read -r line; do
+                        if [[ "$line" =~ ^PublicKey[[:space:]]*=[[:space:]]*(.+) ]]; then
+                            public_key=$(echo "${BASH_REMATCH[1]}")
+                            public_keys_array+=("$public_key")
+                        fi
+                    done < "$config_file"
+                    echo "${public_keys_array[@]}"
+                }
+                public_keys_array=($(extract_public_keys "$config_file"))
+                ############## 用于验证
+                # allowed_ips_array=($(extract_allowed_ips "$config_file"))
+                # public_keys_array=($(extract_public_keys "$config_file"))
+                # echo "Allowed IPs:"
+                # for ip in "${allowed_ips_array[@]}"; do
+                #     echo "  $ip"
+                # done
+                # echo "Public Keys:"
+                # for key in "${public_keys_array[@]}"; do
+                #     echo "  $key"
+                # done
+                #######################################
                 echo -e "${colored_text1}${NC}"
                 # wg show all
                 wg show wg0
@@ -2298,39 +2296,35 @@ case $choice in
                     echo " $((i+1)):   ${allowed_ips_array[i]}"
                 done
                 remind1p
-                # 提示用户选择节点
                 # read -e -p "查询客户端具体配置, 请输入序号 (C.取消): " -n 2 -r choice && echoo
                 # if [[ $choice == "c" || $choice == "C" || $choice == "cc" || $choice == "CC" ]]; then
                 read -e -p "查询客户端具体配置, 请输入序号 (C.取消): " choice
                 if [[ $choice == "c" || $choice == "C" ]]; then
                     continue
                 fi
-                IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
-                mapfile -t ip_array < <(ip a | awk '/inet[[:space:]]/ && !/127\.|fe[0-9a-fA-F]*::|::1/{gsub(/\/[0-9]+/, "", $2); print $2} /inet6[[:space:]]/ && !/fe[0-9a-fA-F]*::|::1/{print $2}')
-                echo -e "${colored_text1}${NC}"
-                echo -e "${CY}检查到 IP 地址列表${NC}:"
-                echo " 1:   $IP_address"
-                for i in "${!ip_array[@]}"; do
-                    echo " $((i+2)):   ${ip_array[i]}"
-                done
-                remind1p
-                read -e -p "系统检查到以上IP地址, 回车默认选择公网IP地址: " selected_index
-                # selected_index=$((selected_index - 1))
-                selected_ip_inall=""
-                if ((selected_index > 1 && selected_index <= ${#ip_array[@]} + 1)); then
-                    selected_ip_inall="${ip_array[selected_index-2]}"
-                    # echo "你选择的IP地址是: $selected_ip_inall"
-                else
-                    if [[ "$selected_index" != "1" && "$selected_index" != "" ]]; then
-                        echo -e "无效的序号，系统默认选择${MA}公网IP${NC}地址."
-                    fi
-                fi
-
                 if [[ $choice =~ ^[0-9]+$ ]]; then
                     if ((choice >= 1 && choice <= ${#allowed_ips_array[@]})); then
                         selected_ip="${allowed_ips_array[$((choice-1))]}"
-                        
-                        # 提取选定节点的详细信息
+                        ######################
+                        IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
+                        mapfile -t ip_array < <(ip a | awk '/inet[[:space:]]/ && !/127\.|fe[0-9a-fA-F]*::|::1/{gsub(/\/[0-9]+/, "", $2); print $2} /inet6[[:space:]]/ && !/fe[0-9a-fA-F]*::|::1/{print $2}')
+                        echo -e "${colored_text1}${NC}"
+                        echo -e "${CY}检查到 IP 地址列表${NC}:"
+                        echo " 1:   $IP_address"
+                        for i in "${!ip_array[@]}"; do
+                            echo " $((i+2)):   ${ip_array[i]}"
+                        done
+                        remind1p
+                        read -e -p "系统检查到以上IP地址, 回车默认选择公网IP地址: " selected_index
+                        selected_ip_inall=""
+                        if ((selected_index > 1 && selected_index <= ${#ip_array[@]} + 1)); then
+                            selected_ip_inall="${ip_array[selected_index-2]}"
+                        else
+                            if [[ "$selected_index" != "1" && "$selected_index" != "" ]]; then
+                                echo -e "无效的序号，系统默认选择${MA}公网IP${NC}地址."
+                            fi
+                        fi
+                        ##########################
                         if [ -f "/etc/wireguard/client$((choice+10)).key" ]; then
                             private_key=$(cat /etc/wireguard/client$((choice+10)).key)
                         else
@@ -2341,20 +2335,18 @@ case $choice in
                         # address=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
                         wg_dns=$(awk '/^DNS/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
                         # wg_mtu=$(awk '/^MTU/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
-                        server_public_key=$(cat /etc/wireguard/server.key.pub)  # 替换为实际路径
+                        server_public_key=$(cat /etc/wireguard/server.key.pub)
                         allowed_ips=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
                         server_port=$(awk '/^ListenPort/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
-
-                        # 显示选定节点的详细信息
                         echo -e "以下为[ ${MA}PEER $choice${NC} ]配置文件信息:"
                         echo -e "${colored_text1}${NC}"
                         echo "[Interface]"
-                        # echo -e "PrivateKey = ${public_keys_array[$((choice-1))]} ${GR}# 此处为client的私钥${NC}"
+                        # echo -e "PrivateKey = ${public_keys_array[$((choice-1))]} ${GR}# 此处为client的私钥${NC}"  ####此处错误，留着备用
                         echo -e "PrivateKey = $private_key ${GR}# 此处为client的私钥${NC}"
                         echo -e "Address = ${allowed_ips_array[$((choice-1))]}/32  ${GR}# 此处为peer的客户端IP${NC}"
                         echo -e "DNS = $wg_dns"
                         echo -e "MTU = 1500"
-                        # echo -e "MTU = $wg_mtu"
+                        # echo -e "MTU = $wg_mtu" # 默认让它 1500
                         echo
                         echo "[Peer]"
                         echo -e "PublicKey = $server_public_key ${GR}# 此处为server的公钥${NC}"
