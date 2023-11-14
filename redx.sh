@@ -2160,8 +2160,8 @@ case $choice in
                     if [ -n "$listen_port" ]; then
                         wglisten_port="$listen_port"
                     fi
-                    read -e -p "请输入服务DNS地址 (回车默认为 1.1.1.1,8.8.8.8): " dns_address
-                    wgdns_address="1.1.1.1,8.8.8.8"
+                    read -e -p "请输入服务DNS地址 (回车默认为 1.1.1.1,8.8.8.8,2001:4860:4860::8888): " dns_address
+                    wgdns_address="1.1.1.1,8.8.8.8,2001:4860:4860::8888"
                     if [ -n "$dns_address" ]; then
                         wgdns_address="$dns_address"
                     fi
@@ -2186,8 +2186,8 @@ case $choice in
                             chmod 0777 /etc/wireguard
                             umask 077   #调整目录默认权限
                             cd /etc/wireguard/
-                            rm *.key
-                            rm *.key.pub
+                            rm *.key &>/dev/null
+                            rm *.key.pub &>/dev/null
                             wg genkey > server.key
                             wg pubkey < server.key > server.key.pub
                             wg genkey > client11.key
@@ -2350,7 +2350,7 @@ case $choice in
                         echo
                         echo "[Peer]"
                         echo -e "PublicKey = $server_public_key ${GR}# 此处为server的公钥${NC}"
-                        echo -e "AllowedIPs = $wgserver_ip_prefix0/24 ${GR}# 此处为允许访问的IP或IP段${NC}"
+                        echo -e "AllowedIPs = $wgserver_ip_prefix0/24,::/0 ${GR}# 此处为允许访问的IP或IP段 (如禁止IPv6把"::/0"去除)${NC}"
                         if [[ ! $selected_ip_inall == "" ]]; then
                             echo "Endpoint = $selected_ip_inall:$server_port"
                         else
