@@ -2070,8 +2070,31 @@ case $choice in
             echo "${allowed_ips_array[@]}"
         }
         allowed_ips_array=($(extract_allowed_ips "$config_file"))
-        # allowed_ips_array=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); print $2}' $config_file)) 第二种方法读取数组(上面是系统内置法，下面是采用外部工具)
-        # echo "AllowedIPs values: ${allowed_ips_array[@]}" ####用于验证数组
+        # allowed_ips_array=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); print $2}' $config_file)) 第二种方法读取数组(上面是系统内置法，此条是采用外部工具)
+        extract_public_keys() {
+            local config_file="$1"
+            local public_keys_array=()
+            while IFS= read -r line; do
+                if [[ "$line" =~ ^PublicKey[[:space:]]*=[[:space:]]*(.+) ]]; then
+                    public_key=$(echo "${BASH_REMATCH[1]}")
+                    public_keys_array+=("$public_key")
+                fi
+            done < "$config_file"
+            echo "${public_keys_array[@]}"
+        }
+        public_keys_array=($(extract_public_keys "$config_file"))
+        ############## 用说验证
+        # allowed_ips_array=($(extract_allowed_ips "$config_file"))
+        # public_keys_array=($(extract_public_keys "$config_file"))
+        # echo "Allowed IPs:"
+        # for ip in "${allowed_ips_array[@]}"; do
+        #     echo "  $ip"
+        # done
+        # echo "Public Keys:"
+        # for key in "${public_keys_array[@]}"; do
+        #     echo "  $key"
+        # done
+        #######################################
         if command -v wg &>/dev/null; then
             wgver=$(wg -v | head -n 1 | awk '{print $2}')
         else
@@ -2084,8 +2107,8 @@ case $choice in
         echo -e "${GR}WIREGUARD${NC} ${MA}$wgver${NC}   运行状态: ${MA}$wgactive${NC}"
         echo -e "${colored_text2}${NC}"
         echo -e "1.  配置 WIREGUARD 服务"
-        echo -e "2.  查询 WIREGUARD 服务信息"
-        echo -e "3.  增加 WIREGUARD 节点"
+        echo -e "2.  查询 WIREGUARD 信息(配置文件)"
+        echo -e "3.  增加 WIREGUARD PEER 节点"
         echo -e "${colored_text1}${NC}"
         echo -e "5.  手动修改 WIREGUARD 配置"
         echo -e "${colored_text1}${NC}"
@@ -2100,7 +2123,8 @@ case $choice in
         case $choice in
             1|11)
                 if [ -e "$config_file" ]; then
-                    read -e -p "配置文件 $config_file 已经存在, 是否要重新配置文件? (Y/其它)" choice
+                    echo -e "配置文件 $config_file 已经存在, 重新配置将${MA}删除${NC}之前的所有配置文件?"
+                    read -e -p "是否要重新配置文件? (Y/其它)" choice
                     if [[ ! ($choice = "y" || $choice = "Y") ]]; then
                     continue
                 fi
@@ -2167,6 +2191,8 @@ case $choice in
                             chmod 0777 /etc/wireguard
                             umask 077   #调整目录默认权限
                             cd /etc/wireguard/
+                            rm *.key
+                            rm *.key.pub
                             wg genkey > server.key
                             wg pubkey < server.key > server.key.pub
                             wg genkey > client11.key
@@ -2197,7 +2223,9 @@ case $choice in
 
                             cat wg0.conf
                             systemctl enable wg-quick@wg0.service &>/dev/null
+                            wg-quick down wg0 &>/dev/null
                             wg-quick up wg0 &>/dev/null
+                            ip address show wg0
                             echo -e "${MA}WIREGUARD 服务已启动...${NC}:"
                             read -e -p "重启后生效, 是否重启服务器? (Y/其它)" choice
                                 if [[ $choice == "Y" || $choice == "y" ]]; then
@@ -2218,39 +2246,57 @@ case $choice in
                 ;;
 
             2|22)
+                echo -e "${colored_text1}${NC}"
+                # wg show all
+                wg show wg0
                 allowed_ips_array2=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); sub(/\/[0-9]+$/, "", $2); print $2}' $config_file))
                 echo -e "${colored_text1}${NC}"
+                echo "序号"
                 for i in "${!allowed_ips_array[@]}"; do
-                    echo "$((i+1))      ${allowed_ips_array[i]}"
+                    echo " $((i+1))      ${allowed_ips_array[i]}"
                 done
+                remind1p
                 # 提示用户选择节点
-                read -e -p "查询客户端具体配置, 请输入序号: " choice
+                # read -e -p "查询客户端具体配置, 请输入序号 (C.取消): " -n 2 -r choice && echoo
+                # if [[ $choice == "c" || $choice == "C" || $choice == "cc" || $choice == "CC" ]]; then
+                read -e -p "查询客户端具体配置, 请输入序号 (C.取消): " choice
+                if [[ $choice == "c" || $choice == "C" ]]; then
+                    continue
+                fi
                 IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
                 if [[ $choice =~ ^[0-9]+$ ]]; then
                     if ((choice >= 1 && choice <= ${#allowed_ips_array[@]})); then
                         selected_ip="${allowed_ips_array[$((choice-1))]}"
                         
                         # 提取选定节点的详细信息
-                        private_key=$(cat /etc/wireguard/client$((choice+10)).key)
-                        address=$(awk '/^Address/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
-                        address0=$(awk '/^Address/{gsub(/[ \t]+/, "", $3); sub(/[0-9]+$/, "0", $3); print $3}' $config_file)
-                        #address=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
-                        mtu=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
+                        if [ -f "/etc/wireguard/client$((choice+10)).key" ]; then
+                            private_key=$(cat /etc/wireguard/client$((choice+10)).key)
+                        else
+                            private_key="未检测到, 请手动查阅文件(/etc/wireguard/...)..."
+                        fi
+                        wgserver_ip=$(awk '/^Address/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
+                        wgserver_ip_prefix0=$(awk '/^Address/{gsub(/[ \t]+/, "", $3); sub(/[0-9]+$/, "0", $3); print $3}' $config_file)
+                        # address=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
+                        wg_dns=$(awk '/^DNS/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
+                        # wg_mtu=$(awk '/^MTU/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
                         server_public_key=$(cat /etc/wireguard/server.key.pub)  # 替换为实际路径
                         allowed_ips=$(awk -v ip="$selected_ip" -v RS= '/\[Peer\]/ && $0 ~ ip {getline; print $2}' $config_file)
-                        server_port=$(awk -F= '/ListenPort/ {gsub(/[ \t]+/, "", $2); print $2}' /etc/wireguard/wg0.conf)  # 替换为实际路径
+                        server_port=$(awk '/^ListenPort/{gsub(/[ \t]+/, "", $3); print $3}' $config_file)
 
                         # 显示选定节点的详细信息
-                        echo "配置文件信息:"
+                        echo -e "以下为[ ${MA}PEER $choice${NC} ]配置文件信息:"
                         echo -e "${colored_text1}${NC}"
                         echo "[Interface]"
+                        # echo -e "PrivateKey = ${public_keys_array[$((choice-1))]} ${GR}# 此处为client的私钥${NC}"
                         echo -e "PrivateKey = $private_key ${GR}# 此处为client的私钥${NC}"
-                        echo -e "Address = ${allowed_ips_array[i]}/32  ${GR}# 此处为peer规定的客户端IP${NC}"
-                        echo "MTU = 1500"
+                        echo -e "Address = ${allowed_ips_array[$((choice-1))]}/32  ${GR}# 此处为peer的客户端IP${NC}"
+                        echo -e "DNS = $wg_dns"
+                        echo -e "MTU = 1500"
+                        # echo -e "MTU = $wg_mtu"
                         echo
                         echo "[Peer]"
                         echo -e "PublicKey = $server_public_key ${GR}# 此处为server的公钥${NC}"
-                        echo -e "AllowedIPs = $address0/24 ${GR}# 此处为允许的服务器IP${NC}"
+                        echo -e "AllowedIPs = $wgserver_ip_prefix0/24 ${GR}# 此处为允许访问的IP或IP段${NC}"
                         echo "Endpoint = $IP_address:$server_port"
                         echo -e "${colored_text1}${NC}"
                     else
