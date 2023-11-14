@@ -2293,9 +2293,9 @@ case $choice in
                 wg show wg0
                 allowed_ips_array2=($(awk -F= '/^AllowedIPs/ {gsub(/[ \t\/]+/, "", $2); sub(/\/[0-9]+$/, "", $2); print $2}' $config_file))
                 echo -e "${colored_text1}${NC}"
-                echo "序号"
+                echo -e "${CY}PEER 列表${NC}:"
                 for i in "${!allowed_ips_array[@]}"; do
-                    echo " $((i+1))      ${allowed_ips_array[i]}"
+                    echo " $((i+1)):   ${allowed_ips_array[i]}"
                 done
                 remind1p
                 # 提示用户选择节点
@@ -2306,6 +2306,26 @@ case $choice in
                     continue
                 fi
                 IP_address=$(curl ipinfo.io/ip 2> /dev/null) > /dev/null
+                mapfile -t ip_array < <(ip a | awk '/inet[[:space:]]/ && !/127\.|fe[0-9a-fA-F]*::|::1/{gsub(/\/[0-9]+/, "", $2); print $2} /inet6[[:space:]]/ && !/fe[0-9a-fA-F]*::|::1/{print $2}')
+                echo -e "${colored_text1}${NC}"
+                echo -e "${CY}检查到 IP 地址列表${NC}:"
+                echo " 1:   $IP_address"
+                for i in "${!ip_array[@]}"; do
+                    echo " $((i+2)):   ${ip_array[i]}"
+                done
+                remind1p
+                read -e -p "系统检查到以上IP地址, 回车默认选择公网IP地址: " selected_index
+                # selected_index=$((selected_index - 1))
+                selected_ip_inall=""
+                if ((selected_index > 1 && selected_index <= ${#ip_array[@]} + 1)); then
+                    selected_ip_inall="${ip_array[selected_index-2]}"
+                    # echo "你选择的IP地址是: $selected_ip_inall"
+                else
+                    if [[ "$selected_index" != "1" && "$selected_index" != "" ]]; then
+                        echo -e "无效的序号，系统默认选择${MA}公网IP${NC}地址."
+                    fi
+                fi
+
                 if [[ $choice =~ ^[0-9]+$ ]]; then
                     if ((choice >= 1 && choice <= ${#allowed_ips_array[@]})); then
                         selected_ip="${allowed_ips_array[$((choice-1))]}"
@@ -2339,7 +2359,11 @@ case $choice in
                         echo "[Peer]"
                         echo -e "PublicKey = $server_public_key ${GR}# 此处为server的公钥${NC}"
                         echo -e "AllowedIPs = $wgserver_ip_prefix0/24 ${GR}# 此处为允许访问的IP或IP段${NC}"
-                        echo "Endpoint = $IP_address:$server_port"
+                        if [[ ! $selected_ip_inall == "" ]]; then
+                            echo "Endpoint = $selected_ip_inall:$server_port"
+                        else
+                            echo "Endpoint = $IP_address:$server_port"
+                        fi
                         echo -e "${colored_text1}${NC}"
                     else
                         echo "无效的序号."
