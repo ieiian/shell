@@ -2198,8 +2198,8 @@ case $choice in
                     if [ -n "$listen_port" ]; then
                         wglisten_port="$listen_port"
                     fi
-                    read -e -p "请输入服务DNS地址 (回车默认为 8.8.8.8): " dns_address
-                    wgdns_address="8.8.8.8"
+                    read -e -p "请输入服务DNS地址 (回车默认为 1.1.1.1,8.8.8.8): " dns_address
+                    wgdns_address="1.1.1.1,8.8.8.8"
                     if [ -n "$dns_address" ]; then
                         wgdns_address="$dns_address"
                     fi
@@ -2259,11 +2259,16 @@ case $choice in
                             wg-quick down wg0 &>/dev/null
                             wg-quick up wg0 &>/dev/null
                             ip address show wg0
-                            echo -e "${MA}WIREGUARD 服务已启动...${NC}:"
-                            read -e -p "重启后生效, 是否重启服务器? (Y/其它)" choice
-                                if [[ $choice == "Y" || $choice == "y" ]]; then
-                                    reboot
-                                fi
+                            if [[ ! "${wgactive}" = "active" ]]; then
+                                read -e -p "重启后生效, 是否重启服务器? (Y/其它)" choice
+                                    if [[ $choice == "Y" || $choice == "y" ]]; then
+                                        reboot
+                                    fi
+                                break
+                            else
+                                echo -e "${MA}WIREGUARD 服务已重新启动...${NC}:"
+                            fi
+                            waitfor
                             break
                             ;;
                         c|C|cc|CC)
