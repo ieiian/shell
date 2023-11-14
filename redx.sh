@@ -112,11 +112,11 @@ else
     echo "不支持的Linux包管理器"
     exit 1
 fi
-if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -v ifconfig &>/dev/null || ! command -v jq &>/dev/null || ! command -v jq &>/dev/null; then
+if ! command -v curl &>/dev/null || ! command -v wget &>/dev/null || ! command -v ifconfig &>/dev/null || ! command -v jq &>/dev/null || ! command -v jq &>/dev/null || ! command -v nano &>/dev/null; then
     clear_screen
     echo -e "${GR}▼${NC}"
     echo -e "${colored_text2}${NC}"
-    echo -e "CURL/WGET/NET-TOOLS/JQ/QRENCODE"
+    echo -e "CURL/WGET/NANO/NET-TOOLS/JQ/QRENCODE"
     read -e -p "检查到部分依赖工具没有安装, 是否要进行安装? (Y/其它跳过): " -n 3 -r choice
     if [[ $choice == "Y" || $choice == "y" ]]; then
         $pm install -y curl wget net-tools jq qrencode
@@ -273,6 +273,12 @@ case $choice in
         read -e -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
+                # if ! command -v xray &>/dev/null; then
+                if [[ $xtag == *"*"* ]]; then
+                    echo -e "检测到系统未安装XRAY, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 makejsonfile() {
                     jq -n '{
                         "log": {
@@ -1575,7 +1581,8 @@ case $choice in
         ;;
     2|22)
         while true; do
-        if [ -x "$user_path/.acme.sh/acme.sh" ]; then
+        acmetag=""
+        if [ -e "$user_path/.acme.sh/acme.sh" ]; then
             acmever=$($user_path/.acme.sh/acme.sh --version | sed -n '2p' | awk '{print $1}')
         else
             acmever="未安装"
@@ -1600,6 +1607,11 @@ case $choice in
         read -e -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
+                if [[ $acmetag == *"*"* ]]; then
+                    echo -e "检测到系统未安装ACME, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 if [ ! -d $user_path/cert ]; then
                     mkdir $user_path/cert
                 fi
@@ -1842,6 +1854,11 @@ case $choice in
                 done
                 ;;
             2|22)
+                if [[ $acmetag == *"*"* ]]; then
+                    echo -e "检测到系统未安装ACME, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 if [[ $($user_path/.acme.sh/acme.sh --list | wc -l) -eq 1 ]]; then
                     echo "未查询到证书."
                 else
@@ -1850,6 +1867,11 @@ case $choice in
                 waitfor
                 ;;
             3|33)
+                if [[ $acmetag == *"*"* ]]; then
+                    echo -e "检测到系统未安装ACME, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 while true; do
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
@@ -1963,6 +1985,11 @@ case $choice in
                 done
                 ;;
             4|44)
+                if [[ $acmetag == *"*"* ]]; then
+                    echo -e "检测到系统未安装ACME, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 while true; do
                 clear_screen
                 echo -e "${GR}▼▼▼${NC}"
@@ -2095,6 +2122,7 @@ case $choice in
         #     echo "  $key"
         # done
         #######################################
+        wgtag=""
         if command -v wg &>/dev/null; then
             wgver=$(wg -v | head -n 1 | awk '{print $2}')
         else
@@ -2122,6 +2150,11 @@ case $choice in
         read -e -p "请输入你的选择: " -n 2 -r choice && echoo
         case $choice in
             1|11)
+                if [[ $wgtag == *"*"* ]]; then
+                    echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 if [ -e "$config_file" ]; then
                     echo -e "配置文件 $config_file 已经存在, 重新配置将${MA}删除${NC}之前的所有配置文件?"
                     read -e -p "是否要重新配置文件? (Y/其它)" choice
@@ -2246,6 +2279,11 @@ case $choice in
                 ;;
 
             2|22)
+                if [[ $wgtag == *"*"* ]]; then
+                    echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 echo -e "${colored_text1}${NC}"
                 # wg show all
                 wg show wg0
@@ -2308,6 +2346,11 @@ case $choice in
                 waitfor
                 ;;
             3|33)
+                if [[ $wgtag == *"*"* ]]; then
+                    echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 read -e -p "是否确定增加一个节点? (Y/其它)" choice
                 if [[ ! ($choice = "y" || $choice = "Y") ]]; then
                     continue
@@ -2337,9 +2380,19 @@ case $choice in
                 waitfor
                 ;;
             # 4|44)
+                # if [[ $wgtag == *"*"* ]]; then
+                #     echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
+                #     waitfor
+                #     continue
+                # fi
             #     waitfor
             #     ;;
             5|55)
+                if [[ $wgtag == *"*"* ]]; then
+                    echo -e "检测到系统未安装WIREGUARD, 请先选择第 ${MA}i${NC} 项进行安装."
+                    waitfor
+                    continue
+                fi
                 nano /etc/wireguard/wg0.conf
                 ;;
             i|I|ii|II)
