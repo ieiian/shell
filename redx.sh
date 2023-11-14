@@ -2264,7 +2264,6 @@ case $choice in
                                     if [[ $choice == "Y" || $choice == "y" ]]; then
                                         reboot
                                     fi
-                                break
                             else
                                 echo -e "${MA}WIREGUARD 服务已重新启动...${NC}:"
                             fi
